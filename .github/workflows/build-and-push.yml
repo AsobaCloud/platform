@@ -1,0 +1,72 @@
+name: Build and Push ECR Images
+
+on:
+  workflow_dispatch:
+  push:
+    branches: [ main ]
+    paths:
+      - 'services/**'
+      - 'services/base/**'
+      - '.github/workflows/build-and-push.yml'
+
+env:
+  AWS_REGION: af-south-1
+  STAGE: prod
+
+jobs:
+  build-and-push:
+    runs-on: ubuntu-latest
+    permissions:
+      contents: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
+          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          aws-region: ${{ env.AWS_REGION }}
+
+      - name: Set ECR registry env
+        id: ecr
+        run: |
+          set -euo pipefail
+          ACCOUNT_ID=$(aws sts get-caller-identity --query Account --output text)
+          echo "ACCOUNT_ID=${ACCOUNT_ID}" >> $GITHUB_ENV
+          echo "ECR_REGISTRY=${ACCOUNT_ID}.dkr.ecr.${AWS_REGION}.amazonaws.com" >> $GITHUB_ENV
+
+      - name: Login to Amazon ECR
+        run: aws ecr get-login-password --region $AWS_REGION | docker login --username AWS --password-stdin $ECR_REGISTRY
+
+      - name: Ensure ECR repositories
+        run: |
+          set -euo pipefail
+          repos=( ona-base ona-dataingestion ona-weathercache ona-interpolationservice ona-globaltrainingservice ona-forecastingapi )
+          for r in "${repos[@]}"; do
+            if ! aws ecr describe-repositories --repository-names "$r" --region "$AWS_REGION" >/dev/null 2>&1; then
+              aws ecr create-repository --repository-name "$r" --image-scanning-configuration scanOnPush=true --region "$AWS_REGION"
+            fi
+          done
+
+      - name: Build and push base image (linux/amd64)
+        run: |
+          docker build --platform linux/amd64 -t ona-base:latest -f services/base/Dockerfile services/base
+          docker tag ona-base:latest $ECR_REGISTRY/ona-base:${STAGE}
+          docker push $ECR_REGISTRY/ona-base:${STAGE}
+
+      - name: Build and push service images (linux/amd64)
+        run: |
+          set -euo pipefail
+          services=( dataIngestion weatherCache interpolationService globalTrainingService forecastingApi )
+          for svc in "${services[@]}"; do
+            dir="services/${svc}"
+            if [ -f "$dir/Dockerfile" ]; then
+              repo="ona-${svc,,}"
+              echo "Building $repo"
+              docker build --platform linux/amd64 -t "${repo}:${STAGE}" -f "$dir/Dockerfile" "$dir"
+              docker tag "${repo}:${STAGE}" "$ECR_REGISTRY/${repo}:${STAGE}"
+              docker push "$ECR_REGISTRY/${repo}:${STAGE}"
+            fi
+          done
