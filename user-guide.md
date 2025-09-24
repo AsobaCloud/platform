@@ -41,7 +41,36 @@ cd dns-setup
 ./check-certificate-status.sh
 ```
 
-### 1.3 Deploy Platform Services
+### 1.3 Build and Push Service Images (GitHub Actions)
+
+You do NOT need local Docker. Build the container images in CI and push to ECR.
+
+Prerequisites (one-time):
+- In the GitHub repo (`AsobaCloud/platform`), add Secrets with ECR permissions for region `af-south-1`:
+  - `AWS_ACCESS_KEY_ID`
+  - `AWS_SECRET_ACCESS_KEY`
+
+Trigger the workflow via GitHub UI:
+1. Open the repo → Actions tab
+2. Select "Build and Push ECR Images"
+3. Click "Run workflow" (branch: `main`)
+
+Trigger via CLI (example):
+```bash
+# Ensure you are authenticated with GitHub CLI
+gh auth status
+
+# Start the workflow on main
+gh workflow run "Build and Push ECR Images" --ref main
+
+# Optional: watch the run until completion
+gh run watch
+```
+
+Wait for the workflow to complete. You should see these images in ECR with tag `:prod`:
+- `ona-base`, `ona-dataingestion`, `ona-weathercache`, `ona-interpolationservice`, `ona-globaltrainingservice`, `ona-forecastingapi`
+
+### 1.4 Deploy Platform Services
 
 ```bash
 # Deploy all services
