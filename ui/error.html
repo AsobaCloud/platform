@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Page Not Found - Ona Energy Management</title>
+    <link rel="icon" type="image/x-icon" href="includes/favicon.ico">
+    <style>
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            margin: 0;
+            padding: 0;
+            min-height: 100vh;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .error-container {
+            background: white;
+            border-radius: 16px;
+            padding: 40px;
+            text-align: center;
+            box-shadow: 0 20px 40px rgba(0,0,0,0.15);
+            max-width: 500px;
+            width: 90%;
+        }
+        .error-code {
+            font-size: 4rem;
+            font-weight: 700;
+            color: #455BF1;
+            margin-bottom: 20px;
+        }
+        .error-message {
+            font-size: 1.5rem;
+            color: #2D2D2D;
+            margin-bottom: 20px;
+        }
+        .error-description {
+            color: #6B7280;
+            margin-bottom: 30px;
+            line-height: 1.6;
+        }
+        .home-button {
+            background: #455BF1;
+            color: white;
+            padding: 12px 24px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            text-decoration: none;
+            display: inline-block;
+            transition: all 0.3s ease;
+        }
+        .home-button:hover {
+            background: #3B4BD8;
+            transform: translateY(-1px);
+        }
+    </style>
+</head>
+<body>
+    <div class="error-container">
+        <div class="error-code">404</div>
+        <h1 class="error-message">Page Not Found</h1>
+        <p class="error-description">
+            The page you're looking for doesn't exist or has been moved.
+        </p>
+        <a href="/" class="home-button">Go Home</a>
+    </div>
+</body>
+</html>

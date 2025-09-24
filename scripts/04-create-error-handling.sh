@@ -8,7 +8,7 @@ echo "Configuring error handling (SQS DLQs, SNS, Alarms)"
 # SNS topic for alerts
 TOPIC_ARN="arn:aws:sns:${AWS_REGION}:${AWS_ACCOUNT_ID}:ona-platform-alerts"
 if ! aws sns get-topic-attributes --topic-arn "${TOPIC_ARN}" >/dev/null 2>&1; then
-  aws sns create-topic --name ona-platform-alerts --tags ${STANDARD_TAGS} --region "${AWS_REGION}" 1>/dev/null
+  aws sns create-topic --name ona-platform-alerts --region "${AWS_REGION}" 1>/dev/null
 fi
 
 # Create DLQs and alarms per service

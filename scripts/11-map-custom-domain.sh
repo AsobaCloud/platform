@@ -20,6 +20,14 @@ fi
 
 CERTIFICATE_ARN=$(cat "${CERT_FILE}")
 
+# Check if certificate is ready
+CERT_STATUS=$(aws acm describe-certificate --certificate-arn "${CERTIFICATE_ARN}" --region "${AWS_REGION}" --query 'Certificate.Status' --output text 2>/dev/null || echo "UNKNOWN")
+if [[ "${CERT_STATUS}" != "ISSUED" ]]; then
+  echo "WARNING: Certificate status is ${CERT_STATUS}, not ISSUED"
+  echo "Custom domain will not be configured until certificate is ready"
+  exit 0
+fi
+
 API_ID=$(aws apigateway get-rest-apis --query "items[?name=='${API_NAME}'].id | [0]" --output text --region "$AWS_REGION")
 if [[ -z "${API_ID}" || "${API_ID}" == "None" ]]; then
   echo "ERROR: API Gateway not found"

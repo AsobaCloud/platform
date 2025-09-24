@@ -1,0 +1,368 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ona Energy Management - Applications</title>
+    <link rel="icon" type="image/x-icon" href="includes/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="includes/Artboard-7.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="includes/Artboard-7.png">
+    <link rel="stylesheet" href="includes/common.css">
+    <style>
+        /* Application Selection Page Styles */
+        :root {
+            --primary-blue: #455BF1;
+            --accent-blue: #3B4BD8;
+            --primary-black: #1A1A1A;
+            --white: #FFFFFF;
+            --text-dark: #2D2D2D;
+            --text-light: #6B7280;
+            --border-grey: #E5E7EB;
+            --neutral-grey: #F3F4F6;
+            --status-green: #22C55E;
+            --status-red: #EF4444;
+            --status-yellow: #F59E0B;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'DM Sans', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .header {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 20px 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-left {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .logo {
+            width: 40px;
+            height: 40px;
+            background: var(--primary-blue);
+            border-radius: 8px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 18px;
+            color: var(--white);
+            font-weight: 700;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+            color: var(--text-dark);
+        }
+
+        .header-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-light);
+        }
+
+        .logout-button {
+            background: var(--status-red);
+            color: var(--white);
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .logout-button:hover {
+            background: #dc2626;
+            transform: translateY(-1px);
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+
+        .welcome-section {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            text-align: center;
+        }
+
+        .welcome-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .welcome-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-light);
+            margin-bottom: 20px;
+        }
+
+        .user-info {
+            background: rgba(69, 91, 241, 0.1);
+            color: var(--primary-blue);
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-weight: 600;
+            display: inline-block;
+        }
+
+        .applications-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
+        }
+
+        .app-card {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            transition: all 0.3s ease;
+            text-decoration: none;
+            color: inherit;
+            position: relative;
+            overflow: hidden;
+        }
+
+        .app-card::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            height: 4px;
+            background: linear-gradient(90deg, var(--primary-blue), var(--accent-blue));
+        }
+
+        .app-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.15);
+        }
+
+        .app-icon {
+            font-size: 3rem;
+            margin-bottom: 20px;
+            display: block;
+        }
+
+        .app-title {
+            font-size: 1.4rem;
+            font-weight: 700;
+            color: var(--text-dark);
+            margin-bottom: 10px;
+        }
+
+        .app-description {
+            color: var(--text-light);
+            line-height: 1.6;
+            margin-bottom: 20px;
+        }
+
+        .app-features {
+            list-style: none;
+            margin-bottom: 20px;
+        }
+
+        .app-features li {
+            color: var(--text-light);
+            font-size: 0.9rem;
+            margin-bottom: 5px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .app-features li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: var(--status-green);
+            font-weight: 600;
+        }
+
+        .app-button {
+            background: var(--primary-blue);
+            color: var(--white);
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            width: 100%;
+        }
+
+        .app-button:hover {
+            background: var(--accent-blue);
+            transform: translateY(-1px);
+        }
+
+        .footer {
+            background: var(--white);
+            border-radius: 12px;
+            padding: 20px 30px;
+            text-align: center;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+            color: var(--text-light);
+            font-size: 0.9rem;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .header {
+                flex-direction: column;
+                gap: 15px;
+                text-align: center;
+            }
+            
+            .applications-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .welcome-title {
+                font-size: 1.5rem;
+            }
+        }
+
+        /* Animation */
+        .app-card {
+            animation: slideUp 0.6s ease-out;
+        }
+
+        .app-card:nth-child(2) {
+            animation-delay: 0.1s;
+        }
+
+        @keyframes slideUp {
+            from {
+                opacity: 0;
+                transform: translateY(30px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="header-left">
+                <div class="logo">A</div>
+                <div>
+                    <div class="header-title">Ona Energy Management</div>
+                    <div class="header-subtitle">Administrative Platform</div>
+                </div>
+            </div>
+            <button class="logout-button" onclick="logout()">Logout</button>
+        </div>
+
+        <div class="welcome-section">
+            <h1 class="welcome-title">Welcome to Ona Energy Management</h1>
+            <p class="welcome-subtitle">Choose an application to get started</p>
+            <div class="user-info">Logged in as: admin</div>
+        </div>
+
+        <div class="applications-grid">
+            <a href="admin-gpu-panel.html" class="app-card">
+                <span class="app-icon">🔧</span>
+                <h2 class="app-title">O&M Admin Panel</h2>
+                <p class="app-description">
+                    Comprehensive operations and maintenance management system for distributed energy infrastructure.
+                </p>
+                <ul class="app-features">
+                    <li>Real-time asset monitoring</li>
+                    <li>Maintenance scheduling</li>
+                    <li>Performance analytics</li>
+                    <li>Operational optimization</li>
+                </ul>
+                <button class="app-button">Open O&M Admin Panel</button>
+            </a>
+
+            <a href="server-management.html" class="app-card">
+                <span class="app-icon">📊</span>
+                <h2 class="app-title">Offtaker Management</h2>
+                <p class="app-description">
+                    Manage energy offtakers, contracts, and delivery across your distributed energy network.
+                </p>
+                <ul class="app-features">
+                    <li>Offtaker onboarding</li>
+                    <li>Contract management</li>
+                    <li>Energy delivery tracking</li>
+                    <li>Performance analytics</li>
+                </ul>
+                <button class="app-button">Open Offtaker Management</button>
+            </a>
+        </div>
+
+        <div class="footer">
+            Powered by Asoba Energy Management Platform
+        </div>
+    </div>
+
+    <script>
+        // Check if user is logged in (simple demo check)
+        function checkAuth() {
+            // Check for authenticated session (consistent with other pages)
+            const isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
+            if (!isAuthenticated) {
+                window.location.href = 'index.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Logout function
+        function logout() {
+            if (confirm('Are you sure you want to logout?')) {
+                // Clear any stored auth data (in a real app, this would clear tokens/sessions)
+                sessionStorage.removeItem('authenticated');
+                window.location.href = 'index.html';
+            }
+        }
+
+        // Initialize page
+        document.addEventListener('DOMContentLoaded', function() {
+            checkAuth();
+        });
+
+        // Add click handlers to app cards
+        document.querySelectorAll('.app-card').forEach(card => {
+            card.addEventListener('click', function(e) {
+                // Add a small delay for visual feedback
+                this.style.transform = 'translateY(-2px)';
+                setTimeout(() => {
+                    this.style.transform = '';
+                }, 150);
+            });
+        });
+    </script>
+</body>
+</html>
