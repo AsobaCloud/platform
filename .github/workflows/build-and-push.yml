@@ -2,6 +2,10 @@ name: Build and Push ECR Images
 
 on:
   workflow_dispatch:
+    inputs:
+      roleArn:
+        description: "IAM role ARN to assume (optional)"
+        required: false
   push:
     branches: [ main ]
     paths:
@@ -17,16 +21,26 @@ jobs:
   build-and-push:
     runs-on: ubuntu-latest
     permissions:
+      id-token: write
       contents: read
     steps:
       - name: Checkout
         uses: actions/checkout@v4
 
-      - name: Configure AWS credentials
+      - name: Resolve role to assume
+        run: |
+          if [ -n "${{ github.event.inputs.roleArn }}" ]; then
+            echo "ROLE_TO_ASSUME=${{ github.event.inputs.roleArn }}" >> $GITHUB_ENV
+          elif [ -n "${{ secrets.AWS_ROLE_TO_ASSUME }}" ]; then
+            echo "ROLE_TO_ASSUME=${{ secrets.AWS_ROLE_TO_ASSUME }}" >> $GITHUB_ENV
+          else
+            echo "ROLE_TO_ASSUME=${{ vars.AWS_ROLE_TO_ASSUME }}" >> $GITHUB_ENV
+          fi
+
+      - name: Configure AWS credentials (OIDC)
         uses: aws-actions/configure-aws-credentials@v4
         with:
-          aws-access-key-id: ${{ secrets.AWS_ACCESS_KEY_ID }}
-          aws-secret-access-key: ${{ secrets.AWS_SECRET_ACCESS_KEY }}
+          role-to-assume: ${{ env.ROLE_TO_ASSUME }}
           aws-region: ${{ env.AWS_REGION }}
 
       - name: Set ECR registry env
