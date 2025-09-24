@@ -16,13 +16,13 @@ else
 fi
 
 # Root resource ID
-ROOT_ID=$(aws apigateway get-resources --rest-api-id "${API_ID}" --region "${AWS_REGION}" --query 'items[?path==\"/\"].id' --output text)
+ROOT_ID=$(aws apigateway get-resources --rest-api-id "${API_ID}" --region "${AWS_REGION}" --query 'items[?path==`/`].id' --output text)
 
 # Helper to (re)create method+integration
 create_method_integration() {
   local path=$1 method=$2 fn_name=$3
   # Ensure resource exists
-  local res_id=$(aws apigateway get-resources --rest-api-id "${API_ID}" --region "${AWS_REGION}" --query "items[?path=='/${path}'].id | [0]" --output text)
+  local res_id=$(aws apigateway get-resources --rest-api-id "${API_ID}" --region "${AWS_REGION}" --query "items[?path==\`/${path}\`].id | [0]" --output text)
   if [[ -z "${res_id}" || "${res_id}" == "None" ]]; then
     res_id=$(aws apigateway create-resource --rest-api-id "${API_ID}" --parent-id "${ROOT_ID}" --path-part "${path}" --region "${AWS_REGION}" --query id --output text)
   fi
