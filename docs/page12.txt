@@ -1,0 +1,37 @@
+Easy Deployment
+Option 1: Direct Data Feed
+(Most Common)
+● Your inverters/SCADA
+systems continue sending
+data to your current
+dashboard
+● We receive a copy of the
+same data stream via
+secure API or FTP
+● Your team keeps using
+familiar tools while gaining
+Asoba's predictive
+insights
+
+Option 2: Storage Integration
+● If you store data in cloud
+storage (AWS S3, Azure,
+Google Cloud)
+● We connect directly to
+read your historical and
+real-time data
+● No changes to your data
+collection process
+required
+
+Option 3: API Integration
+● We pull data from your
+existing monitoring
+platform's API
+● Works with SolarEdge,
+Huawei FusionSolar, SMA
+Sunny Portal, and others
+● Completely non-invasive
+to your current operations
+
+
