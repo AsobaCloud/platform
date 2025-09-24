@@ -48,57 +48,43 @@ This path requires GitHub CLI (gh) and AWS CLI. No local Docker needed.
 ```bash
 # 1) Put your required secrets into a local env file (gitignored)
 cat > .env.local << 'EOF'
-VISUAL_CROSSING_API_KEY=5TNNNSTUM59VC7PARY5GDXHPV
+VISUAL_CROSSING_API_KEY=YOUR_ACTUAL_VISUAL_CROSSING_API_KEY
 EOF
 
 # 2) Run the one-command helper (triggers CI build, waits, then deploys)
-bash local-deploy.sh
+./local-deploy.sh
 ```
 
-Once the DNS certificate is ISSUED, map the custom domain (optional):
-```bash
-./scripts/11-map-custom-domain.sh
-./scripts/12-validate-deployment.sh
+**What this does:**
+- Triggers GitHub Actions to build Docker images in CI
+- Waits for CI build to complete successfully
+- Deploys all infrastructure (Lambda, API Gateway, etc.)
+- Validates the deployment
+- Skips custom domain if certificate not ready
+
+**Expected output:**
+```
+✓ CI workflow succeeded
+✓ All Lambda functions created
+✓ API Gateway deployed
+✓ Endpoints responding with 200 status
 ```
 
-### 1.4 Build and Push Service Images (GitHub Actions)
+Once the DNS certificate is ISSUED, the custom domain will be automatically mapped on the next deployment.
 
-You do NOT need local Docker. Build the container images in CI and push to ECR.
+### 1.4 Manual Deployment (Alternative)
 
-Prerequisites (one-time):
-- In the GitHub repo (`AsobaCloud/platform`), add Secrets with ECR permissions for region `af-south-1`:
-  - `AWS_ACCESS_KEY_ID`
-  - `AWS_SECRET_ACCESS_KEY`
-
-Trigger the workflow via GitHub UI:
-1. Open the repo → Actions tab
-2. Select "Build and Push ECR Images"
-3. Click "Run workflow" (branch: `main`)
-
-Trigger via CLI (example):
-```bash
-# Ensure you are authenticated with GitHub CLI
-gh auth status
-
-# Start the workflow on main
-gh workflow run "Build and Push ECR Images" --ref main
-
-# Optional: watch the run until completion
-gh run watch
-```
-
-Wait for the workflow to complete. You should see these images in ECR with tag `:prod`:
-- `ona-base`, `ona-dataingestion`, `ona-weathercache`, `ona-interpolationservice`, `ona-globaltrainingservice`, `ona-forecastingapi`
-
-### 1.5 Deploy Platform Services
+If you prefer to deploy manually without CI:
 
 ```bash
-# Deploy all services
+# Deploy all services directly
 ./deploy-all.sh
 
 # Validate deployment
 ./validate.sh
 ```
+
+**Note:** Manual deployment requires Docker to be installed locally and will build images locally instead of using CI.
 
 ## Step 2: Configure Your Assets
 
@@ -160,13 +146,14 @@ Choose your integration method:
 **Option A: Direct Data Feed (Recommended)**
 ```bash
 # Configure your SCADA system to send data to:
-# POST https://api.yourcompany.com/upload_nowcast
+# POST https://api.asoba.co/upload_nowcast
+# Or use direct API Gateway URL: https://u9xpolnr5m.execute-api.af-south-1.amazonaws.com/prod/upload_nowcast
 ```
 
 **Option B: File Upload**
 ```bash
 # Upload historical data for model training
-curl -X POST https://api.yourcompany.com/upload_train \
+curl -X POST https://api.asoba.co/upload_train \
   -H "Content-Type: application/json" \
   -d '{"customer_id": "your-company", "data_type": "historical"}'
 ```
@@ -188,7 +175,7 @@ timestamp,asset_id,temperature_c,voltage_v,power_kw
 
 ```bash
 # Get presigned URL for upload
-curl -X POST https://api.yourcompany.com/upload_train \
+curl -X POST https://api.asoba.co/upload_train \
   -H "Content-Type: application/json" \
   -d '{
     "customer_id": "your-company",
@@ -242,7 +229,7 @@ aws sns subscribe \
 
 ```bash
 # Test forecast generation
-curl "https://api.yourcompany.com/forecast?customer_id=your-company&site_id=your-site"
+curl "https://api.asoba.co/forecast?customer_id=your-company&site_id=your-site"
 ```
 
 ### 6.2 Verify Data Processing

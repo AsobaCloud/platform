@@ -8,6 +8,10 @@ This guide provides detailed technical administration information for the Ona Pl
 
 The Ona Platform exposes a RESTful API through AWS API Gateway with the following core endpoints:
 
+**Base URLs:**
+- Custom Domain: `https://api.asoba.co` (when certificate is ready)
+- Direct API Gateway: `https://u9xpolnr5m.execute-api.af-south-1.amazonaws.com/prod`
+
 #### Data Upload Endpoints
 
 **POST /upload_train**
@@ -201,7 +205,174 @@ curl -H "X-API-Key: your-api-key" \
 }
 ```
 
-## 2. Operations & Maintenance
+## 2. Deployment & Infrastructure Management
+
+### 2.1 One-Command Deployment
+
+The recommended deployment method uses the `local-deploy.sh` script which orchestrates CI/CD and infrastructure deployment:
+
+```bash
+# Prerequisites
+# 1. GitHub CLI (gh) installed and authenticated
+# 2. AWS CLI configured with appropriate permissions
+# 3. Visual Crossing API key
+
+# Create environment file
+cat > .env.local << 'EOF'
+VISUAL_CROSSING_API_KEY=YOUR_ACTUAL_API_KEY
+EOF
+
+# Run one-command deployment
+./local-deploy.sh
+```
+
+**What this script does:**
+1. **Triggers CI Build**: Uses GitHub Actions to build Docker images
+2. **Waits for CI**: Polls GitHub Actions until build completes successfully
+3. **Deploys Infrastructure**: Runs all deployment scripts in sequence
+4. **Validates Deployment**: Tests all endpoints and services
+
+**Expected Deployment Sequence:**
+```
+✓ CI workflow succeeded
+✓ Scripts 01-11 completed successfully
+✓ All Lambda functions created
+✓ API Gateway deployed (ID: u9xpolnr5m)
+✓ Endpoints responding with 200 status
+✓ Custom domain skipped (certificate not ready)
+```
+
+### 2.2 Manual Deployment
+
+For manual deployment without CI:
+
+```bash
+# Deploy all services directly
+./deploy-all.sh
+
+# Validate deployment
+./validate.sh
+```
+
+**Note**: Manual deployment requires Docker installed locally.
+
+### 2.3 Infrastructure Components
+
+The deployment creates the following AWS resources:
+
+#### Lambda Functions
+- `ona-dataIngestion-prod` (1024MB, 300s timeout)
+- `ona-weatherCache-prod` (512MB, 300s timeout)  
+- `ona-interpolationService-prod` (3008MB, 900s timeout)
+- `ona-globalTrainingService-prod` (1024MB, 300s timeout)
+- `ona-forecastingApi-prod` (3008MB, 60s timeout)
+
+#### API Gateway
+- REST API: `ona-api-prod`
+- Stage: `prod`
+- Endpoints:
+  - `POST /upload_train`
+  - `POST /upload_nowcast`
+  - `GET /forecast`
+
+#### Storage Resources
+- S3 Buckets: `sa-api-client-input`, `sa-api-client-output`
+- DynamoDB Tables: `ona-platform-locations`, `ona-platform-weather-cache`
+
+#### ECR Repositories
+- `ona-base`, `ona-dataingestion`, `ona-weathercache`
+- `ona-interpolationservice`, `ona-globaltrainingservice`, `ona-forecastingapi`
+
+### 2.4 DNS and Custom Domain
+
+#### One-time DNS Setup
+```bash
+cd dns-setup
+./setup-dns-infrastructure.sh
+```
+
+This creates SSL certificate for `api.asoba.co` and configures DNS validation.
+
+#### Custom Domain Mapping
+The custom domain is automatically mapped when the SSL certificate is ready:
+```bash
+# Check certificate status
+./dns-setup/check-certificate-status.sh
+
+# Once certificate is ISSUED, custom domain will be mapped automatically
+# on the next deployment run
+```
+
+### 2.5 Troubleshooting Deployment
+
+#### Common Issues
+
+**CI Build Fails**
+```bash
+# Check GitHub Actions logs
+gh run view --log
+
+# Verify GitHub OIDC role exists
+aws iam get-role --role-name ona-github-actions-ecr-role
+```
+
+**Lambda Functions Not Responding**
+```bash
+# Check Lambda logs
+aws logs get-log-events \
+  --log-group-name /aws/lambda/ona-dataIngestion-prod \
+  --log-stream-name $(aws logs describe-log-streams \
+    --log-group-name /aws/lambda/ona-dataIngestion-prod \
+    --order-by LastEventTime --descending --max-items 1 \
+    --query 'logStreams[0].logStreamName' --output text)
+
+# Check function status
+aws lambda get-function --function-name ona-dataIngestion-prod
+```
+
+**API Gateway Not Working**
+```bash
+# Check API Gateway deployment
+aws apigateway get-deployments --rest-api-id u9xpolnr5m
+
+# Test endpoints directly
+curl -X POST https://u9xpolnr5m.execute-api.af-south-1.amazonaws.com/prod/upload_train
+```
+
+**Custom Domain Issues**
+```bash
+# Check certificate status
+aws acm describe-certificate \
+  --certificate-arn $(cat .certificate-arn) \
+  --region us-east-1
+
+# Check DNS resolution
+nslookup api.asoba.co
+```
+
+### 2.6 Rollback and Cleanup
+
+#### Complete Rollback
+```bash
+./rollback.sh
+```
+
+This removes all platform resources while preserving:
+- S3 buckets and data
+- DynamoDB tables and data  
+- SSL certificate
+- Route53 DNS records
+
+#### Selective Cleanup
+```bash
+# Remove specific Lambda functions
+aws lambda delete-function --function-name ona-dataIngestion-prod
+
+# Remove API Gateway
+aws apigateway delete-rest-api --rest-api-id u9xpolnr5m
+```
+
+## 3. Operations & Maintenance
 
 ### OODA Workflow Overview
 
