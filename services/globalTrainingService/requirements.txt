@@ -1,0 +1,17 @@
+# Service-specific dependencies for globalTrainingService
+# Base dependencies are inherited from base image
+
+# Deep learning
+tensorflow==2.13.0
+keras==2.13.1
+
+# Model optimization
+optuna==3.3.0
+hyperopt==0.2.7
+
+# Model serialization
+joblib==1.3.2
+dill==0.3.7
+
+# Experiment tracking
+mlflow==2.6.0

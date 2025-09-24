@@ -1,0 +1,14 @@
+# Service-specific dependencies for interpolationService
+# Base dependencies are inherited from base image
+
+# ML and data processing
+tensorflow==2.13.0
+keras==2.13.1
+scipy==1.11.1
+statsmodels==0.14.0
+
+# Feature engineering
+feature-engine==1.6.1
+
+# Data validation
+great-expectations==0.17.12

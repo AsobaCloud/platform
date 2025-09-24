@@ -1,0 +1,5 @@
+# Service-specific dependencies for dataIngestion
+# Base dependencies are inherited from base image
+
+# No additional dependencies needed for dataIngestion
+# It mainly uses boto3 for S3 presigned URLs which is in base

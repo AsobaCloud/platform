@@ -27,7 +27,7 @@ for service in "${SERVICES[@]}"; do
     echo "Building image for ${service} (linux/amd64)"
     docker build --platform linux/amd64 -t "ona-${service}:${STAGE}" -f "${dir}/Dockerfile" "${dir}"
     echo "Pushing image for ${service}"
-    tag_and_push "ona-${service}:${STAGE}" "ona-${service}" "${STAGE}"
+    tag_and_push "ona-${service}:${STAGE}" "$(get_ecr_repo "${service}")" "${STAGE}"
   else
     echo "Skipping ${service} (no Dockerfile)"
   fi

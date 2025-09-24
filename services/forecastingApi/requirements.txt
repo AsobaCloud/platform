@@ -1,0 +1,14 @@
+# Service-specific dependencies for forecastingApi
+# Base dependencies are inherited from base image
+
+# Forecasting
+tensorflow==2.13.0
+prophet==1.1.4
+
+# API response formatting
+marshmallow==3.20.1
+apispec==6.3.0
+
+# Caching
+redis==4.6.0
+hiredis==2.2.3

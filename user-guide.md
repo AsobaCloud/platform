@@ -41,7 +41,27 @@ cd dns-setup
 ./check-certificate-status.sh
 ```
 
-### 1.3 Build and Push Service Images (GitHub Actions)
+### 1.3 One-Command Build & Deploy (Recommended)
+
+This path requires GitHub CLI (gh) and AWS CLI. No local Docker needed.
+
+```bash
+# 1) Put your required secrets into a local env file (gitignored)
+cat > .env.local << 'EOF'
+VISUAL_CROSSING_API_KEY=5TNNNSTUM59VC7PARY5GDXHPV
+EOF
+
+# 2) Run the one-command helper (triggers CI build, waits, then deploys)
+bash local-deploy.sh
+```
+
+Once the DNS certificate is ISSUED, map the custom domain (optional):
+```bash
+./scripts/11-map-custom-domain.sh
+./scripts/12-validate-deployment.sh
+```
+
+### 1.4 Build and Push Service Images (GitHub Actions)
 
 You do NOT need local Docker. Build the container images in CI and push to ECR.
 
@@ -70,7 +90,7 @@ gh run watch
 Wait for the workflow to complete. You should see these images in ECR with tag `:prod`:
 - `ona-base`, `ona-dataingestion`, `ona-weathercache`, `ona-interpolationservice`, `ona-globaltrainingservice`, `ona-forecastingapi`
 
-### 1.4 Deploy Platform Services
+### 1.5 Deploy Platform Services
 
 ```bash
 # Deploy all services

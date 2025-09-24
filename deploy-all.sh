@@ -14,9 +14,15 @@ echo
 echo "Pre-flight checks..."
 
 # Tooling
-for bin in aws docker jq; do
+for bin in aws jq; do
   if command -v "${bin}" >/dev/null 2>&1; then echo "${bin}: OK"; else echo "${bin}: MISSING"; exit 1; fi
 done
+if command -v docker >/dev/null 2>&1; then
+  echo "docker: OK"
+else
+  echo "docker: not found, will skip local image builds (expect images in ECR)"
+  export SKIP_DOCKER_BUILD=1
+fi
 
 # Credentials
 if aws sts get-caller-identity >/dev/null 2>&1; then echo "AWS credentials: OK"; else echo "AWS credentials: ERROR"; exit 1; fi
@@ -51,6 +57,11 @@ for script_info in "${SCRIPTS[@]}"; do
   IFS=':' read -r script description <<< "${script_info}"
   echo "Running scripts/${script} - ${description}"
 
+  # Skip local Docker build if instructed
+  if [[ "${script}" == "07-build-and-push-docker.sh" ]] && [[ "${SKIP_DOCKER_BUILD:-}" == "1" || "${USE_CI_DOCKER:-}" == "1" ]]; then
+    echo "Skipping local Docker build (using CI-built images)"
+    continue
+  fi
   # Note: Custom domain and error handling are optional and not part of minimal flow
 
   START_TIME=$(date +%s)

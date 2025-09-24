@@ -85,5 +85,10 @@ get_lambda_timeout() {
 get_lambda_role_name() { echo "ona-lambda-$1-role"; }
 get_dlq_name() { echo "ona-$1-dlq"; }
 get_lambda_name() { echo "ona-$1-${STAGE}"; }
-get_ecr_repo() { echo "ona-$1"; }
+get_ecr_repo() {
+  local svc="$1"
+  # Ensure lowercase for Docker/ECR repository naming rules
+  svc="${svc,,}"
+  echo "ona-${svc}"
+}
 get_ecr_image_uri() { echo "${ECR_REGISTRY}/$(get_ecr_repo "$1"):${STAGE}"; }

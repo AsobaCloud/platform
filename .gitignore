@@ -9,8 +9,10 @@ __pycache__/
 *.py[cod]
 *$py.class
 .env
+.env.local
 venv/
 config/.visual-crossing-api-key
+local-deploy.sh
 
 # Docker
 *.log

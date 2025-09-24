@@ -14,7 +14,7 @@ create_repo() {
 
 create_repo "ona-base"
 for service in "${SERVICES[@]}"; do
-  create_repo "ona-${service}"
+  create_repo "$(get_ecr_repo "${service}")"
 done
 
 echo "ECR repositories ensured"

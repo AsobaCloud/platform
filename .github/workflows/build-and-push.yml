@@ -79,7 +79,10 @@ jobs:
             if [ -f "$dir/Dockerfile" ]; then
               repo="ona-${svc,,}"
               echo "Building $repo"
-              docker build --platform linux/amd64 -t "${repo}:${STAGE}" -f "$dir/Dockerfile" "$dir"
+              docker build --platform linux/amd64 \
+                --build-arg BASE_IMAGE=$ECR_REGISTRY/ona-base:${STAGE} \
+                -t "${repo}:${STAGE}" \
+                -f "$dir/Dockerfile" "$dir"
               docker tag "${repo}:${STAGE}" "$ECR_REGISTRY/${repo}:${STAGE}"
               docker push "$ECR_REGISTRY/${repo}:${STAGE}"
             fi
