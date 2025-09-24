@@ -17,7 +17,15 @@ create_or_update_lambda() {
   local timeout=$(get_lambda_timeout "${service}")
 
   if aws lambda get-function --function-name "${function_name}" --region "${AWS_REGION}" >/dev/null 2>&1; then
+    # Wait for any pending updates
+    aws lambda wait function-active-v2 --function-name "${function_name}" --region "${AWS_REGION}" 2>/dev/null || true
+    aws lambda wait function-updated-v2 --function-name "${function_name}" --region "${AWS_REGION}" 2>/dev/null || true
+    
+    # Update code first
     aws lambda update-function-code --function-name "${function_name}" --image-uri "${image_uri}" --region "${AWS_REGION}" 1>/dev/null
+    aws lambda wait function-updated-v2 --function-name "${function_name}" --region "${AWS_REGION}" 2>/dev/null || true
+    
+    # Then update configuration
     aws lambda update-function-configuration --function-name "${function_name}" --timeout "${timeout}" --memory-size "${memory}" --region "${AWS_REGION}" 1>/dev/null
   else
     aws lambda create-function \
@@ -28,15 +36,25 @@ create_or_update_lambda() {
       --architectures x86_64 \
       --timeout "${timeout}" \
       --memory-size "${memory}" \
-      --tags ${STANDARD_TAGS} \
+      --tags Project=ona-platform,Environment=${ENVIRONMENT} \
       --region "${AWS_REGION}" 1>/dev/null
+    
+    # Wait for function to be active
+    echo -n "Waiting for ${function_name} to be active..."
+    aws lambda wait function-active --function-name "${function_name}" --region "${AWS_REGION}"
+    echo " done"
   fi
 
+  # Wait before updating environment variables
+  aws lambda wait function-updated-v2 --function-name "${function_name}" --region "${AWS_REGION}" 2>/dev/null || true
+  
   # Set environment variables common to all
   aws lambda update-function-configuration \
     --function-name "${function_name}" \
     --environment "Variables={STAGE=${STAGE},ENVIRONMENT=${ENVIRONMENT},INPUT_BUCKET=${INPUT_BUCKET},OUTPUT_BUCKET=${OUTPUT_BUCKET},LOCATIONS_TABLE=${LOCATIONS_TABLE},WEATHER_CACHE_TABLE=${WEATHER_CACHE_TABLE},LOG_LEVEL=INFO}" \
     --region "${AWS_REGION}" 1>/dev/null
+  
+  aws lambda wait function-updated-v2 --function-name "${function_name}" --region "${AWS_REGION}" 2>/dev/null || true
 
   # Configure DLQ
   local dlq_arn="arn:aws:sqs:${AWS_REGION}:${AWS_ACCOUNT_ID}:$(get_dlq_name "${service}")"

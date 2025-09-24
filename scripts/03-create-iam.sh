@@ -20,13 +20,46 @@ create_role_if_missing() {
         "Action": "sts:AssumeRole"
       }]
     }' \
-    --tags ${STANDARD_TAGS} 1>/dev/null
+    1>/dev/null
 }
 
 attach_managed_policies() {
   local role_name=$1
   aws iam attach-role-policy --role-name "${role_name}" --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole 1>/dev/null || true
   aws iam attach-role-policy --role-name "${role_name}" --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole 1>/dev/null || true
+}
+
+# Add common ECR and SQS permissions to all Lambda roles
+add_common_permissions() {
+  local role_name=$1
+  local dlq_name="$(get_dlq_name "${role_name##*-}")"  # Extract service name from role name
+  
+  COMMON_POLICY=$(cat <<JSON
+{
+  "Version": "2012-10-17",
+  "Statement": [
+    {
+      "Effect": "Allow",
+      "Action": [
+        "ecr:GetAuthorizationToken",
+        "ecr:BatchCheckLayerAvailability",
+        "ecr:GetDownloadUrlForLayer",
+        "ecr:BatchGetImage"
+      ],
+      "Resource": "*"
+    },
+    {
+      "Effect": "Allow",
+      "Action": [
+        "sqs:SendMessage"
+      ],
+      "Resource": "arn:aws:sqs:${AWS_REGION}:${AWS_ACCOUNT_ID}:${dlq_name}"
+    }
+  ]
+}
+JSON
+)
+  put_inline_policy "${role_name}" "ona-common-permissions" "${COMMON_POLICY}"
 }
 
 put_inline_policy() {
@@ -48,6 +81,7 @@ for service in "${SERVICES[@]}"; do
   ROLE_NAME="$(get_lambda_role_name "${service}")"
   create_role_if_missing "${ROLE_NAME}"
   attach_managed_policies "${ROLE_NAME}"
+  add_common_permissions "${ROLE_NAME}"
 
   # Inline policy tailored per service
   case "${service}" in

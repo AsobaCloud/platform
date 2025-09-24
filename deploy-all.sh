@@ -43,12 +43,14 @@ SCRIPTS=(
   "01-setup-directories.sh:Setting up directories"
   "02-create-parameters.sh:Creating parameters"
   "03-create-iam.sh:Creating IAM roles"
+  "04-create-error-handling.sh:Creating error handling"
   "05-create-storage.sh:Ensuring storage resources"
   "06-create-ecr-repos.sh:Creating ECR repositories"
   "07-build-and-push-docker.sh:Building Docker images"
   "08-create-lambdas.sh:Creating Lambda functions"
   "09-configure-triggers.sh:Configuring triggers"
   "10-create-api-gateway.sh:Creating API Gateway"
+  "11-map-custom-domain.sh:Mapping custom domain"
   "12-validate-deployment.sh:Validating deployment"
 )
 
