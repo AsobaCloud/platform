@@ -56,9 +56,13 @@ create_or_update_lambda() {
   
   aws lambda wait function-updated-v2 --function-name "${function_name}" --region "${AWS_REGION}" 2>/dev/null || true
 
-  # Configure DLQ
+  # Configure DLQ (optional - may fail if permissions not ready)
   local dlq_arn="arn:aws:sqs:${AWS_REGION}:${AWS_ACCOUNT_ID}:$(get_dlq_name "${service}")"
-  aws lambda update-function-configuration --function-name "${function_name}" --dead-letter-config TargetArn="${dlq_arn}" --region "${AWS_REGION}" 1>/dev/null || true
+  if aws lambda update-function-configuration --function-name "${function_name}" --dead-letter-config TargetArn="${dlq_arn}" --region "${AWS_REGION}" 1>/dev/null 2>&1; then
+    echo "DLQ configured for ${function_name}"
+  else
+    echo "Warning: DLQ configuration failed for ${function_name} (permissions may not be ready)"
+  fi
 }
 
 for service in "${SERVICES[@]}"; do

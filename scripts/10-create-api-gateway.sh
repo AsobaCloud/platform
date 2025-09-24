@@ -9,7 +9,7 @@ echo "Creating/Updating API Gateway: ${API_NAME}"
 echo -n "Resolving API... "
 API_ID=$(aws apigateway get-rest-apis --region "${AWS_REGION}" --query "items[?name=='${API_NAME}'].id | [0]" --output text)
 if [[ -z "${API_ID}" || "${API_ID}" == "None" ]]; then
-  API_ID=$(aws apigateway create-rest-api --name "${API_NAME}" --region "${AWS_REGION}" --tags ${STANDARD_TAGS} --query id --output text)
+  API_ID=$(aws apigateway create-rest-api --name "${API_NAME}" --region "${AWS_REGION}" --tags Project=ona-platform,Environment=${ENVIRONMENT} --query id --output text)
   echo "created ${API_ID}"
 else
   echo "found ${API_ID}"
