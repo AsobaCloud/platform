@@ -38,7 +38,7 @@ else
     --domain-name "${API_DOMAIN}" \
     --regional-certificate-arn "${CERTIFICATE_ARN}" \
     --endpoint-configuration types=REGIONAL \
-    --tags ${STANDARD_TAGS} \
+    --tags Project=ona-platform,Environment=${ENVIRONMENT} \
     --region "$AWS_REGION")
 fi
 
