@@ -163,8 +163,14 @@ if (fs.existsSync(htmlFilePath) && fs.existsSync(jsFilePath)) {
     const jsFunctionDefinitions = jsContent.match(/function\s+(\w+)/g) || [];
     const definedFunctionNames = jsFunctionDefinitions.map(f => f.match(/function\s+(\w+)/)[1]);
     
+    console.log(`🔍 DEBUG: Found ${definedFunctionNames.length} function definitions in JS file`);
+    console.log(`🔍 DEBUG: First 10 functions: ${definedFunctionNames.slice(0, 10).join(', ')}`);
+    
     // Extract function calls from HTML file (only in event handlers)
     const htmlFunctionCalls = htmlContent.match(/on\w+="[^"]*(\w+)\s*\([^"]*"/g) || [];
+    
+    console.log(`🔍 DEBUG: Found ${htmlFunctionCalls.length} function calls in HTML event handlers`);
+    console.log(`🔍 DEBUG: First 5 calls: ${htmlFunctionCalls.slice(0, 5).join(', ')}`);
     const builtInFunctions = [
         'alert', 'console', 'parseInt', 'parseFloat', 'Math', 'Date', 'String', 'Number',
         'setTimeout', 'setInterval', 'addEventListener', 'querySelector', 'querySelectorAll',
@@ -193,7 +199,15 @@ if (fs.existsSync(htmlFilePath) && fs.existsSync(jsFilePath)) {
         })
         .filter(funcName => funcName && !builtInFunctions.includes(funcName) && funcName.match(/^[a-z]/));
     
+    console.log(`🔍 DEBUG: Found ${customFunctionCalls.length} custom function calls`);
+    console.log(`🔍 DEBUG: Custom calls: ${customFunctionCalls.join(', ')}`);
+    
     const undefinedFunctions = customFunctionCalls.filter(funcName => !definedFunctionNames.includes(funcName));
+    
+    console.log(`🔍 DEBUG: Found ${undefinedFunctions.length} undefined functions`);
+    if (undefinedFunctions.length > 0) {
+        console.log(`🔍 DEBUG: Undefined functions: ${undefinedFunctions.join(', ')}`);
+    }
     
     if (undefinedFunctions.length > 0) {
         const uniqueUndefinedFunctions = [...new Set(undefinedFunctions)];
