@@ -1768,6 +1768,12 @@
             padding: 15px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
+        
+        /* Better spacing for Performance Metrics and Resource Distribution cards */
+        .chart-card.performance-metrics-card .chart-content,
+        .chart-card.resource-distribution-card .chart-content {
+            padding: 20px 0;
+        }
 
         .chart-header {
             display: flex;
@@ -1834,12 +1840,11 @@
 
         /* Performance Metrics specific styling */
         .chart-content .performance-metrics {
-            height: 100%;
             display: flex;
             flex-direction: column;
-            justify-content: space-between;
-            padding: 0;
-            overflow: hidden;
+            justify-content: center;
+            padding: 10px 0;
+            gap: 15px;
         }
 
         .chart-placeholder {
@@ -1920,8 +1925,8 @@
             grid-template-columns: 70px 1fr;
             gap: 5px;
             align-items: center;
-            margin-bottom: 2px;
-            height: 35px;
+            margin-bottom: 8px;
+            height: 45px;
         }
 
         .perf-metric:last-child {
@@ -1974,10 +1979,12 @@
 
         .resource-distribution {
             width: 100%;
+            padding: 10px 0;
         }
 
         .resource-item {
-            margin-bottom: 15px;
+            margin-bottom: 20px;
+            padding: 8px 0;
         }
 
         .resource-label {
@@ -2128,6 +2135,15 @@
         .uptime-badge {
             background: rgba(34, 197, 94, 0.1);
             color: var(--status-green);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        
+        .capacity-factor-badge {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary-blue);
             padding: 4px 8px;
             border-radius: 4px;
             font-weight: 600;
@@ -2860,7 +2876,7 @@
                         </div>
 
                         <!-- Performance Metrics -->
-                        <div class="chart-card">
+                        <div class="chart-card performance-metrics-card">
                             <div class="chart-header">
                                 <h3>Performance Metrics</h3>
                                 <div class="chart-controls">
@@ -2903,36 +2919,45 @@
                             </div>
                         </div>
 
-                        <!-- Resource Distribution -->
-                        <div class="chart-card">
+                        <!-- Energy Production Distribution -->
+                        <div class="chart-card resource-distribution-card">
                             <div class="chart-header">
-                                <h3>Resource Distribution</h3>
+                                <h3>Energy Production Distribution</h3>
                                 <div class="chart-controls">
-                                    <span class="chart-subtitle">By GPU Type</span>
+                                    <span class="chart-subtitle">By Site</span>
                                 </div>
                             </div>
                             <div class="chart-content">
-                                <div class="resource-distribution">
-                                    <div class="resource-item">
-                                        <div class="resource-label">NVIDIA A100</div>
-                                        <div class="resource-bar">
-                                            <div class="resource-fill" style="width: 45%; background: #455BF1;"></div>
+                                <div class="performance-metrics">
+                                    <div class="perf-metric">
+                                        <div class="perf-label">Cummins Midrand</div>
+                                        <div class="perf-content">
+                                            <div class="perf-value">145,410 kWh</div>
+                                            <div class="perf-bar">
+                                                <div class="perf-fill" style="width: 59%;"></div>
+                                            </div>
+                                            <div class="perf-detail">59% of max capacity (246,540 kWh) - Last 30 days</div>
                                         </div>
-                                        <div class="resource-value">45% (18 GPUs)</div>
                                     </div>
-                                    <div class="resource-item">
-                                        <div class="resource-label">NVIDIA V100</div>
-                                        <div class="resource-bar">
-                                            <div class="resource-fill" style="width: 30%; background: #22C55E;"></div>
+                                    <div class="perf-metric">
+                                        <div class="perf-label">FNB Willowbridge</div>
+                                        <div class="perf-content">
+                                            <div class="perf-value">9,180 kWh</div>
+                                            <div class="perf-bar">
+                                                <div class="perf-fill" style="width: 59%;"></div>
+                                            </div>
+                                            <div class="perf-detail">59% of max capacity (15,600 kWh) - Last 30 days</div>
                                         </div>
-                                        <div class="resource-value">30% (12 GPUs)</div>
                                     </div>
-                                    <div class="resource-item">
-                                        <div class="resource-label">NVIDIA RTX 4090</div>
-                                        <div class="resource-bar">
-                                            <div class="resource-fill" style="width: 25%; background: #F59E0B;"></div>
+                                    <div class="perf-metric">
+                                        <div class="perf-label">Total Production</div>
+                                        <div class="perf-content">
+                                            <div class="perf-value">154,590 kWh</div>
+                                            <div class="perf-bar">
+                                                <div class="perf-fill" style="width: 59%;"></div>
+                                            </div>
+                                            <div class="perf-detail">59% of combined capacity (262,140 kWh) - Last 30 days</div>
                                         </div>
-                                        <div class="resource-value">25% (10 GPUs)</div>
                                     </div>
                                 </div>
                             </div>
@@ -2959,8 +2984,7 @@
                                         <th>Serial</th>
                                         <th>Type</th>
                                         <th>OEM</th>
-                                        <th>Utilization</th>
-                                        <th>Efficiency</th>
+                                        <th>Capacity Factor</th>
                                         <th>Cost/Hour</th>
                                         <th>Revenue/Hour</th>
                                         <th>Energy At Risk</th>

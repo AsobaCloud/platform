@@ -2585,18 +2585,18 @@
             // Sample analytics data
             const analyticsData = [
                 // Cummins Midrand inverters
-                { serial: 'SMA-SB-001', type: 'String Inverter', oem: 'SMA', utilization: '92%', efficiency: '96.8%', costHour: '$0.15', revenueHour: '$2.85', energyAtRisk: 'Low', roi: '1800%', uptime: '99.2%', status: 'Active', site: 'cummins-midrand' },
-                { serial: 'SMA-SB-002', type: 'String Inverter', oem: 'SMA', utilization: '87%', efficiency: '96.5%', costHour: '$0.15', revenueHour: '$2.61', energyAtRisk: 'Low', roi: '1640%', uptime: '98.8%', status: 'Active', site: 'cummins-midrand' },
-                { serial: 'SMA-SB-003', type: 'String Inverter', oem: 'SMA', utilization: '89%', efficiency: '96.7%', costHour: '$0.15', revenueHour: '$2.67', energyAtRisk: 'Low', roi: '1680%', uptime: '99.1%', status: 'Active', site: 'cummins-midrand' },
-                { serial: 'SMA-SB-004', type: 'String Inverter', oem: 'SMA', utilization: '94%', efficiency: '97.1%', costHour: '$0.15', revenueHour: '$2.82', energyAtRisk: 'Low', roi: '1780%', uptime: '99.5%', status: 'Active', site: 'cummins-midrand' },
-                { serial: 'SMA-SB-005', type: 'String Inverter', oem: 'SMA', utilization: '91%', efficiency: '96.9%', costHour: '$0.15', revenueHour: '$2.73', energyAtRisk: 'Low', roi: '1720%', uptime: '98.9%', status: 'Active', site: 'cummins-midrand' },
-                { serial: 'SMA-SB-006', type: 'String Inverter', oem: 'SMA', utilization: '88%', efficiency: '96.6%', costHour: '$0.15', revenueHour: '$2.64', energyAtRisk: 'Low', roi: '1660%', uptime: '99.3%', status: 'Active', site: 'cummins-midrand' },
-                { serial: 'SMA-SB-007', type: 'String Inverter', oem: 'SMA', utilization: '93%', efficiency: '97.0%', costHour: '$0.15', revenueHour: '$2.79', energyAtRisk: 'Low', roi: '1760%', uptime: '99.0%', status: 'Active', site: 'cummins-midrand' },
-                { serial: 'SMA-SB-008', type: 'String Inverter', oem: 'SMA', utilization: '90%', efficiency: '96.8%', costHour: '$0.15', revenueHour: '$2.70', energyAtRisk: 'Low', roi: '1700%', uptime: '98.7%', status: 'Active', site: 'cummins-midrand' },
-                { serial: 'SMA-SB-009', type: 'String Inverter', oem: 'SMA', utilization: '86%', efficiency: '96.4%', costHour: '$0.15', revenueHour: '$2.58', energyAtRisk: 'Low', roi: '1620%', uptime: '99.4%', status: 'Active', site: 'cummins-midrand' },
+                { serial: 'SMA-SB-001', type: 'String Inverter', oem: 'SMA', capacityFactor: '22%', costHour: '$0.15', revenueHour: '$2.85', energyAtRisk: 'Low', roi: '8.2%', uptime: '94.2%', status: 'Active', site: 'cummins-midrand' },
+                { serial: 'SMA-SB-002', type: 'String Inverter', oem: 'SMA', capacityFactor: '18%', costHour: '$0.15', revenueHour: '$2.61', energyAtRisk: 'Low', roi: '7.8%', uptime: '91.5%', status: 'Active', site: 'cummins-midrand' },
+                { serial: 'SMA-SB-003', type: 'String Inverter', oem: 'SMA', capacityFactor: '25%', costHour: '$0.15', revenueHour: '$2.67', energyAtRisk: 'Low', roi: '8.5%', uptime: '96.8%', status: 'Active', site: 'cummins-midrand' },
+                { serial: 'SMA-SB-004', type: 'String Inverter', oem: 'SMA', capacityFactor: '28%', costHour: '$0.15', revenueHour: '$2.82', energyAtRisk: 'Low', roi: '9.1%', uptime: '97.3%', status: 'Active', site: 'cummins-midrand' },
+                { serial: 'SMA-SB-005', type: 'String Inverter', oem: 'SMA', capacityFactor: '21%', costHour: '$0.15', revenueHour: '$2.73', energyAtRisk: 'Low', roi: '8.0%', uptime: '93.7%', status: 'Active', site: 'cummins-midrand' },
+                { serial: 'SMA-SB-006', type: 'String Inverter', oem: 'SMA', capacityFactor: '19%', costHour: '$0.15', revenueHour: '$2.64', energyAtRisk: 'Low', roi: '7.6%', uptime: '89.4%', status: 'Active', site: 'cummins-midrand' },
+                { serial: 'SMA-SB-007', type: 'String Inverter', oem: 'SMA', capacityFactor: '24%', costHour: '$0.15', revenueHour: '$2.79', energyAtRisk: 'Low', roi: '8.8%', uptime: '95.1%', status: 'Active', site: 'cummins-midrand' },
+                { serial: 'SMA-SB-008', type: 'String Inverter', oem: 'SMA', capacityFactor: '20%', costHour: '$0.15', revenueHour: '$2.70', energyAtRisk: 'Low', roi: '7.9%', uptime: '92.6%', status: 'Active', site: 'cummins-midrand' },
+                { serial: 'SMA-SB-009', type: 'String Inverter', oem: 'SMA', capacityFactor: '17%', costHour: '$0.15', revenueHour: '$2.58', energyAtRisk: 'Low', roi: '7.2%', uptime: '87.3%', status: 'Active', site: 'cummins-midrand' },
                 // FNB Willowbridge inverters
-                { serial: 'ABB-PVI-001', type: 'Central Inverter', oem: 'ABB', utilization: '95%', efficiency: '97.5%', costHour: '$0.25', revenueHour: '$1.90', energyAtRisk: 'Low', roi: '660%', uptime: '99.8%', status: 'Active', site: 'fnb-willowbridge' },
-                { serial: 'ABB-PVI-002', type: 'Central Inverter', oem: 'ABB', utilization: '92%', efficiency: '97.2%', costHour: '$0.25', revenueHour: '$1.84', energyAtRisk: 'Low', roi: '636%', uptime: '99.6%', status: 'Active', site: 'fnb-willowbridge' }
+                { serial: 'ABB-PVI-001', type: 'Central Inverter', oem: 'ABB', capacityFactor: '26%', costHour: '$0.25', revenueHour: '$1.90', energyAtRisk: 'Low', roi: '6.8%', uptime: '96.2%', status: 'Active', site: 'fnb-willowbridge' },
+                { serial: 'ABB-PVI-002', type: 'Central Inverter', oem: 'ABB', capacityFactor: '23%', costHour: '$0.25', revenueHour: '$1.84', energyAtRisk: 'Low', roi: '6.4%', uptime: '94.7%', status: 'Active', site: 'fnb-willowbridge' }
             ];
 
             // Populate analytics table
@@ -2609,8 +2609,7 @@
                         <td>${inverter.serial}</td>
                         <td>${inverter.type}</td>
                         <td>${inverter.oem}</td>
-                        <td><span class="utilization-badge">${inverter.utilization}</span></td>
-                        <td><span class="efficiency-badge">${inverter.efficiency}</span></td>
+                        <td><span class="capacity-factor-badge">${inverter.capacityFactor}</span></td>
                         <td>${inverter.costHour}</td>
                         <td>${inverter.revenueHour}</td>
                         <td><span class="risk-badge risk-${inverter.energyAtRisk.toLowerCase()}">${inverter.energyAtRisk}</span></td>
