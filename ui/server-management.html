@@ -3,269 +3,367 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Ona Energy Asset Management</title>
+    <title>Ona Energy Management - Offtaker Management</title>
+    <link rel="icon" type="image/x-icon" href="includes/favicon.ico">
+    <link rel="icon" type="image/png" sizes="32x32" href="includes/Artboard-7.png">
+    <link rel="apple-touch-icon" sizes="180x180" href="includes/Artboard-7.png">
+    <link rel="stylesheet" href="includes/common.css">
+    <link rel="stylesheet" href="includes/dashboard.css">
+    <script src="includes/loader.js"></script>
     <style>
-        /* Import DM Sans font */
-        @import url('https://fonts.googleapis.com/css2?family=DM+Sans:wght@400;500;700&display=swap');
-
-        /* Color theme from brand guide */
-        :root {
-            --primary-black: #000000;
-            --primary-blue: #455BF1;
-            --accent-blue: #3748c8;
-            --text-dark: #333;
-            --text-light: #4D4D4D;
-            --background-light: #f5f5f5;
-            --white: #FFFFFF;
-            --neutral-light: #F9F9F9;
-            --neutral-grey: #F4F4F4;
-            --border-grey: #E0E0E0;
-            --success-green: #28ca42;
-            --warning-orange: #f39c12;
-        }
-
-        /* Reset and base styles */
-        * {
-            margin: 0;
-            padding: 0;
-            box-sizing: border-box;
-        }
-
-        body {
-            font-family: 'DM Sans', Helvetica, Arial, sans-serif;
-            color: var(--text-dark);
-            background-color: var(--white);
-            line-height: 1.6;
-        }
-
-        /* Header/Navigation Bar */
-        .header-bar {
-            background-color: var(--primary-black);
-            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 70px;
-            z-index: 100;
-            display: flex;
-            align-items: center;
-            justify-content: space-between;
-            padding: 0 90px;
-        }
-
-        .branding {
-            display: flex;
-            align-items: center;
-        }
-
-        .site-title {
-            color: var(--white);
-            font-size: 20px;
-            font-weight: 700;
-            margin-left: 15px;
-            white-space: nowrap;
-        }
-
-        .top-links {
-            display: flex;
-            gap: 15px;
-            align-items: center;
-        }
-
-        .top-links a {
-            color: var(--white);
-            text-decoration: none;
-            font: normal 12px / 16px 'DM Sans', Helvetica, Arial, sans-serif;
-            padding: 5px;
-            transition: color 0.3s ease;
-        }
-
-        .top-links a:hover {
-            color: var(--primary-blue);
-        }
-
-        /* Main content spacing */
-        main {
-            margin-top: 70px;
-        }
-
-        /* Admin panel specific styles */
-        .admin-container {
+        /* Server Management Specific Styles */
+        .server-management-container {
             display: flex;
             min-height: calc(100vh - 70px);
         }
 
-        .sidebar {
+        .server-nav {
             width: 250px;
-            background-color: var(--neutral-grey);
-            border-right: 1px solid var(--border-grey);
-            padding: 2rem 0;
+            background-color: var(--primary-black);
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
         }
 
-        .sidebar-section {
-            margin-bottom: 2rem;
+        .nav-section {
+            margin-bottom: 30px;
         }
 
-        .sidebar-title {
-            color: var(--text-light);
-            font-size: 0.8rem;
-            text-transform: uppercase;
-            letter-spacing: 1px;
-            padding: 0 2rem;
-            margin-bottom: 1rem;
+        .nav-section-title {
+            color: var(--white);
+            font-size: 14px;
             font-weight: 600;
+            margin-bottom: 15px;
+            opacity: 0.8;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
         }
 
-        .sidebar-link {
+        .nav-button {
+            background-color: #2b2b2b;
+            color: var(--white);
+            border: 1px solid #444;
+            padding: 15px;
+            text-align: left;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            margin-bottom: 8px;
             display: flex;
             align-items: center;
-            gap: 1rem;
+            gap: 10px;
+            width: 100%;
+            min-width: 0;
+        }
+
+        .nav-button:hover {
+            background-color: var(--primary-blue);
+            border-color: var(--primary-blue);
+        }
+
+        .nav-button.active {
+            background-color: var(--primary-blue);
+            border-color: var(--primary-blue);
+        }
+
+        .nav-icon {
+            font-size: 18px;
+        }
+
+        .server-main-content {
+            flex-grow: 1;
+            padding: 40px;
+            background-color: var(--white);
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-header {
+            margin-bottom: 30px;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
             color: var(--text-dark);
-            text-decoration: none;
-            padding: 0.75rem 2rem;
+            margin-bottom: 10px;
+        }
+
+        .section-subtitle {
+            font-size: 1.1rem;
+            color: var(--text-light);
+        }
+
+        /* Server Cards */
+        .servers-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(350px, 1fr));
+            gap: 25px;
+            margin-bottom: 40px;
+        }
+
+        .server-card {
+            background: var(--white);
+            border: 1px solid var(--border-grey);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
             transition: all 0.3s ease;
+            position: relative;
+        }
+
+        .server-card:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 8px 24px rgba(0,0,0,0.1);
+        }
+
+        .server-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .server-name {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-dark);
+        }
+
+        .server-status {
+            padding: 6px 12px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            font-weight: 600;
+            text-transform: uppercase;
+        }
+
+        .status-running {
+            background-color: rgba(34, 197, 94, 0.1);
+            color: var(--status-green);
+        }
+
+        .status-stopped {
+            background-color: rgba(239, 68, 68, 0.1);
+            color: var(--status-red);
+        }
+
+        .status-provisioning {
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--status-yellow);
+        }
+
+        .server-specs {
+            margin-bottom: 20px;
+        }
+
+        .spec-row {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 8px;
+            font-size: 0.9rem;
+        }
+
+        .spec-label {
+            color: var(--text-light);
+        }
+
+        .spec-value {
+            color: var(--text-dark);
             font-weight: 500;
+        }
+
+        .server-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+
+        .action-btn {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 6px;
+            font-size: 0.85rem;
+            font-weight: 600;
             cursor: pointer;
+            transition: all 0.2s ease;
+            flex: 1;
         }
 
-        .sidebar-link:hover {
-            background-color: var(--neutral-light);
-            color: var(--primary-blue);
-        }
-
-        .sidebar-link.active {
+        .action-btn.primary {
             background-color: var(--primary-blue);
             color: var(--white);
         }
 
-        .main-content {
-            flex: 1;
-            padding: 2rem;
-            background-color: var(--white);
+        .action-btn.primary:hover {
+            background-color: var(--accent-blue);
         }
 
-        .section {
-            display: none;
-        }
-
-        .section.active {
-            display: block;
-        }
-
-        .page-header {
-            margin-bottom: 3rem;
-        }
-
-        .page-title {
+        .action-btn.secondary {
+            background-color: var(--neutral-grey);
             color: var(--text-dark);
-            font-size: 2.5rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
         }
 
-        .page-subtitle {
-            color: var(--text-light);
-            font-size: 1.1rem;
+        .action-btn.secondary:hover {
+            background-color: var(--border-grey);
         }
 
-        .grid {
-            display: grid;
-            gap: 2rem;
-            margin-bottom: 3rem;
+        .action-btn.danger {
+            background-color: var(--status-red);
+            color: var(--white);
         }
 
-        .grid-4 {
-            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+        .action-btn.danger:hover {
+            background-color: #dc2626;
         }
 
-        .grid-2 {
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-        }
-
-        .card {
+        /* Deploy Server Form */
+        .deploy-form {
             background: var(--white);
             border: 1px solid var(--border-grey);
             border-radius: 12px;
-            padding: 2rem;
-            box-shadow: 0 2px 8px rgba(0, 0, 0, 0.05);
-            transition: box-shadow 0.3s ease;
+            padding: 30px;
+            margin-bottom: 30px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.05);
         }
 
-        .card:hover {
-            box-shadow: 0 4px 16px rgba(0, 0, 0, 0.1);
+        .form-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 25px;
+            margin-bottom: 30px;
         }
 
-        .quick-action {
-            text-align: center;
+        .form-group {
+            margin-bottom: 20px;
+        }
+
+        .form-group label {
+            display: block;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 8px;
+            font-size: 0.95rem;
+        }
+
+        .form-group input,
+        .form-group select,
+        .form-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 1px solid var(--border-grey);
+            border-radius: 6px;
+            font-family: 'DM Sans', sans-serif;
+            font-size: 1rem;
+            transition: border-color 0.3s ease;
+        }
+
+        .form-group input:focus,
+        .form-group select:focus,
+        .form-group textarea:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+            box-shadow: 0 0 0 3px rgba(69, 91, 241, 0.1);
+        }
+
+        .form-group textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        .deploy-button {
+            background-color: var(--primary-blue);
+            color: var(--white);
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            font-size: 1.1rem;
             cursor: pointer;
             transition: all 0.3s ease;
+            display: flex;
+            align-items: center;
+            gap: 10px;
         }
 
-        .quick-action:hover {
-            transform: translateY(-2px);
-            border-color: var(--primary-blue);
+        .deploy-button:hover {
+            background-color: var(--accent-blue);
+            transform: translateY(-1px);
         }
 
-        .quick-action-icon {
-            font-size: 3rem;
-            margin-bottom: 1rem;
+        .deploy-button:disabled {
+            background-color: var(--border-grey);
+            cursor: not-allowed;
+            transform: none;
         }
 
-        .quick-action-title {
-            color: var(--text-dark);
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
+        /* Monitoring Dashboard */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
         }
 
-        .quick-action-desc {
-            color: var(--text-light);
-            font-size: 0.9rem;
-        }
-
-        .stat-card {
+        .metric-card {
+            background: var(--white);
+            border: 1px solid var(--border-grey);
+            border-radius: 8px;
+            padding: 20px;
             text-align: center;
-            border-left: 4px solid var(--primary-blue);
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
-        .stat-number {
-            color: var(--text-dark);
-            font-size: 2.5rem;
+        .metric-value {
+            font-size: 2rem;
             font-weight: 700;
-            margin-bottom: 0.5rem;
+            color: var(--primary-blue);
+            display: block;
+            margin-bottom: 5px;
         }
 
-        .stat-label {
+        .metric-label {
+            font-size: 0.9rem;
             color: var(--text-light);
-            font-size: 1rem;
-            margin-bottom: 0.5rem;
-            font-weight: 500;
+            margin-bottom: 10px;
         }
 
-        .stat-change {
-            color: var(--success-green);
+        .metric-change {
             font-size: 0.8rem;
-            font-weight: 500;
+            font-weight: 600;
         }
 
-        .section-title {
-            color: var(--text-dark);
-            font-size: 1.5rem;
-            font-weight: 700;
-            margin-bottom: 1.5rem;
+        .metric-change.positive {
+            color: var(--status-green);
         }
 
-        .section-subtitle {
-            color: var(--text-light);
-            margin-bottom: 2rem;
+        .metric-change.negative {
+            color: var(--status-red);
+        }
+
+        /* Activity Feed */
+        .activity-feed {
+            background: var(--white);
+            border: 1px solid var(--border-grey);
+            border-radius: 12px;
+            padding: 25px;
+            margin-bottom: 30px;
         }
 
         .activity-item {
             display: flex;
-            align-items: flex-start;
-            gap: 1rem;
-            padding: 1rem 0;
+            align-items: center;
+            padding: 15px 0;
             border-bottom: 1px solid var(--border-grey);
         }
 
@@ -280,778 +378,875 @@
             display: flex;
             align-items: center;
             justify-content: center;
+            margin-right: 15px;
             font-size: 1.2rem;
-            flex-shrink: 0;
-            font-weight: 600;
         }
 
         .activity-icon.success {
-            background: rgba(40, 202, 66, 0.1);
-            color: var(--success-green);
-        }
-
-        .activity-icon.info {
-            background: rgba(69, 91, 241, 0.1);
-            color: var(--primary-blue);
+            background-color: rgba(34, 197, 94, 0.1);
+            color: var(--status-green);
         }
 
         .activity-icon.warning {
-            background: rgba(243, 156, 18, 0.1);
-            color: var(--warning-orange);
+            background-color: rgba(245, 158, 11, 0.1);
+            color: var(--status-yellow);
+        }
+
+        .activity-icon.info {
+            background-color: rgba(69, 91, 241, 0.1);
+            color: var(--primary-blue);
         }
 
         .activity-content {
-            flex: 1;
+            flex-grow: 1;
         }
 
         .activity-title {
+            font-weight: 600;
             color: var(--text-dark);
-            font-weight: 500;
-            margin-bottom: 0.25rem;
+            margin-bottom: 4px;
         }
 
         .activity-time {
+            font-size: 0.85rem;
             color: var(--text-light);
-            font-size: 0.8rem;
         }
 
-        .btn {
-            padding: 0.75rem 2rem;
-            border: none;
+        /* Quick Actions */
+        .quick-actions {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 20px;
+            margin-bottom: 30px;
+        }
+
+        .quick-action-card {
+            background: var(--white);
+            border: 1px solid var(--border-grey);
             border-radius: 8px;
-            font-size: 1rem;
-            font-weight: 500;
+            padding: 20px;
+            text-align: center;
             cursor: pointer;
             transition: all 0.3s ease;
-            display: inline-flex;
-            align-items: center;
-            gap: 0.5rem;
-            font-family: 'DM Sans', sans-serif;
         }
 
-        .btn-primary {
-            background: var(--primary-blue);
-            color: var(--white);
-        }
-
-        .btn-primary:hover {
-            background: var(--accent-blue);
-            transform: translateY(-2px);
-            box-shadow: 0 4px 12px rgba(69, 91, 241, 0.3);
-        }
-
-        .btn-secondary {
-            background: var(--neutral-grey);
-            color: var(--text-dark);
-            border: 1px solid var(--border-grey);
-        }
-
-        .btn-secondary:hover {
-            background: var(--neutral-light);
-        }
-
-        .turbine-card {
-            border: 1px solid var(--border-grey);
-            border-radius: 12px;
-            overflow: hidden;
-            background: var(--white);
-        }
-
-        .turbine-header {
-            padding: 1.5rem;
-            border-bottom: 1px solid var(--border-grey);
-            background: var(--neutral-light);
-        }
-
-        .turbine-title {
-            color: var(--text-dark);
-            font-size: 1.2rem;
-            font-weight: 600;
-            margin-bottom: 0.5rem;
-        }
-
-        .turbine-status {
-            color: var(--success-green);
-            font-size: 0.9rem;
-            font-weight: 500;
-        }
-
-        .turbine-specs {
-            padding: 1.5rem;
-        }
-
-        .turbine-spec {
-            display: flex;
-            justify-content: space-between;
-            margin-bottom: 0.75rem;
-            color: var(--text-dark);
-        }
-
-        .turbine-spec:last-child {
-            margin-bottom: 0;
-        }
-
-        .turbine-spec span:first-child {
-            font-weight: 500;
-            color: var(--text-light);
-        }
-
-        .turbine-actions {
-            padding: 1.5rem;
-            border-top: 1px solid var(--border-grey);
-            display: flex;
-            gap: 1rem;
-            background: var(--neutral-light);
-        }
-
-        .form-group {
-            margin-bottom: 1.5rem;
-        }
-
-        .form-label {
-            color: var(--text-dark);
-            font-weight: 500;
-            margin-bottom: 0.5rem;
-            display: block;
-        }
-
-        .form-input, .form-select, .form-textarea {
-            width: 100%;
-            padding: 0.75rem;
-            border: 1px solid var(--border-grey);
-            border-radius: 8px;
-            background: var(--white);
-            color: var(--text-dark);
-            font-size: 1rem;
-            font-family: 'DM Sans', sans-serif;
-        }
-
-        .form-input:focus, .form-select:focus, .form-textarea:focus {
-            outline: none;
+        .quick-action-card:hover {
             border-color: var(--primary-blue);
-            box-shadow: 0 0 0 3px rgba(69, 91, 241, 0.1);
+            transform: translateY(-2px);
+            box-shadow: 0 4px 12px rgba(69, 91, 241, 0.1);
         }
 
-        .alert-item {
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            padding: 1rem 0;
-            border-bottom: 1px solid var(--border-grey);
-        }
-
-        .alert-item:last-child {
-            border-bottom: none;
-        }
-
-        .alert-content {
-            display: flex;
-            align-items: center;
-            gap: 1rem;
-            flex: 1;
-        }
-
-        .alert-actions {
-            display: flex;
-            gap: 0.5rem;
-        }
-
-        .metric-item {
-            text-align: center;
-            padding: 1.5rem;
-            background: var(--neutral-light);
-            border-radius: 12px;
-            border: 1px solid var(--border-grey);
-        }
-
-        .metric-value {
-            color: var(--text-dark);
+        .quick-action-icon {
             font-size: 2rem;
-            font-weight: 700;
-            margin-bottom: 0.5rem;
+            margin-bottom: 10px;
         }
 
-        .metric-label {
+        .quick-action-title {
+            font-weight: 600;
+            color: var(--text-dark);
+            margin-bottom: 5px;
+        }
+
+        .quick-action-desc {
+            font-size: 0.85rem;
             color: var(--text-light);
-            font-size: 0.9rem;
-            margin-bottom: 0.25rem;
-            font-weight: 500;
         }
 
-        .metric-change {
-            font-size: 0.8rem;
-            font-weight: 500;
-        }
-
-        .metric-change.positive {
-            color: var(--success-green);
-        }
-
-        .metric-change.negative {
-            color: var(--warning-orange);
-        }
-
+        /* Responsive */
         @media (max-width: 768px) {
-            .header-bar {
-                padding: 0 20px;
-            }
-
-            .admin-container {
+            .server-management-container {
                 flex-direction: column;
             }
-            
-            .sidebar {
+
+            .server-nav {
                 width: 100%;
+                flex-direction: row;
+                overflow-x: auto;
+                padding: 15px;
             }
-            
-            .grid-4, .grid-2 {
+
+            .nav-section {
+                margin-bottom: 0;
+                margin-right: 20px;
+                min-width: 200px;
+            }
+
+            .server-main-content {
+                padding: 20px;
+            }
+
+            .servers-grid {
                 grid-template-columns: 1fr;
             }
-            
-            .main-content {
-                padding: 1rem;
+
+            .form-grid {
+                grid-template-columns: 1fr;
+            }
+
+            .metrics-grid {
+                grid-template-columns: repeat(2, 1fr);
+            }
+
+            .quick-actions {
+                grid-template-columns: 1fr;
             }
         }
     </style>
 </head>
 <body>
-    <header class="header-bar">
+    <!-- Top Navigation Bar from index.html -->
+    <div class="header-bar">
         <div class="branding">
-            <div class="site-title">Ona Energy Management</div>
+            <img src="includes/Artboard-7.png" alt="Asoba Logo">
+            <span class="site-title">Ona Energy Management</span>
         </div>
-        
-        <nav class="top-links">
-            <a href="#">Applications</a>
-            <a href="#">Offtaker Management</a>
-            <a href="#">O&M Management</a>
-            <a href="#">Logout</a>
-        </nav>
-    </header>
+        <div class="top-links">
+            <a href="application-select.html">Applications</a>
+            <a href="admin-gpu-panel.html">O&M Management</a>
+            <a href="server-management.html" style="color: var(--primary-blue);">Offtaker Management</a>
+            <a href="#" onclick="logout(); return false;" style="color: var(--status-red);">Logout</a>
+        </div>
+    </div>
 
     <main>
-        <div class="admin-container">
-            <aside class="sidebar">
-                <div class="sidebar-section">
-                    <div class="sidebar-title">Overview</div>
-                    
-                    <a href="#" class="sidebar-link active" data-section="dashboard">
-                        <span>📊</span>
+        <div class="server-management-container">
+            <!-- Navigation Sidebar -->
+            <nav class="server-nav">
+                <div class="nav-section">
+                    <div class="nav-section-title">Overview</div>
+                    <button class="nav-button active" data-section="dashboard">
+                        <span class="nav-icon">📊</span>
                         Dashboard
-                    </a>
-                    <a href="#" class="sidebar-link" data-section="inventory">
-                        <span>⚡</span>
-                        Inventory
-                    </a>
-                    <a href="#" class="sidebar-link" data-section="resource-allocation">
-                        <span>⚡</span>
-                        Resource Allocation
-                    </a>
+                    </button>
+                    <button class="nav-button" data-section="contracts">
+                        <span class="nav-icon">📋</span>
+                        PPA Contracts
+                    </button>
+                    <button class="nav-button" data-section="monitoring">
+                        <span class="nav-icon">📈</span>
+                        Consumption
+                    </button>
                 </div>
-
-                <div class="sidebar-section">
-                    <div class="sidebar-title">Monitoring</div>
-                    
-                    <a href="#" class="sidebar-link" data-section="performance">
-                        <span>📈</span>
-                        Performance
-                    </a>
-                    <a href="#" class="sidebar-link" data-section="maintenance">
-                        <span>🔧</span>
-                        Maintenance
-                    </a>
-                    <a href="#" class="sidebar-link" data-section="analytics">
-                        <span>📊</span>
-                        Analytics
-                    </a>
+                
+                <div class="nav-section">
+                    <div class="nav-section-title">Management</div>
+                    <button class="nav-button" data-section="deploy">
+                        <span class="nav-icon">🤝</span>
+                        Create PPA
+                    </button>
+                    <button class="nav-button" data-section="templates">
+                        <span class="nav-icon">📋</span>
+                        Templates
+                    </button>
+                    <button class="nav-button" data-section="settings">
+                        <span class="nav-icon">⚙️</span>
+                        Settings
+                    </button>
                 </div>
-            </aside>
+            </nav>
 
-            <div class="main-content">
+            <!-- Main Content Area -->
+            <div class="server-main-content">
                 <!-- Dashboard Section -->
-                <div id="dashboard" class="section active">
-                    <div class="page-header">
-                        <h1 class="page-title">Dashboard</h1>
-                        <p class="page-subtitle">Real-time monitoring and management of energy infrastructure</p>
+                <div class="content-section active" id="dashboard">
+                    <div class="section-header">
+                        <h1 class="section-title">Offtaker Management Dashboard</h1>
+                        <p class="section-subtitle">Monitor and manage your power purchase agreements and offtaker relationships</p>
                     </div>
 
-                    <!-- Key Metrics -->
-                    <div class="grid grid-4">
-                        <div class="card stat-card">
-                            <div class="stat-number">1</div>
-                            <div class="stat-label">Total Turbines</div>
-                            <div class="stat-change">+0 this month</div>
+                    <!-- Quick Actions -->
+                    <div class="quick-actions">
+                        <div class="quick-action-card" onclick="switchSection('deploy')">
+                            <div class="quick-action-icon">🤝</div>
+                            <div class="quick-action-title">Create PPA</div>
+                            <div class="quick-action-desc">New contract agreement</div>
                         </div>
-
-                        <div class="card stat-card">
-                            <div class="stat-number">1</div>
-                            <div class="stat-label">Active Turbines</div>
-                            <div class="stat-change">86% utilization</div>
+                        <div class="quick-action-card" onclick="switchSection('contracts')">
+                            <div class="quick-action-icon">📋</div>
+                            <div class="quick-action-title">View Contracts</div>
+                            <div class="quick-action-desc">Manage existing PPAs</div>
                         </div>
-
-                        <div class="card stat-card">
-                            <div class="stat-number">86%</div>
-                            <div class="stat-label">Avg Utilization</div>
-                            <div class="stat-change">+5% from yesterday</div>
-                        </div>
-
-                        <div class="card stat-card">
-                            <div class="stat-number">3</div>
-                            <div class="stat-label">AI Optimization Jobs</div>
-                            <div class="stat-change">+2 this hour</div>
-                        </div>
-                    </div>
-
-                    <!-- Active Turbines -->
-                    <div class="grid grid-2">
-                        <div class="turbine-card">
-                            <div class="turbine-header">
-                                <div class="turbine-title">Teebus Conduit Hydro Plant</div>
-                                <div class="turbine-status">Active</div>
-                            </div>
-                            <div class="turbine-specs">
-                                <div class="turbine-spec">
-                                    <span>Type:</span>
-                                    <span>Conduit Hydropower</span>
-                                </div>
-                                <div class="turbine-spec">
-                                    <span>Capacity:</span>
-                                    <span>9.5 MW</span>
-                                </div>
-                                <div class="turbine-spec">
-                                    <span>Location:</span>
-                                    <span>Orange-Fish River Tunnel</span>
-                                </div>
-                                <div class="turbine-spec">
-                                    <span>Current Output:</span>
-                                    <span>8.2 MW</span>
-                                </div>
-                                <div class="turbine-spec">
-                                    <span>AI Efficiency:</span>
-                                    <span>94.2%</span>
-                                </div>
-                            </div>
-                            <div class="turbine-actions">
-                                <button class="btn btn-primary">View Details</button>
-                                <button class="btn btn-secondary">AI Optimize</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Inventory Section -->
-                <div id="inventory" class="section">
-                    <div class="page-header">
-                        <h1 class="page-title">Asset Inventory</h1>
-                        <p class="page-subtitle">Conduit hydropower specifications and asset tracking</p>
-                        <button class="btn btn-primary">➕ Add New Asset</button>
-                    </div>
-
-                    <div class="grid grid-2">
-                        <div class="turbine-card">
-                            <div class="turbine-header">
-                                <div class="turbine-title">Teebus Conduit Hydro Plant</div>
-                                <div class="turbine-status">Active</div>
-                            </div>
-                            <div class="turbine-specs">
-                                <div class="turbine-spec">
-                                    <span>Type:</span>
-                                    <span>Conduit Hydropower</span>
-                                </div>
-                                <div class="turbine-spec">
-                                    <span>Capacity:</span>
-                                    <span>9.5 MW</span>
-                                </div>
-                                <div class="turbine-spec">
-                                    <span>Turbines:</span>
-                                    <span>3 units</span>
-                                </div>
-                                <div class="turbine-spec">
-                                    <span>Location:</span>
-                                    <span>Orange-Fish River Tunnel</span>
-                                </div>
-                                <div class="turbine-spec">
-                                    <span>Commissioned:</span>
-                                    <span>2024-09-15</span>
-                                </div>
-                                <div class="turbine-spec">
-                                    <span>Next AI Calibration:</span>
-                                    <span>Dec 15, 2024</span>
-                                </div>
-                            </div>
-                            <div class="turbine-actions">
-                                <button class="btn btn-primary">View Details</button>
-                                <button class="btn btn-secondary">Maintenance</button>
-                                <button class="btn btn-secondary">AI Training</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Resource Allocation Section -->
-                <div id="resource-allocation" class="section">
-                    <div class="page-header">
-                        <h1 class="page-title">Capacity Management</h1>
-                        <p class="page-subtitle">AI-driven hydro energy production capacity and resource optimization</p>
-                    </div>
-
-                    <!-- Capacity Stats -->
-                    <div class="grid grid-4">
-                        <div class="card stat-card">
-                            <div class="stat-number">9.5</div>
-                            <div class="stat-label">Total Installed Capacity (MW)</div>
-                            <div class="stat-change">+9.5 MW this year</div>
-                        </div>
-
-                        <div class="card stat-card">
-                            <div class="stat-number">69.5</div>
-                            <div class="stat-label">Contracted Energy (GWh/year)</div>
-                            <div class="stat-change">100% of capacity contracted</div>
-                        </div>
-
-                        <div class="card stat-card">
-                            <div class="stat-number">0</div>
-                            <div class="stat-label">Available Capacity (MW)</div>
-                            <div class="stat-change">Fully allocated</div>
-                        </div>
-
-                        <div class="card stat-card">
-                            <div class="stat-number">98.7%</div>
-                            <div class="stat-label">AI Availability Prediction</div>
-                            <div class="stat-change">+2.5% from ML optimization</div>
-                        </div>
-                    </div>
-
-                    <!-- AI Optimization Cards -->
-                    <div class="grid grid-2">
-                        <div class="card">
-                            <h2 class="section-title">Flow Prediction AI</h2>
-                            <div class="grid grid-2">
-                                <div class="metric-item">
-                                    <div class="metric-value">92.4%</div>
-                                    <div class="metric-label">7-Day Flow Accuracy</div>
-                                    <div class="metric-change positive">+3.2% vs historical</div>
-                                </div>
-                                <div class="metric-item">
-                                    <div class="metric-value">15.2</div>
-                                    <div class="metric-label">Predicted Flow (m³/s)</div>
-                                    <div class="metric-change positive">Peak irrigation season</div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <h2 class="section-title">Revenue Optimization AI</h2>
-                            <div class="grid grid-2">
-                                <div class="metric-item">
-                                    <div class="metric-value">R2.3M</div>
-                                    <div class="metric-label">Optimized Monthly Revenue</div>
-                                    <div class="metric-change positive">+8.2% vs baseline</div>
-                                </div>
-                                <div class="metric-item">
-                                    <div class="metric-value">94.7%</div>
-                                    <div class="metric-label">Dispatch Optimization</div>
-                                    <div class="metric-change positive">AI-driven scheduling</div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Performance Section -->
-                <div id="performance" class="section">
-                    <div class="page-header">
-                        <h1 class="page-title">Performance Monitoring</h1>
-                        <p class="page-subtitle">Real-time metrics and AI-powered system health</p>
-                        <button class="btn btn-primary">🔄 Refresh Data</button>
-                    </div>
-
-                    <!-- Live Performance Metrics -->
-                    <div class="grid grid-4">
-                        <div class="card stat-card">
-                            <div class="stat-number">8.2 MW</div>
-                            <div class="stat-label">Current Power Output</div>
-                            <div class="stat-change">↗ +0.5MW from AI optimization</div>
-                        </div>
-
-                        <div class="card stat-card">
-                            <div class="stat-number">12.5°C</div>
-                            <div class="stat-label">Water Temperature</div>
-                            <div class="stat-change">→ Optimal for efficiency</div>
-                        </div>
-
-                        <div class="card stat-card">
-                            <div class="stat-number">89.2%</div>
-                            <div class="stat-label">System Efficiency</div>
-                            <div class="stat-change">↗ +3.1% from AI tuning</div>
-                        </div>
-
-                        <div class="card stat-card">
-                            <div class="stat-number">95.8%</div>
-                            <div class="stat-label">PPA Compliance</div>
-                            <div class="stat-change">↗ Above 95% target</div>
-                        </div>
-                    </div>
-
-                    <!-- AI Alerts -->
-                    <div class="card">
-                        <h2 class="section-title">Active AI Alerts</h2>
-                        
-                        <div class="alert-item">
-                            <div class="alert-content">
-                                <div class="activity-icon warning">⚠</div>
-                                <div>
-                                    <div class="activity-title">AI Predictive: Flow rate declining trend detected</div>
-                                    <div class="activity-time">5 minutes ago</div>
-                                </div>
-                            </div>
-                            <div class="alert-actions">
-                                <button class="btn btn-secondary">Acknowledge</button>
-                                <button class="btn btn-primary">AI Optimize</button>
-                            </div>
-                        </div>
-
-                        <div class="alert-item">
-                            <div class="alert-content">
-                                <div class="activity-icon info">ℹ</div>
-                                <div>
-                                    <div class="activity-title">ML Model: Efficiency optimization completed</div>
-                                    <div class="activity-time">15 minutes ago</div>
-                                </div>
-                            </div>
-                            <div class="alert-actions">
-                                <button class="btn btn-secondary">Acknowledge</button>
-                                <button class="btn btn-primary">View Results</button>
-                            </div>
-                        </div>
-
-                        <div class="alert-item">
-                            <div class="alert-content">
-                                <div class="activity-icon success">✓</div>
-                                <div>
-                                    <div class="activity-title">AI Revenue Optimizer: Dispatch schedule updated</div>
-                                    <div class="activity-time">2 hours ago</div>
-                                </div>
-                            </div>
-                            <div class="alert-actions">
-                                <button class="btn btn-secondary">Acknowledge</button>
-                                <button class="btn btn-primary">View Schedule</button>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-
-                <!-- Maintenance Section -->
-                <div id="maintenance" class="section">
-                    <div class="page-header">
-                        <h1 class="page-title">AI-Powered Maintenance</h1>
-                        <p class="page-subtitle">Predictive maintenance and automated system optimization</p>
-                    </div>
-
-                    <!-- Predictive Maintenance -->
-                    <div class="card">
-                        <h2 class="section-title">Predictive Maintenance AI</h2>
-                        
-                        <div class="grid grid-4">
-                            <div class="metric-item">
-                                <div class="metric-value">87%</div>
-                                <div class="metric-label">Turbine Health Score</div>
-                                <div class="metric-change positive">Normal operation</div>
-                            </div>
-                            
-                            <div class="metric-item">
-                                <div class="metric-value">23</div>
-                                <div class="metric-label">Days to Next Service</div>
-                                <div class="metric-change positive">AI-predicted optimal timing</div>
-                            </div>
-                            
-                            <div class="metric-item">
-                                <div class="metric-value">2.1°C</div>
-                                <div class="metric-label">Bearing Temp Anomaly</div>
-                                <div class="metric-change warning">Monitor trending</div>
-                            </div>
-                            
-                            <div class="metric-item">
-                                <div class="metric-value">94.2%</div>
-                                <div class="metric-label">Failure Prediction Accuracy</div>
-                                <div class="metric-change positive">Model confidence high</div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Configuration -->
-                    <div class="card">
-                        <h2 class="section-title">AI System Configuration</h2>
-                        
-                        <div class="grid grid-2">
-                            <div class="form-group">
-                                <label class="form-label">Flow Prediction Model</label>
-                                <select class="form-select">
-                                    <option>LSTM Neural Network</option>
-                                    <option>Random Forest</option>
-                                    <option>Ensemble Model</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">Optimization Interval</label>
-                                <select class="form-select">
-                                    <option>Real-time (5min)</option>
-                                    <option>Hourly</option>
-                                    <option>Daily</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">Alert Threshold</label>
-                                <select class="form-select">
-                                    <option>Conservative (85%)</option>
-                                    <option>Balanced (90%)</option>
-                                    <option>Aggressive (95%)</option>
-                                </select>
-                            </div>
-
-                            <div class="form-group">
-                                <label class="form-label">Auto-Optimization</label>
-                                <select class="form-select">
-                                    <option>Enabled with Human Override</option>
-                                    <option>Recommendation Only</option>
-                                    <option>Fully Automated</option>
-                                </select>
-                            </div>
-                        </div>
-
-                        <button class="btn btn-primary">💾 Save AI Configuration</button>
-                    </div>
-                </div>
-
-                <!-- Analytics Section -->
-                <div id="analytics" class="section">
-                    <div class="page-header">
-                        <h1 class="page-title">AI Analytics Dashboard</h1>
-                        <p class="page-subtitle">Machine learning insights, predictive analytics, and performance optimization</p>
-                    </div>
-
-                    <!-- AI Performance Metrics -->
-                    <div class="grid grid-4">
-                        <div class="card">
-                            <div class="quick-action-icon">🤖</div>
-                            <div class="activity-content">
-                                <div class="metric-value">4.2h</div>
-                                <div class="metric-label">AI Model Training Time</div>
-                                <div class="metric-change positive">-1.8h vs last month</div>
-                            </div>
-                        </div>
-
-                        <div class="card">
+                        <div class="quick-action-card" onclick="switchSection('monitoring')">
                             <div class="quick-action-icon">📊</div>
-                            <div class="activity-content">
-                                <div class="metric-value">97.1%</div>
-                                <div class="metric-label">Flow Prediction Accuracy</div>
-                                <div class="metric-change positive">+2.3% vs target (95%)</div>
-                            </div>
+                            <div class="quick-action-title">Consumption</div>
+                            <div class="quick-action-desc">Real-time usage metrics</div>
                         </div>
-
-                        <div class="card">
-                            <div class="quick-action-icon">🎯</div>
-                            <div class="activity-content">
-                                <div class="metric-value">3.2%</div>
-                                <div class="metric-label">Revenue Optimization Gain</div>
-                                <div class="metric-change positive">+R890k additional revenue</div>
-                            </div>
-                        </div>
-
-                        <div class="card">
-                            <div class="quick-action-icon">⚡</div>
-                            <div class="activity-content">
-                                <div class="metric-value">12.3min</div>
-                                <div class="metric-label">Anomaly Detection Speed</div>
-                                <div class="metric-change positive">-8.7min vs baseline</div>
-                            </div>
+                        <div class="quick-action-card" onclick="showTemplates()">
+                            <div class="quick-action-icon">📋</div>
+                            <div class="quick-action-title">Templates</div>
+                            <div class="quick-action-desc">Pre-configured contracts</div>
                         </div>
                     </div>
 
-                    <!-- Detailed AI Analytics -->
-                    <div class="grid grid-2">
-                        <div class="card">
-                            <h2 class="section-title">ML Model Performance</h2>
-                            <div class="grid grid-2">
-                                <div class="metric-item">
-                                    <div class="metric-value">8.47</div>
-                                    <div class="metric-label">Flow RMSE (m³/s)</div>
-                                    <div class="metric-change positive">-12% model improvement</div>
-                                </div>
-                                <div class="metric-item">
-                                    <div class="metric-value">0.94</div>
-                                    <div class="metric-label">Revenue Correlation (R²)</div>
-                                    <div class="metric-change positive">High model accuracy</div>
-                                </div>
-                            </div>
+                    <!-- Metrics Overview -->
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <span class="metric-value" id="totalContracts">12</span>
+                            <span class="metric-label">Active PPAs</span>
+                            <span class="metric-change positive">+2 this month</span>
                         </div>
-
-                        <div class="card">
-                            <h2 class="section-title">Predictive Insights</h2>
-                            <div class="grid grid-2">
-                                <div class="metric-item">
-                                    <div class="metric-value">156h</div>
-                                    <div class="metric-label">Predicted Optimal Runtime</div>
-                                    <div class="metric-change positive">Next 7 days forecast</div>
-                                </div>
-                                <div class="metric-item">
-                                    <div class="metric-value">R2.8M</div>
-                                    <div class="metric-label">Forecasted Revenue</div>
-                                    <div class="metric-change positive">Monthly AI projection</div>
-                                </div>
-                            </div>
+                        <div class="metric-card">
+                            <span class="metric-value" id="totalCapacity">847</span>
+                            <span class="metric-label">MW Contracted</span>
+                            <span class="metric-change positive">+156 MW this month</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-value" id="totalRevenue">R3.2M</span>
+                            <span class="metric-label">Monthly Revenue</span>
+                            <span class="metric-change positive">+R512k this month</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-value" id="contractCompliance">99.8%</span>
+                            <span class="metric-label">Contract Compliance</span>
+                            <span class="metric-change positive">+0.2% this month</span>
                         </div>
                     </div>
 
-                    <!-- Export Data -->
-                    <div class="card">
-                        <h2 class="section-title">AI Data Export</h2>
-                        <div class="grid grid-2">
+                    <!-- Recent Activity -->
+                    <div class="activity-feed">
+                        <h3 style="margin-bottom: 20px; color: var(--text-dark);">Recent Activity</h3>
+                        <div class="activity-item">
+                            <div class="activity-icon success">✓</div>
+                            <div class="activity-content">
+                                <div class="activity-title">PPA 'Municipal-PPA-03' executed successfully</div>
+                                <div class="activity-time">2 minutes ago</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon info">ℹ</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Peak demand exceeded for 'Industrial-Contract-01'</div>
+                                <div class="activity-time">15 minutes ago</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon warning">⚠</div>
+                            <div class="activity-content">
+                                <div class="activity-title">High consumption detected on 'Commercial-PPA-02'</div>
+                                <div class="activity-time">1 hour ago</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon success">✓</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Monthly billing completed for 'Residential-Cluster'</div>
+                                <div class="activity-time">3 hours ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Contracts Section -->
+                <div class="content-section" id="contracts">
+                    <div class="section-header">
+                        <h1 class="section-title">PPA Contracts</h1>
+                        <p class="section-subtitle">Manage your power purchase agreements and offtaker relationships</p>
+                    </div>
+
+                    <div class="servers-grid" id="contractsGrid">
+                        <!-- Contracts will be populated by JavaScript -->
+                    </div>
+                </div>
+
+                <!-- Deploy Contract Section -->
+                <div class="content-section" id="deploy">
+                    <div class="section-header">
+                        <h1 class="section-title">Create New PPA</h1>
+                        <p class="section-subtitle">Configure and execute a new power purchase agreement</p>
+                    </div>
+
+                    <div class="deploy-form">
+                        <div class="form-grid">
                             <div class="form-group">
-                                <label class="form-label">AI Model Type</label>
-                                <select class="form-select">
-                                    <option>All AI Models</option>
-                                    <option>Flow Prediction</option>
-                                    <option>Revenue Optimization</option>
-                                    <option>Maintenance Prediction</option>
+                                <label for="contractName">Contract Name</label>
+                                <input type="text" id="contractName" placeholder="e.g., Municipal-PPA-01" value="demo-ppa-01">
+                            </div>
+                            <div class="form-group">
+                                <label for="offtakerType">Offtaker Type</label>
+                                <select id="offtakerType">
+                                    <option value="municipal">Municipal Utility</option>
+                                    <option value="commercial">Commercial</option>
+                                    <option value="industrial">Industrial</option>
+                                    <option value="residential">Residential Cluster</option>
                                 </select>
                             </div>
-                            <button class="btn btn-primary">📊 Export AI Analytics</button>
+                            <div class="form-group">
+                                <label for="contractCapacity">Contract Capacity</label>
+                                <select id="contractCapacity">
+                                    <option value="10">10 MW</option>
+                                    <option value="25" selected>25 MW</option>
+                                    <option value="50">50 MW</option>
+                                    <option value="100">100 MW</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="deliveryPoint">Delivery Point</label>
+                                <select id="deliveryPoint">
+                                    <option value="grid-a1">Grid Node A1</option>
+                                    <option value="grid-a2">Grid Node A2</option>
+                                    <option value="grid-b1">Grid Node B1</option>
+                                    <option value="grid-c1">Grid Node C1</option>
+                                </select>
+                            </div>
                         </div>
+                        
+                        <div class="form-group">
+                            <label for="contractTerms">Special Contract Terms (Optional)</label>
+                            <textarea id="contractTerms" placeholder="Additional terms and conditions...&#10;- Peak/off-peak pricing&#10;- Minimum annual volume&#10;- Force majeure clauses"></textarea>
+                        </div>
+
+                        <button class="deploy-button" onclick="createPPA()">
+                            <span>🤝</span>
+                            Execute PPA
+                        </button>
+                    </div>
+                </div>
+
+                <!-- Monitoring Section -->
+                <div class="content-section" id="monitoring">
+                    <div class="section-header">
+                        <h1 class="section-title">Consumption Monitoring</h1>
+                        <p class="section-subtitle">Real-time energy consumption and contract performance</p>
+                    </div>
+
+                    <div class="metrics-grid">
+                        <div class="metric-card">
+                            <span class="metric-value" id="capacityUtilization">67%</span>
+                            <span class="metric-label">Average Capacity Utilization</span>
+                            <span class="metric-change negative">-5% from yesterday</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-value" id="dailyConsumption">4.2</span>
+                            <span class="metric-label">GWh Today's Consumption</span>
+                            <span class="metric-change positive">+0.8 GWh from yesterday</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-value" id="peakDemand">245</span>
+                            <span class="metric-label">MW Peak Demand</span>
+                            <span class="metric-change positive">+12 MW from yesterday</span>
+                        </div>
+                        <div class="metric-card">
+                            <span class="metric-value" id="currentOutput">189</span>
+                            <span class="metric-label">MW Current Output</span>
+                            <span class="metric-change positive">+8 MW from yesterday</span>
+                        </div>
+                    </div>
+
+                    <div class="activity-feed">
+                        <h3 style="margin-bottom: 20px; color: var(--text-dark);">System Events</h3>
+                        <div class="activity-item">
+                            <div class="activity-icon info">📊</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Peak demand spike detected on Municipal-PPA-03</div>
+                                <div class="activity-time">5 minutes ago</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon success">✓</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Load balancing completed: +50 MW capacity</div>
+                                <div class="activity-time">12 minutes ago</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon warning">⚠</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Consumption approaching contract limit on Commercial-PPA-01</div>
+                                <div class="activity-time">25 minutes ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Templates Section -->
+                <div class="content-section" id="templates">
+                    <div class="section-header">
+                        <h1 class="section-title">PPA Templates</h1>
+                        <p class="section-subtitle">Pre-configured contract templates for common offtaker types</p>
+                    </div>
+
+                    <div class="servers-grid">
+                        <div class="server-card">
+                            <div class="server-header">
+                                <div class="server-name">Municipal Utility PPA</div>
+                                <div class="server-status status-running">Template</div>
+                            </div>
+                            <div class="server-specs">
+                                <div class="spec-row">
+                                    <span class="spec-label">Capacity:</span>
+                                    <span class="spec-value">50 MW</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Price:</span>
+                                    <span class="spec-value">\$45/MWh</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Term:</span>
+                                    <span class="spec-value">20 Years</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Type:</span>
+                                    <span class="spec-value">Fixed-Price</span>
+                                </div>
+                            </div>
+                            <div class="server-actions">
+                                <button class="action-btn primary" onclick="deployFromTemplate('municipal-ppa')">Create</button>
+                                <button class="action-btn secondary" onclick="viewTemplateDetails('municipal-ppa')">Details</button>
+                            </div>
+                        </div>
+
+                        <div class="server-card">
+                            <div class="server-header">
+                                <div class="server-name">Commercial PPA</div>
+                                <div class="server-status status-running">Template</div>
+                            </div>
+                            <div class="server-specs">
+                                <div class="spec-row">
+                                    <span class="spec-label">Capacity:</span>
+                                    <span class="spec-value">25 MW</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Price:</span>
+                                    <span class="spec-value">\$52/MWh</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Term:</span>
+                                    <span class="spec-value">15 Years</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Type:</span>
+                                    <span class="spec-value">Escalating</span>
+                                </div>
+                            </div>
+                            <div class="server-actions">
+                                <button class="action-btn primary" onclick="deployFromTemplate('commercial-ppa')">Create</button>
+                                <button class="action-btn secondary" onclick="viewTemplateDetails('commercial-ppa')">Details</button>
+                            </div>
+                        </div>
+
+                        <div class="server-card">
+                            <div class="server-header">
+                                <div class="server-name">Industrial PPA</div>
+                                <div class="server-status status-running">Template</div>
+                            </div>
+                            <div class="server-specs">
+                                <div class="spec-row">
+                                    <span class="spec-label">Capacity:</span>
+                                    <span class="spec-value">100 MW</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Price:</span>
+                                    <span class="spec-value">\$38/MWh</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Term:</span>
+                                    <span class="spec-value">25 Years</span>
+                                </div>
+                                <div class="spec-row">
+                                    <span class="spec-label">Type:</span>
+                                    <span class="spec-value">Volume-Discount</span>
+                                </div>
+                            </div>
+                            <div class="server-actions">
+                                <button class="action-btn primary" onclick="deployFromTemplate('industrial-ppa')">Create</button>
+                                <button class="action-btn secondary" onclick="viewTemplateDetails('industrial-ppa')">Details</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div class="content-section" id="settings">
+                    <div class="section-header">
+                        <h1 class="section-title">PPA Management Settings</h1>
+                        <p class="section-subtitle">Configure your contract management preferences</p>
+                    </div>
+
+                    <div class="deploy-form">
+                        <div class="form-grid">
+                            <div class="form-group">
+                                <label for="autoLoadBalancing">Auto Load Balancing</label>
+                                <select id="autoLoadBalancing">
+                                    <option value="enabled" selected>Enabled</option>
+                                    <option value="disabled">Disabled</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="billingFrequency">Billing Frequency</label>
+                                <select id="billingFrequency">
+                                    <option value="daily">Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly" selected>Monthly</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="performanceMonitoring">Performance Monitoring</label>
+                                <select id="performanceMonitoring">
+                                    <option value="basic">Basic</option>
+                                    <option value="standard" selected>Standard</option>
+                                    <option value="advanced">Advanced</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="usageAlertThreshold">Usage Alert Threshold</label>
+                                <select id="usageAlertThreshold">
+                                    <option value="80">80%</option>
+                                    <option value="85" selected>85%</option>
+                                    <option value="90">90%</option>
+                                    <option value="95">95%</option>
+                                </select>
+                            </div>
+                        </div>
+
+                        <button class="deploy-button" onclick="saveSettings()">
+                            <span>💾</span>
+                            Save Settings
+                        </button>
                     </div>
                 </div>
             </div>
         </div>
     </main>
 
-    <script>
-        // Navigation functionality
-        document.addEventListener('DOMContentLoaded', function() {
-            const sidebarLinks = document.querySelectorAll('.sidebar-link');
-            const sections = document.querySelectorAll('.section');
+    <div id="footer-placeholder"></div>
 
-            sidebarLinks.forEach(link => {
-                link.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    
-                    // Remove active class from all links and sections
-                    sidebarLinks.forEach(l => l.classList.remove('active'));
-                    sections.forEach(s => s.classList.remove('active'));
-                    
-                    // Add active class to clicked link
-                    this.classList.add('active');
-                    
-                    // Show corresponding section
-                    const sectionId = this.getAttribute('data-section');
-                    const targetSection = document.getElementById(sectionId);
-                    if (targetSection) {
-                        targetSection.classList.add('active');
+    <script>
+        // Authentication check
+        function checkAuth() {
+            const isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
+            if (!isAuthenticated) {
+                window.location.href = 'index.html';
+                return false;
+            }
+            return true;
+        }
+
+        // Check authentication on page load
+        if (!checkAuth()) {
+            // Redirect will happen in checkAuth function
+        }
+
+        // Logout function
+        function logout() {
+            sessionStorage.removeItem('authenticated');
+            window.location.href = 'index.html';
+        }
+
+        // Sample contract data - CHANGED FROM sampleServers
+        const sampleContracts = [
+            {
+                id: 1,
+                name: 'Municipal-PPA-01',
+                type: 'Municipal Utility',
+                status: 'active',
+                capacity: '50 MW',
+                price: '\$45/MWh',
+                volume: '200 GWh/year',
+                location: 'Grid Node A1',
+                performance: '98.5%'
+            },
+            {
+                id: 2,
+                name: 'Commercial-PPA-03',
+                type: 'Commercial',
+                status: 'active',
+                capacity: '25 MW',
+                price: '\$52/MWh',
+                volume: '150 GWh/year',
+                location: 'Grid Node A2',
+                performance: '97.2%'
+            },
+            {
+                id: 3,
+                name: 'Industrial-PPA-02',
+                type: 'Industrial',
+                status: 'provisioning',
+                capacity: '100 MW',
+                price: '\$38/MWh',
+                volume: '500 GWh/year',
+                location: 'Grid Node B1',
+                performance: 'Pending...'
+            },
+            {
+                id: 4,
+                name: 'Residential-Cluster',
+                type: 'Residential',
+                status: 'active',
+                capacity: '15 MW',
+                price: '\$55/MWh',
+                volume: '75 GWh/year',
+                location: 'Grid Node A1',
+                performance: '99.1%'
+            },
+            {
+                id: 5,
+                name: 'Mining-Operation-01',
+                type: 'Industrial',
+                status: 'active',
+                capacity: '75 MW',
+                price: '\$35/MWh',
+                volume: '400 GWh/year',
+                location: 'Grid Node C1',
+                performance: '96.8%'
+            },
+            {
+                id: 6,
+                name: 'Agricultural-Coop',
+                type: 'Agricultural',
+                status: 'suspended',
+                capacity: '20 MW',
+                price: '\$48/MWh',
+                volume: '100 GWh/year',
+                location: 'Grid Node B2',
+                performance: 'Suspended'
+            }
+        ];
+
+        // Navigation functionality
+        function switchSection(sectionId) {
+            // Hide all sections
+            document.querySelectorAll('.content-section').forEach(section => {
+                section.classList.remove('active');
+            });
+            
+            // Remove active class from all nav buttons
+            document.querySelectorAll('.nav-button').forEach(button => {
+                button.classList.remove('active');
+            });
+            
+            // Show selected section
+            document.getElementById(sectionId).classList.add('active');
+            
+            // Add active class to corresponding nav button
+            document.querySelector(`[data-section="\${sectionId}"]`).classList.add('active');
+            
+            // Load section-specific content - CHANGED FROM loadServers
+            if (sectionId === 'contracts') {
+                loadContracts();
+            }
+        }
+
+        // Load contracts into the grid - CHANGED FROM loadServers
+        function loadContracts() {
+            const contractsGrid = document.getElementById('contractsGrid');
+            contractsGrid.innerHTML = '';
+            
+            sampleContracts.forEach(contract => {
+                const contractCard = createContractCard(contract);
+                contractsGrid.appendChild(contractCard);
+            });
+        }
+
+        // Create contract card element - CHANGED FROM createServerCard
+        function createContractCard(contract) {
+            const card = document.createElement('div');
+            card.className = 'server-card';
+            
+            const statusClass = contract.status === 'active' ? 'status-running' : contract.status === 'suspended' ? 'status-stopped' : 'status-provisioning';
+            const statusText = contract.status.charAt(0).toUpperCase() + contract.status.slice(1);
+            
+            card.innerHTML = `
+                <div class="server-header">
+                    <div class="server-name">\${contract.name}</div>
+                    <div class="server-status \${statusClass}">\${statusText}</div>
+                </div>
+                <div class="server-specs">
+                    <div class="spec-row">
+                        <span class="spec-label">Type:</span>
+                        <span class="spec-value">\${contract.type}</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">Capacity:</span>
+                        <span class="spec-value">\${contract.capacity}</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">Price:</span>
+                        <span class="spec-value">\${contract.price}</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">Volume:</span>
+                        <span class="spec-value">\${contract.volume}</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">Location:</span>
+                        <span class="spec-value">\${contract.location}</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">Performance:</span>
+                        <span class="spec-value">\${contract.performance}</span>
+                    </div>
+                </div>
+                <div class="server-actions">
+                    \${contract.status === 'active' ? 
+                        `<button class="action-btn secondary" onclick="suspendContract(\${contract.id})">Suspend</button>` : 
+                        `<button class="action-btn primary" onclick="activateContract(\${contract.id})">Activate</button>`
                     }
+                    <button class="action-btn secondary" onclick="viewContractDetails(\${contract.id})">Details</button>
+                    <button class="action-btn danger" onclick="terminateContract(\${contract.id})">Terminate</button>
+                </div>
+            `;
+            
+            return card;
+        }
+
+        // Contract management functions - RENAMED FROM server functions
+        function createPPA() {
+            const contractName = document.getElementById('contractName').value;
+            const offtakerType = document.getElementById('offtakerType').value;
+            const contractCapacity = document.getElementById('contractCapacity').value;
+            const deliveryPoint = document.getElementById('deliveryPoint').value;
+            
+            if (!contractName) {
+                alert('Please enter a contract name');
+                return;
+            }
+            
+            // Simulate deployment
+            const deployButton = document.querySelector('.deploy-button');
+            const originalText = deployButton.innerHTML;
+            deployButton.innerHTML = '<span>⏳</span> Executing...';
+            deployButton.disabled = true;
+            
+            setTimeout(() => {
+                alert(`PPA "\${contractName}" executed successfully!`);
+                deployButton.innerHTML = originalText;
+                deployButton.disabled = false;
+                
+                // Add to contracts list
+                const newContract = {
+                    id: sampleContracts.length + 1,
+                    name: contractName,
+                    type: offtakerType.charAt(0).toUpperCase() + offtakerType.slice(1),
+                    status: 'active',
+                    capacity: contractCapacity + ' MW',
+                    price: '\$45/MWh',
+                    volume: (contractCapacity * 8760 / 1000).toFixed(0) + ' GWh/year',
+                    location: deliveryPoint.toUpperCase(),
+                    performance: 'Just created'
+                };
+                
+                sampleContracts.push(newContract);
+                
+                // Switch to contracts view and refresh
+                switchSection('contracts');
+                
+                // Reset form
+                document.getElementById('contractName').value = 'demo-ppa-01';
+                document.getElementById('offtakerType').value = 'municipal';
+                document.getElementById('contractCapacity').value = '25';
+                document.getElementById('deliveryPoint').value = 'grid-a1';
+                document.getElementById('contractTerms').value = '';
+            }, 3000);
+        }
+
+        function activateContract(contractId) {
+            const contract = sampleContracts.find(s => s.id === contractId);
+            if (contract) {
+                contract.status = 'active';
+                contract.performance = '98.5%';
+                loadContracts();
+                alert(`Contract "\${contract.name}" activated successfully!`);
+            }
+        }
+
+        function suspendContract(contractId) {
+            const contract = sampleContracts.find(s => s.id === contractId);
+            if (contract) {
+                contract.status = 'suspended';
+                contract.performance = 'Suspended';
+                loadContracts();
+                alert(`Contract "\${contract.name}" suspended successfully!`);
+            }
+        }
+
+        function terminateContract(contractId) {
+            const contract = sampleContracts.find(s => s.id === contractId);
+            if (contract && confirm(`Are you sure you want to terminate contract "\${contract.name}"?`)) {
+                const index = sampleContracts.findIndex(s => s.id === contractId);
+                sampleContracts.splice(index, 1);
+                loadContracts();
+                alert(`Contract "\${contract.name}" terminated successfully!`);
+            }
+        }
+
+        function viewContractDetails(contractId) {
+            const contract = sampleContracts.find(s => s.id === contractId);
+            if (contract) {
+                alert(`Contract Details:\n\nName: \${contract.name}\nType: \${contract.type}\nStatus: \${contract.status}\nCapacity: \${contract.capacity}\nPrice: \${contract.price}\nVolume: \${contract.volume}\nLocation: \${contract.location}\nPerformance: \${contract.performance}`);
+            }
+        }
+
+        function deployFromTemplate(templateType) {
+            const templates = {
+                'municipal-ppa': 'Municipal Utility PPA',
+                'commercial-ppa': 'Commercial PPA',
+                'industrial-ppa': 'Industrial PPA'
+            };
+            
+            const templateName = templates[templateType];
+            if (confirm(`Create \${templateName}?`)) {
+                alert(`\${templateName} creation initiated! Check the Contracts section to monitor progress.`);
+                switchSection('contracts');
+            }
+        }
+
+        function viewTemplateDetails(templateType) {
+            const details = {
+                'municipal-ppa': 'Municipal Utility PPA\n\nPre-configured with:\n- Fixed pricing structure\n- 20-year term\n- Standard municipal clauses\n- Grid reliability requirements\n- Performance guarantees\n\nPerfect for municipal utility partnerships.',
+                'commercial-ppa': 'Commercial PPA\n\nPre-configured with:\n- Escalating price structure\n- 15-year term\n- Commercial risk allocation\n- Peak/off-peak pricing\n- Demand response clauses\n\nOptimized for commercial and retail customers.',
+                'industrial-ppa': 'Industrial PPA\n\nPre-configured with:\n- Volume discount pricing\n- 25-year term\n- Industrial load requirements\n- Force majeure protections\n- Custom delivery schedules\n\nReady for heavy industrial consumers.'
+            };
+            
+            alert(details[templateType]);
+        }
+
+        function showTemplates() {
+            switchSection('templates');
+        }
+
+        function saveSettings() {
+            alert('Settings saved successfully!');
+        }
+
+        // Initialize navigation
+        document.addEventListener('DOMContentLoaded', function() {
+            // Add click handlers to nav buttons
+            document.querySelectorAll('.nav-button').forEach(button => {
+                button.addEventListener('click', function() {
+                    const sectionId = this.getAttribute('data-section');
+                    switchSection(sectionId);
                 });
             });
+            
+            // Initialize with dashboard
+            switchSection('dashboard');
+            
+            // Animate metrics on load
+            animateMetrics();
         });
+
+        // Animate metrics
+        function animateMetrics() {
+            const metrics = document.querySelectorAll('.metric-value');
+            metrics.forEach(metric => {
+                const finalValue = metric.textContent;
+                const isNumeric = !isNaN(finalValue.replace(/[^\d.]/g, ''));
+                
+                if (isNumeric) {
+                    const numericValue = parseFloat(finalValue.replace(/[^\d.]/g, ''));
+                    let currentValue = 0;
+                    const increment = numericValue / 30;
+                    const timer = setInterval(() => {
+                        currentValue += increment;
+                        if (currentValue >= numericValue) {
+                            currentValue = numericValue;
+                            clearInterval(timer);
+                        }
+                        metric.textContent = finalValue.replace(/[\d.]+/, Math.round(currentValue));
+                    }, 50);
+                }
+            });
+        }
     </script>
 </body>
 </html>
