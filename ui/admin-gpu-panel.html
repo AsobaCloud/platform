@@ -1906,7 +1906,7 @@
             overflow: hidden;
         }
 
-        #gpuUtilizationChart, #costAnalysisChart {
+        #capacityFactorChart, #energyAtRiskChart {
             width: 100% !important;
             height: 200px !important;
         }
@@ -2086,6 +2086,46 @@
         }
 
         .utilization-badge {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--status-green);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        
+        .efficiency-badge {
+            background: rgba(59, 130, 246, 0.1);
+            color: var(--primary-blue);
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        
+        .risk-badge {
+            padding: 4px 8px;
+            border-radius: 4px;
+            font-weight: 600;
+            font-size: 0.8rem;
+        }
+        
+        .risk-low {
+            background: rgba(34, 197, 94, 0.1);
+            color: var(--status-green);
+        }
+        
+        .risk-medium {
+            background: rgba(245, 158, 11, 0.1);
+            color: var(--status-yellow);
+        }
+        
+        .risk-high {
+            background: rgba(239, 68, 68, 0.1);
+            color: var(--status-red);
+        }
+        
+        .uptime-badge {
             background: rgba(34, 197, 94, 0.1);
             color: var(--status-green);
             padding: 4px 8px;
@@ -2738,53 +2778,53 @@
                 <div class="content-section" id="analytics">
                     <div class="section-header">
                         <h1 class="section-title">Analytics Dashboard</h1>
-                        <p class="section-subtitle">Comprehensive GPU performance, usage, and cost analytics</p>
+                        <p class="section-subtitle">Comprehensive solar site performance, usage, and cost analytics</p>
                     </div>
 
                     <!-- Key Metrics Overview -->
                     <div class="metrics-overview">
                         <div class="metric-card">
-                            <div class="metric-icon">💰</div>
+                            <div class="metric-icon">🔧</div>
                             <div class="metric-content">
-                                <div class="metric-value" id="totalCost">$12,847</div>
-                                <div class="metric-label">Total Cost (30 days)</div>
-                                <div class="metric-change positive">-8.2% vs last month</div>
+                                <div class="metric-value" id="repairReduction">156h</div>
+                                <div class="metric-label">Median Time to Repair Reduction</div>
+                                <div class="metric-change positive">-24h vs last month</div>
                             </div>
                         </div>
                         <div class="metric-card">
-                            <div class="metric-icon">⚡</div>
+                            <div class="metric-icon">📊</div>
                             <div class="metric-content">
-                                <div class="metric-value" id="analyticsAvgUtilization">87.3%</div>
-                                <div class="metric-label">Avg Site Utilization</div>
-                                <div class="metric-change positive">+5.1% vs last month</div>
+                                <div class="metric-value" id="forecasting">94.2%</div>
+                                <div class="metric-label">Solar Production Forecasting</div>
+                                <div class="metric-change positive">+2.1% vs target (95%)</div>
                             </div>
                         </div>
                         <div class="metric-card">
                             <div class="metric-icon">🎯</div>
                             <div class="metric-content">
-                                <div class="metric-value" id="roi">342%</div>
-                                <div class="metric-label">ROI</div>
-                                <div class="metric-change positive">+12% vs last month</div>
+                                <div class="metric-value" id="falsePositiveRate">8.3%</div>
+                                <div class="metric-label">False Positive Rate</div>
+                                <div class="metric-change positive">-1.7% vs target (10%)</div>
                             </div>
                         </div>
                         <div class="metric-card">
-                            <div class="metric-icon">⏱️</div>
+                            <div class="metric-icon">⚡</div>
                             <div class="metric-content">
-                                <div class="metric-value" id="uptime">99.7%</div>
-                                <div class="metric-label">Uptime</div>
-                                <div class="metric-change positive">+0.3% vs last month</div>
+                                <div class="metric-value" id="detectionLatency">7.2min</div>
+                                <div class="metric-label">Detection Latency</div>
+                                <div class="metric-change positive">-2.8min vs target (<10min)</div>
                             </div>
                         </div>
                     </div>
 
                     <!-- Charts Grid -->
                     <div class="charts-grid">
-                        <!-- Cost Analysis Chart -->
+                        <!-- Energy At Risk Analysis Chart -->
                         <div class="chart-card">
                             <div class="chart-header">
-                                <h3>Cost Analysis</h3>
+                                <h3>Energy At Risk Analysis</h3>
                                 <div class="chart-controls">
-                                    <select id="costTimeframe">
+                                    <select id="energyAtRiskTimeframe">
                                         <option value="7d">Last 7 days</option>
                                         <option value="30d" selected>Last 30 days</option>
                                         <option value="90d">Last 90 days</option>
@@ -2792,18 +2832,18 @@
                                 </div>
                             </div>
                             <div class="chart-content">
-                                <div class="chart-placeholder" id="analyticsCostChart">
-                                    <canvas id="costAnalysisChart" width="400" height="200"></canvas>
+                                <div class="chart-placeholder" id="analyticsEnergyAtRiskChart">
+                                    <canvas id="energyAtRiskChart" width="400" height="200"></canvas>
                                 </div>
                             </div>
                         </div>
 
-                        <!-- Site Utilization Chart -->
+                        <!-- Capacity Factor Chart -->
                         <div class="chart-card">
                             <div class="chart-header">
-                                <h3>Site Utilization</h3>
+                                <h3>Capacity Factor</h3>
                                 <div class="chart-controls">
-                                    <select id="utilizationTimeframe">
+                                    <select id="capacityFactorTimeframe">
                                         <option value="24h">Last 24 hours</option>
                                         <option value="7d" selected>Last 7 days</option>
                                         <option value="30d">Last 30 days</option>
@@ -2811,9 +2851,9 @@
                                 </div>
                             </div>
                             <div class="chart-content">
-                                <div class="chart-placeholder" id="analyticsUtilizationChart">
+                                <div class="chart-placeholder" id="analyticsCapacityFactorChart">
                                     <div class="chart-line">
-                                        <canvas id="gpuUtilizationChart" width="400" height="200"></canvas>
+                                        <canvas id="capacityFactorChart" width="400" height="200"></canvas>
                                     </div>
                                 </div>
                             </div>
@@ -2830,33 +2870,33 @@
                             <div class="chart-content">
                                 <div class="performance-metrics">
                                     <div class="perf-metric">
-                                        <div class="perf-label">Throughput</div>
+                                        <div class="perf-label">Power Output</div>
                                         <div class="perf-content">
-                                            <div class="perf-value">2,847 req/s</div>
-                                            <div class="perf-bar">
-                                                <div class="perf-fill" style="width: 87%;"></div>
-                                            </div>
-                                            <div class="perf-detail">Peak: 3,200 req/s | Avg: 2,650 req/s</div>
-                                        </div>
-                                    </div>
-                                    <div class="perf-metric">
-                                        <div class="perf-label">Latency</div>
-                                        <div class="perf-content">
-                                            <div class="perf-value">12.3ms</div>
+                                            <div class="perf-value">873.86 kW</div>
                                             <div class="perf-bar">
                                                 <div class="perf-fill" style="width: 92%;"></div>
                                             </div>
-                                            <div class="perf-detail">P95: 18.7ms | P99: 25.4ms</div>
+                                            <div class="perf-detail">Peak: 950 kW | Avg: 820 kW</div>
                                         </div>
                                     </div>
                                     <div class="perf-metric">
-                                        <div class="perf-label">Accuracy</div>
+                                        <div class="perf-label">Grid Frequency</div>
                                         <div class="perf-content">
-                                            <div class="perf-value">98.7%</div>
+                                            <div class="perf-value">50.02 Hz</div>
                                             <div class="perf-bar">
-                                                <div class="perf-fill" style="width: 98%;"></div>
+                                                <div class="perf-fill" style="width: 95%;"></div>
                                             </div>
-                                            <div class="perf-detail">Precision: 97.2% | Recall: 96.8%</div>
+                                            <div class="perf-detail">P95: 50.05 Hz | P99: 50.08 Hz</div>
+                                        </div>
+                                    </div>
+                                    <div class="perf-metric">
+                                        <div class="perf-label">Power Quality</div>
+                                        <div class="perf-content">
+                                            <div class="perf-value">99.2%</div>
+                                            <div class="perf-bar">
+                                                <div class="perf-fill" style="width: 99%;"></div>
+                                            </div>
+                                            <div class="perf-detail">Precision: 98.8% | Recall: 99.1%</div>
                                         </div>
                                     </div>
                                 </div>
@@ -2905,10 +2945,9 @@
                             <h3>Detailed Analytics</h3>
                             <div class="table-controls">
                                 <select id="analyticsFilter">
-                                    <option value="all">All GPUs</option>
-                                    <option value="a100">NVIDIA A100</option>
-                                    <option value="v100">NVIDIA V100</option>
-                                    <option value="rtx4090">NVIDIA RTX 4090</option>
+                                    <option value="all">All Sites</option>
+                                    <option value="cummins-midrand">Cummins Midrand</option>
+                                    <option value="fnb-willowbridge">FNB Willowbridge</option>
                                 </select>
                                 <button class="export-btn">📊 Export Data</button>
                             </div>
@@ -2917,12 +2956,16 @@
                             <table class="analytics-table">
                                 <thead>
                                     <tr>
-                                        <th>GPU ID</th>
+                                        <th>Serial</th>
                                         <th>Type</th>
+                                        <th>OEM</th>
                                         <th>Utilization</th>
+                                        <th>Efficiency</th>
                                         <th>Cost/Hour</th>
                                         <th>Revenue/Hour</th>
+                                        <th>Energy At Risk</th>
                                         <th>ROI</th>
+                                        <th>Uptime (%)</th>
                                         <th>Status</th>
                                     </tr>
                                 </thead>

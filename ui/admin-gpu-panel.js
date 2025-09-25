@@ -2584,32 +2584,39 @@
         function loadAnalytics() {
             // Sample analytics data
             const analyticsData = [
-                { id: 'GPU-001', type: 'NVIDIA A100', utilization: '92%', costHour: '$3.20', revenueHour: '$12.50', roi: '291%', status: 'Active' },
-                { id: 'GPU-002', type: 'NVIDIA A100', utilization: '87%', costHour: '$3.20', revenueHour: '$11.20', roi: '250%', status: 'Active' },
-                { id: 'GPU-003', type: 'NVIDIA V100', utilization: '78%', costHour: '$2.10', revenueHour: '$7.80', roi: '271%', status: 'Active' },
-                { id: 'GPU-004', type: 'NVIDIA V100', utilization: '95%', costHour: '$2.10', revenueHour: '$9.50', roi: '352%', status: 'Active' },
-                { id: 'GPU-005', type: 'NVIDIA RTX 4090', utilization: '83%', costHour: '$1.50', revenueHour: '$6.20', roi: '313%', status: 'Active' },
-                { id: 'GPU-006', type: 'NVIDIA RTX 4090', utilization: '89%', costHour: '$1.50', revenueHour: '$6.70', roi: '347%', status: 'Active' },
-                { id: 'GPU-007', type: 'NVIDIA A100', utilization: '91%', costHour: '$3.20', revenueHour: '$12.10', roi: '278%', status: 'Active' },
-                { id: 'GPU-008', type: 'NVIDIA V100', utilization: '76%', costHour: '$2.10', revenueHour: '$7.60', roi: '262%', status: 'Active' },
-                { id: 'GPU-009', type: 'NVIDIA RTX 4090', utilization: '94%', costHour: '$1.50', revenueHour: '$7.10', roi: '373%', status: 'Active' },
-                { id: 'GPU-010', type: 'NVIDIA A100', utilization: '88%', costHour: '$3.20', revenueHour: '$11.00', roi: '244%', status: 'Active' }
+                // Cummins Midrand inverters
+                { serial: 'SMA-SB-001', type: 'String Inverter', oem: 'SMA', utilization: '92%', efficiency: '96.8%', costHour: '$0.15', revenueHour: '$2.85', energyAtRisk: 'Low', roi: '1800%', uptime: '99.2%', status: 'Active', site: 'cummins-midrand' },
+                { serial: 'SMA-SB-002', type: 'String Inverter', oem: 'SMA', utilization: '87%', efficiency: '96.5%', costHour: '$0.15', revenueHour: '$2.61', energyAtRisk: 'Low', roi: '1640%', uptime: '98.8%', status: 'Active', site: 'cummins-midrand' },
+                { serial: 'SMA-SB-003', type: 'String Inverter', oem: 'SMA', utilization: '89%', efficiency: '96.7%', costHour: '$0.15', revenueHour: '$2.67', energyAtRisk: 'Low', roi: '1680%', uptime: '99.1%', status: 'Active', site: 'cummins-midrand' },
+                { serial: 'SMA-SB-004', type: 'String Inverter', oem: 'SMA', utilization: '94%', efficiency: '97.1%', costHour: '$0.15', revenueHour: '$2.82', energyAtRisk: 'Low', roi: '1780%', uptime: '99.5%', status: 'Active', site: 'cummins-midrand' },
+                { serial: 'SMA-SB-005', type: 'String Inverter', oem: 'SMA', utilization: '91%', efficiency: '96.9%', costHour: '$0.15', revenueHour: '$2.73', energyAtRisk: 'Low', roi: '1720%', uptime: '98.9%', status: 'Active', site: 'cummins-midrand' },
+                { serial: 'SMA-SB-006', type: 'String Inverter', oem: 'SMA', utilization: '88%', efficiency: '96.6%', costHour: '$0.15', revenueHour: '$2.64', energyAtRisk: 'Low', roi: '1660%', uptime: '99.3%', status: 'Active', site: 'cummins-midrand' },
+                { serial: 'SMA-SB-007', type: 'String Inverter', oem: 'SMA', utilization: '93%', efficiency: '97.0%', costHour: '$0.15', revenueHour: '$2.79', energyAtRisk: 'Low', roi: '1760%', uptime: '99.0%', status: 'Active', site: 'cummins-midrand' },
+                { serial: 'SMA-SB-008', type: 'String Inverter', oem: 'SMA', utilization: '90%', efficiency: '96.8%', costHour: '$0.15', revenueHour: '$2.70', energyAtRisk: 'Low', roi: '1700%', uptime: '98.7%', status: 'Active', site: 'cummins-midrand' },
+                { serial: 'SMA-SB-009', type: 'String Inverter', oem: 'SMA', utilization: '86%', efficiency: '96.4%', costHour: '$0.15', revenueHour: '$2.58', energyAtRisk: 'Low', roi: '1620%', uptime: '99.4%', status: 'Active', site: 'cummins-midrand' },
+                // FNB Willowbridge inverters
+                { serial: 'ABB-PVI-001', type: 'Central Inverter', oem: 'ABB', utilization: '95%', efficiency: '97.5%', costHour: '$0.25', revenueHour: '$1.90', energyAtRisk: 'Low', roi: '660%', uptime: '99.8%', status: 'Active', site: 'fnb-willowbridge' },
+                { serial: 'ABB-PVI-002', type: 'Central Inverter', oem: 'ABB', utilization: '92%', efficiency: '97.2%', costHour: '$0.25', revenueHour: '$1.84', energyAtRisk: 'Low', roi: '636%', uptime: '99.6%', status: 'Active', site: 'fnb-willowbridge' }
             ];
 
             // Populate analytics table
             const tableBody = document.getElementById('analyticsTableBody');
             if (tableBody) {
                 tableBody.innerHTML = '';
-                analyticsData.forEach(gpu => {
+                analyticsData.forEach(inverter => {
                     const row = document.createElement('tr');
                     row.innerHTML = `
-                        <td>${gpu.id}</td>
-                        <td>${gpu.type}</td>
-                        <td><span class="utilization-badge">${gpu.utilization}</span></td>
-                        <td>${gpu.costHour}</td>
-                        <td>${gpu.revenueHour}</td>
-                        <td><span class="roi-badge">${gpu.roi}</span></td>
-                        <td><span class="status-badge status-active">${gpu.status}</span></td>
+                        <td>${inverter.serial}</td>
+                        <td>${inverter.type}</td>
+                        <td>${inverter.oem}</td>
+                        <td><span class="utilization-badge">${inverter.utilization}</span></td>
+                        <td><span class="efficiency-badge">${inverter.efficiency}</span></td>
+                        <td>${inverter.costHour}</td>
+                        <td>${inverter.revenueHour}</td>
+                        <td><span class="risk-badge risk-${inverter.energyAtRisk.toLowerCase()}">${inverter.energyAtRisk}</span></td>
+                        <td><span class="roi-badge">${inverter.roi}</span></td>
+                        <td><span class="uptime-badge">${inverter.uptime}</span></td>
+                        <td><span class="status-badge status-active">${inverter.status}</span></td>
                     `;
                     tableBody.appendChild(row);
                 });
@@ -2621,25 +2628,25 @@
             // Wait for Chart.js to be available
             setTimeout(() => {
                 console.log('Attempting to create charts...');
-                updateCostChart('30d');
-                updateUtilizationChart('7d');
+                updateEnergyAtRiskChart('30d');
+                updateCapacityFactorChart('7d');
             }, 500);
         }
 
         function setupAnalyticsControls() {
-            // Cost timeframe selector
-            const costTimeframe = document.getElementById('costTimeframe');
-            if (costTimeframe) {
-                costTimeframe.addEventListener('change', function() {
-                    updateCostChart(this.value);
+            // Energy At Risk timeframe selector
+            const energyAtRiskTimeframe = document.getElementById('energyAtRiskTimeframe');
+            if (energyAtRiskTimeframe) {
+                energyAtRiskTimeframe.addEventListener('change', function() {
+                    updateEnergyAtRiskChart(this.value);
                 });
             }
 
-            // Utilization timeframe selector
-            const utilizationTimeframe = document.getElementById('utilizationTimeframe');
-            if (utilizationTimeframe) {
-                utilizationTimeframe.addEventListener('change', function() {
-                    updateUtilizationChart(this.value);
+            // Capacity Factor timeframe selector
+            const capacityFactorTimeframe = document.getElementById('capacityFactorTimeframe');
+            if (capacityFactorTimeframe) {
+                capacityFactorTimeframe.addEventListener('change', function() {
+                    updateCapacityFactorChart(this.value);
                 });
             }
 
@@ -2661,20 +2668,20 @@
             }
         }
 
-        let costChartInstance = null;
-        let analyticsUtilizationChartInstance = null;
+        let energyAtRiskChartInstance = null;
+        let analyticsCapacityFactorChartInstance = null;
 
-        function updateCostChart(timeframe) {
-            const canvas = document.getElementById('costAnalysisChart');
-            console.log('Cost chart canvas element:', canvas);
+        function updateEnergyAtRiskChart(timeframe) {
+            const canvas = document.getElementById('energyAtRiskChart');
+            console.log('Energy At Risk chart canvas element:', canvas);
             
             if (!canvas) {
-                console.error('Cost chart canvas element not found');
+                console.error('Energy At Risk chart canvas element not found');
                 return;
             }
             
             if (typeof canvas.getContext !== 'function') {
-                console.error('Cost chart canvas element is not a proper canvas element');
+                console.error('Energy At Risk chart canvas element is not a proper canvas element');
                 return;
             }
             
@@ -2686,35 +2693,35 @@
                 return;
             }
             
-            console.log('Creating cost chart with timeframe:', timeframe);
+            console.log('Creating Energy At Risk chart with timeframe:', timeframe);
             
             // Destroy existing chart if it exists
-            if (costChartInstance) {
-                costChartInstance.destroy();
+            if (energyAtRiskChartInstance) {
+                energyAtRiskChartInstance.destroy();
             }
             
             let labels, data;
             
             if (timeframe === '7d') {
                 labels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
-                data = [420, 460, 390, 440, 475, 410, 445];
+                data = [12, 8, 15, 6, 9, 11, 7]; // Energy at risk in kWh
             } else if (timeframe === '30d') {
                 labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-                data = [1680, 1840, 1560, 1760];
+                data = [48, 32, 60, 24]; // Energy at risk in kWh
             } else if (timeframe === '90d') {
                 labels = ['Month 1', 'Month 2', 'Month 3'];
-                data = [5040, 5520, 4680];
+                data = [144, 96, 180]; // Energy at risk in kWh
             }
             
-            costChartInstance = new Chart(ctx, {
+            energyAtRiskChartInstance = new Chart(ctx, {
                 type: 'bar',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'Cost ($)',
+                        label: 'Energy At Risk (kWh)',
                         data: data,
-                        backgroundColor: 'rgba(69, 91, 241, 0.8)',
-                        borderColor: '#455BF1',
+                        backgroundColor: 'rgba(239, 68, 68, 0.8)',
+                        borderColor: '#EF4444',
                         borderWidth: 2,
                         borderRadius: 4,
                         borderSkipped: false,
@@ -2757,9 +2764,9 @@
             });
         }
 
-        function updateUtilizationChart(timeframe) {
-            const canvas = document.getElementById('gpuUtilizationChart');
-            console.log('Canvas element:', canvas);
+        function updateCapacityFactorChart(timeframe) {
+            const canvas = document.getElementById('capacityFactorChart');
+            console.log('Capacity Factor chart canvas element:', canvas);
             
             if (!canvas) {
                 console.error('Canvas element not found');
@@ -2782,29 +2789,29 @@
             console.log('Creating chart with timeframe:', timeframe);
             
             // Destroy existing chart if it exists
-            if (analyticsUtilizationChartInstance) {
-                analyticsUtilizationChartInstance.destroy();
+            if (analyticsCapacityFactorChartInstance) {
+                analyticsCapacityFactorChartInstance.destroy();
             }
             
             let labels, data;
             
             if (timeframe === '24h') {
                 labels = ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'];
-                data = [85, 78, 92, 88, 95, 82];
+                data = [0, 0, 15, 35, 25, 5]; // Capacity factor (%) for solar
             } else if (timeframe === '7d') {
                 labels = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6', 'Day 7'];
-                data = [85, 78, 92, 88, 95, 82, 89];
+                data = [22, 18, 25, 20, 28, 15, 24]; // Capacity factor (%) for solar
             } else if (timeframe === '30d') {
                 labels = ['Week 1', 'Week 2', 'Week 3', 'Week 4'];
-                data = [87, 92, 78, 88];
+                data = [21, 24, 19, 22]; // Capacity factor (%) for solar
             }
             
-            analyticsUtilizationChartInstance = new Chart(ctx, {
+            analyticsCapacityFactorChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: labels,
                     datasets: [{
-                        label: 'GPU Utilization %',
+                        label: 'Capacity Factor (%)',
                         data: data,
                         borderColor: '#455BF1',
                         backgroundColor: 'rgba(69, 91, 241, 0.1)',
@@ -2859,14 +2866,20 @@
             const rows = tableBody.querySelectorAll('tr');
             
             rows.forEach(row => {
-                const gpuType = row.cells[1].textContent.toLowerCase();
+                // Get the site from the data-site attribute or infer from serial number
+                const serial = row.cells[0].textContent;
+                let site = '';
+                if (serial.includes('SMA-SB')) {
+                    site = 'cummins-midrand';
+                } else if (serial.includes('ABB-PVI')) {
+                    site = 'fnb-willowbridge';
+                }
+                
                 if (filter === 'all') {
                     row.style.display = '';
-                } else if (filter === 'a100' && gpuType.includes('a100')) {
+                } else if (filter === 'cummins-midrand' && site === 'cummins-midrand') {
                     row.style.display = '';
-                } else if (filter === 'v100' && gpuType.includes('v100')) {
-                    row.style.display = '';
-                } else if (filter === 'rtx4090' && gpuType.includes('rtx 4090')) {
+                } else if (filter === 'fnb-willowbridge' && site === 'fnb-willowbridge') {
                     row.style.display = '';
                 } else {
                     row.style.display = 'none';
