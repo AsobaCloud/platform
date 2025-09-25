@@ -9,8 +9,8 @@ This guide provides detailed technical administration information for the Ona Pl
 The Ona Platform exposes a RESTful API through AWS API Gateway with the following core endpoints:
 
 **Base URLs:**
-- Custom Domain: `https://api.asoba.co` (when certificate is ready)
-- Direct API Gateway: `https://u9xpolnr5m.execute-api.af-south-1.amazonaws.com/prod`
+- Custom Domain: `https://api.asoba.co` ✅ **LIVE**
+- Direct API Gateway: `https://2m5xvm39ef.execute-api.af-south-1.amazonaws.com/prod`
 
 #### Data Upload Endpoints
 
@@ -102,6 +102,55 @@ The Ona Platform exposes a RESTful API through AWS API Gateway with the followin
     }
   }
   ```
+
+## 2. Deployment & Infrastructure Management
+
+### Current Deployment Status ✅ **LIVE**
+
+**Platform Status**: **OPERATIONAL**
+- **Custom Domain**: `https://api.asoba.co` ✅ **ACTIVE**
+- **API Gateway ID**: `2m5xvm39ef` ✅ **ACTIVE**
+- **Region**: `af-south-1` ✅ **ACTIVE**
+- **Environment**: `prod` ✅ **ACTIVE**
+
+**Infrastructure Components**:
+- **Lambda Functions**: 5/5 ✅ **ACTIVE**
+  - `ona-dataIngestion-prod` ✅ **ACTIVE**
+  - `ona-weatherCache-prod` ✅ **ACTIVE**
+  - `ona-interpolationService-prod` ✅ **ACTIVE**
+  - `ona-globalTrainingService-prod` ✅ **ACTIVE**
+  - `ona-forecastingApi-prod` ✅ **ACTIVE**
+- **S3 Buckets**: 2/2 ✅ **ACTIVE**
+  - `sa-api-client-input` ✅ **ACTIVE**
+  - `sa-api-client-output` ✅ **ACTIVE**
+- **DynamoDB Tables**: 2/2 ✅ **ACTIVE**
+  - `ona-platform-locations` ✅ **ACTIVE**
+  - `ona-platform-weather-cache` ✅ **ACTIVE**
+- **API Gateway**: ✅ **ACTIVE**
+- **SSL Certificate**: ✅ **ISSUED**
+- **Route53 DNS**: ✅ **ACTIVE**
+
+**Endpoint Testing**:
+- `POST /upload_train` → 200 OK ✅
+- `POST /upload_nowcast` → 200 OK ✅
+- `GET /forecast` → 200 OK ✅
+
+### Deployment Commands
+
+**Full Deployment**:
+```bash
+./local-deploy.sh
+```
+
+**Infrastructure Rollback**:
+```bash
+./rollback.sh
+```
+
+**Validation**:
+```bash
+./validate.sh
+```
 
 ### Authentication and Security
 
