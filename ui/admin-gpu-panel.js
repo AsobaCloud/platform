@@ -1671,7 +1671,7 @@
                 data: {
                     labels: initialTempData.labels,
                     datasets: [{
-                        label: 'Temperature °C',
+                        label: 'Inverter Temperature °C',
                         data: initialTempData.data,
                         borderColor: '#22C55E',
                         backgroundColor: 'rgba(34, 197, 94, 0.1)',
