@@ -2532,18 +2532,18 @@
                     <!-- Performance Metrics Overview -->
                     <div class="performance-metrics">
                         <div class="performance-card">
-                            <div class="performance-value" id="gpuUtilization">78%</div>
-                            <div class="performance-label" id="utilizationLabel">Average Site Utilization</div>
+                            <div class="performance-value" id="gpuUtilization">679 kWh</div>
+                            <div class="performance-label" id="utilizationLabel">Total Power Production</div>
                             <div class="performance-trend trend-up" id="utilizationTrend">↗ +5% from yesterday</div>
                         </div>
                         <div class="performance-card">
                             <div class="performance-value" id="gpuTemperature">67°C</div>
-                            <div class="performance-label" id="temperatureLabel">Average Temperature</div>
+                            <div class="performance-label" id="temperatureLabel">Average Inverter Temperature</div>
                             <div class="performance-trend trend-stable" id="temperatureTrend">→ Stable</div>
                         </div>
                         <div class="performance-card">
-                            <div class="performance-value" id="gpuPower">185W</div>
-                            <div class="performance-label" id="powerLabel">Average Power Draw</div>
+                            <div class="performance-value" id="gpuPower">185 kWh</div>
+                            <div class="performance-label" id="powerLabel">Total Power Consumption</div>
                             <div class="performance-trend trend-down" id="powerTrend">↘ -12W from yesterday</div>
                         </div>
                         <div class="performance-card">
@@ -2553,10 +2553,10 @@
                         </div>
                     </div>
 
-                    <!-- Utilization Chart -->
+                    <!-- Efficiency Chart -->
                     <div class="chart-container">
                         <div class="chart-header">
-                            <h3 class="chart-title" id="utilizationChartTitle">Site Utilization Over Time</h3>
+                            <h3 class="chart-title" id="efficiencyChartTitle">Site Efficiency Over Time</h3>
                             <div class="chart-controls">
                                 <button class="chart-btn active" data-period="1h">1 Hour</button>
                                 <button class="chart-btn" data-period="6h">6 Hours</button>
@@ -2564,8 +2564,8 @@
                                 <button class="chart-btn" data-period="7d">7 Days</button>
                             </div>
                         </div>
-                        <div class="chart-canvas" id="utilizationChart">
-                            <canvas id="utilizationChartCanvas"></canvas>
+                        <div class="chart-canvas" id="efficiencyChart">
+                            <canvas id="efficiencyChartCanvas"></canvas>
                         </div>
                     </div>
 
@@ -2584,18 +2584,34 @@
                         </div>
                     </div>
 
+                    <!-- Power Production Chart -->
+                    <div class="chart-container">
+                        <div class="chart-header">
+                            <h3 class="chart-title" id="powerProductionChartTitle">Power Production Over Time</h3>
+                            <div class="chart-controls">
+                                <button class="chart-btn active" data-period="1h">1 Hour</button>
+                                <button class="chart-btn" data-period="6h">6 Hours</button>
+                                <button class="chart-btn" data-period="24h">24 Hours</button>
+                                <button class="chart-btn" data-period="7d">7 Days</button>
+                            </div>
+                        </div>
+                        <div class="chart-canvas" id="powerProductionChart">
+                            <canvas id="powerProductionChartCanvas"></canvas>
+                        </div>
+                    </div>
+
                     <!-- Power Consumption Chart -->
                     <div class="chart-container">
                         <div class="chart-header">
-                            <h3 class="chart-title" id="powerChartTitle">Power Consumption</h3>
+                            <h3 class="chart-title" id="powerConsumptionChartTitle">Power Consumption Over Time</h3>
                             <div class="chart-controls">
                                 <button class="chart-btn active" data-period="1h">1 Hour</button>
                                 <button class="chart-btn" data-period="6h">6 Hours</button>
                                 <button class="chart-btn" data-period="24h">24 Hours</button>
                             </div>
                         </div>
-                        <div class="chart-canvas" id="powerChart">
-                            <canvas id="powerChartCanvas"></canvas>
+                        <div class="chart-canvas" id="powerConsumptionChart">
+                            <canvas id="powerConsumptionChartCanvas"></canvas>
                         </div>
                     </div>
 

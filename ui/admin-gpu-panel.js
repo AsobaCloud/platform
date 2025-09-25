@@ -240,29 +240,58 @@
             });
             
             // Show the specific form
-            document.getElementById(`add-${sectionType}-form`).style.display = 'block';
+            const targetForm = document.getElementById(`add-${sectionType}-form`);
+            if (targetForm) {
+                targetForm.style.display = 'block';
+            } else {
+                console.error('Form not found for section:', sectionType);
+                alert('Form not found. Please refresh the page.');
+            }
         }
         
         function cancelAddComponent(sectionType) {
             // Hide the form
-            document.getElementById(`add-${sectionType}-form`).style.display = 'none';
+            const formElement = document.getElementById(`add-${sectionType}-form`);
+            if (formElement) {
+                formElement.style.display = 'none';
+            }
             
-            // Clear form fields
-            document.getElementById(`${sectionType}-sku`).value = '';
-            document.getElementById(`${sectionType}-model`).value = '';
-            document.getElementById(`${sectionType}-qty`).value = '1';
-            document.getElementById(`${sectionType}-install-date`).value = '';
-            document.getElementById(`${sectionType}-warranty-date`).value = '';
-            document.getElementById(`${sectionType}-documents`).value = '';
+            // Clear form fields with null checks
+            const skuElement = document.getElementById(`${sectionType}-sku`);
+            const modelElement = document.getElementById(`${sectionType}-model`);
+            const qtyElement = document.getElementById(`${sectionType}-qty`);
+            const installDateElement = document.getElementById(`${sectionType}-install-date`);
+            const warrantyDateElement = document.getElementById(`${sectionType}-warranty-date`);
+            const documentsElement = document.getElementById(`${sectionType}-documents`);
+            
+            if (skuElement) skuElement.value = '';
+            if (modelElement) modelElement.value = '';
+            if (qtyElement) qtyElement.value = '1';
+            if (installDateElement) installDateElement.value = '';
+            if (warrantyDateElement) warrantyDateElement.value = '';
+            if (documentsElement) documentsElement.value = '';
         }
         
         function saveComponent(sectionType) {
-            const sku = document.getElementById(`${sectionType}-sku`).value.trim();
-            const model = document.getElementById(`${sectionType}-model`).value.trim();
-            const qty = parseInt(document.getElementById(`${sectionType}-qty`).value) || 1;
-            const installDate = document.getElementById(`${sectionType}-install-date`).value;
-            const warrantyDate = document.getElementById(`${sectionType}-warranty-date`).value;
+            const skuElement = document.getElementById(`${sectionType}-sku`);
+            const modelElement = document.getElementById(`${sectionType}-model`);
+            const qtyElement = document.getElementById(`${sectionType}-qty`);
+            const installDateElement = document.getElementById(`${sectionType}-install-date`);
+            const warrantyDateElement = document.getElementById(`${sectionType}-warranty-date`);
             const fileInput = document.getElementById(`${sectionType}-documents`);
+            
+            // Check if elements exist
+            if (!skuElement || !modelElement || !qtyElement || !installDateElement || !warrantyDateElement || !fileInput) {
+                console.error('Required form elements not found for section:', sectionType);
+                alert('Form elements not found. Please refresh the page.');
+                return;
+            }
+            
+            const sku = skuElement.value.trim();
+            const model = modelElement.value.trim();
+            const qty = parseInt(qtyElement.value) || 1;
+            const installDate = installDateElement.value;
+            const warrantyDate = warrantyDateElement.value;
             
             // Validate required fields
             if (!sku || !model) {
@@ -410,46 +439,39 @@
             };
         }
         
-        // Cache for site data to ensure consistency
+        // PERSISTENT CACHE - Generate once, never regenerate
         let cachedSiteData = null;
         
         function getCachedSiteData(siteId) {
-            // Return cached data if it exists and is recent (within 5 seconds)
-            if (cachedSiteData && cachedSiteData.lastUpdate && (Date.now() - cachedSiteData.lastUpdate) < 5000) {
-                return cachedSiteData[siteId];
+            // Generate data ONLY if cache is completely empty
+            if (!cachedSiteData) {
+                generateAndCacheSiteData();
             }
             
-            // Generate new cached data
-            generateAndCacheSiteData();
+            // Always return cached data - NEVER regenerate
             return cachedSiteData[siteId];
         }
         
         function generateAndCacheSiteData() {
-            const currentHour = new Date().getHours();
-            const currentMinute = new Date().getMinutes();
-            
-            // Generate realistic site-specific solar factors
-            const cumminsSolarFactor = getSiteSpecificSolarFactor('cummins-midrand', currentHour, currentMinute);
-            const fnbSolarFactor = getSiteSpecificSolarFactor('fnb-willowbridge', currentHour, currentMinute);
-            
-            // Generate consistent data for both sites
-            const cumminsBase = getSiteData('cummins-midrand');
-            const fnbBase = getSiteData('fnb-willowbridge');
-            
+            // Use realistic, fixed data for solar sites
             cachedSiteData = {
                 'cummins-midrand': {
-                    utilization: Math.round(cumminsSolarFactor * 100),
-                    power: Math.round(cumminsBase.capacity * cumminsSolarFactor * 100) / 100,
-                    efficiency: Math.round(cumminsSolarFactor * 100),
-                    temperature: cumminsBase.temperature + Math.round(cumminsSolarFactor * 15),
-                    capacity: cumminsBase.capacity
+                    name: 'Cummins Midrand',
+                    utilization: 78,        // 78% utilization
+                    power: 641.1,          // 641.1 kWh power production (78% of 821.88 kW)
+                    consumption: 192.3,   // 192.3 kWh power consumption (30% of production)
+                    efficiency: 82,        // 82% efficiency
+                    temperature: 52,       // 52°C inverter temperature (higher due to larger system)
+                    capacity: 821.88       // 821.88 kW capacity
                 },
                 'fnb-willowbridge': {
-                    utilization: Math.round(fnbSolarFactor * 100),
-                    power: Math.round(fnbBase.capacity * fnbSolarFactor * 100) / 100,
-                    efficiency: Math.round(fnbSolarFactor * 100),
-                    temperature: fnbBase.temperature + Math.round(fnbSolarFactor * 15),
-                    capacity: fnbBase.capacity
+                    name: 'FNB Willowbridge',
+                    utilization: 65,        // 65% utilization
+                    power: 33.8,           // 33.8 kWh power production (65% of 51.98 kW)
+                    consumption: 13.5,     // 13.5 kWh power consumption (40% of production)
+                    efficiency: 68,        // 68% efficiency
+                    temperature: 48,       // 48°C inverter temperature (smaller system)
+                    capacity: 51.98        // 51.98 kW capacity
                 },
                 lastUpdate: Date.now()
             };
@@ -457,25 +479,7 @@
             cachedSiteData.lastUpdate = Date.now();
         }
         
-        // Generate site-specific solar factors based on location and conditions
-        function getSiteSpecificSolarFactor(siteId, hour, minute) {
-            // Base solar curve
-            let baseFactor = getSolarFactor(hour, minute);
-            
-            // Site-specific adjustments
-            if (siteId === 'cummins-midrand') {
-                // Cummins Midrand: Better location, higher efficiency
-                baseFactor *= (0.95 + Math.random() * 0.1); // 95-105% of base
-            } else if (siteId === 'fnb-willowbridge') {
-                // FNB Willowbridge: Urban location, potential shading
-                baseFactor *= (0.85 + Math.random() * 0.15); // 85-100% of base
-            }
-            
-            // Add some realistic variation
-            baseFactor += (Math.random() - 0.5) * 0.05; // ±2.5% variation
-            
-            return Math.max(0, Math.min(1, baseFactor)); // Clamp between 0 and 1
-        }
+        // Note: Solar factor functions removed - using fixed realistic data instead
 
         // Sample site data for solar sites
         const siteAssets = [
@@ -672,7 +676,7 @@
                         <span class="metric-value">${gpu.utilization}%</span>
                     </div>
                     <div class="metric-row">
-                        <span class="metric-label">Temperature:</span>
+                        <span class="metric-label">Inverter Temperature:</span>
                         <span class="metric-value">${gpu.temperature}°C</span>
                     </div>
                     <div class="metric-row">
@@ -1276,15 +1280,15 @@
                 const cumminsWeight = cummins.capacity / totalCapacity;
                 const fnbWeight = fnb.capacity / totalCapacity;
                 
-                // Weighted average utilization and efficiency
-                const avgUtil = Math.round((cummins.utilization * cumminsWeight) + (fnb.utilization * fnbWeight));
+                // Total power production (sum, not average) - convert to kWh
+                const totalPowerProduction = Math.round((cummins.power + fnb.power) * 100) / 100;
                 const avgEfficiency = Math.round((cummins.efficiency * cumminsWeight) + (fnb.efficiency * fnbWeight));
                 
                 // Weighted average temperature
                 const avgTemp = Math.round((cummins.temperature * cumminsWeight) + (fnb.temperature * fnbWeight));
                 
-                // Total power (sum, not average)
-                const totalPower = Math.round((cummins.power + fnb.power) * 100) / 100;
+                // Total power consumption (sum, not average) - convert to kWh
+                const totalPowerConsumption = Math.round((cummins.consumption + fnb.consumption) * 100) / 100;
                 
                 // Update DOM elements with calculated averages
                 const utilizationElement = document.getElementById('gpuUtilization');
@@ -1292,9 +1296,9 @@
                 const powerElement = document.getElementById('gpuPower');
                 const memoryElement = document.getElementById('gpuMemory');
                 
-                if (utilizationElement) utilizationElement.textContent = avgUtil + '%';
+                if (utilizationElement) utilizationElement.textContent = totalPowerProduction + ' kWh';
                 if (temperatureElement) temperatureElement.textContent = avgTemp + '°C';
-                if (powerElement) powerElement.textContent = totalPower + ' kW';
+                if (powerElement) powerElement.textContent = totalPowerConsumption + ' kWh';
                 if (memoryElement) memoryElement.textContent = avgEfficiency + '%';
                 
                 // Update labels to reflect averages
@@ -1303,16 +1307,16 @@
                 const powerLabel = document.getElementById('powerLabel');
                 const memoryLabel = document.getElementById('memoryLabel');
                 
-                if (utilizationLabel) utilizationLabel.textContent = 'Weighted Average Utilization';
-                if (temperatureLabel) temperatureLabel.textContent = 'Weighted Average Temperature';
-                if (powerLabel) powerLabel.textContent = 'Total Power Output';
+                if (utilizationLabel) utilizationLabel.textContent = 'Total Power Production';
+                if (temperatureLabel) temperatureLabel.textContent = 'Weighted Average Inverter Temperature';
+                if (powerLabel) powerLabel.textContent = 'Total Power Consumption';
                 if (memoryLabel) memoryLabel.textContent = 'Weighted Average Efficiency';
                 
                 // Update trend indicators for averages
-                updateAverageTrendIndicators(avgUtil, avgTemp, totalPower, avgEfficiency);
+                updateAverageTrendIndicators(totalPowerProduction, avgTemp, totalPowerConsumption, avgEfficiency);
                 
                 // Return the calculated averages for chart use
-                return { avgUtil, avgTemp, avgPower: totalPower, avgEfficiency };
+                return { totalPowerProduction, avgTemp, totalPowerConsumption, avgEfficiency };
             }
         }
 
@@ -1333,9 +1337,9 @@
             const powerElement = document.getElementById('gpuPower');
             const memoryElement = document.getElementById('gpuMemory');
             
-            if (utilizationElement) utilizationElement.textContent = site.utilization + '%';
+            if (utilizationElement) utilizationElement.textContent = site.power + ' kWh';
             if (temperatureElement) temperatureElement.textContent = site.temperature + '°C';
-            if (powerElement) powerElement.textContent = site.power + ' kW';
+            if (powerElement) powerElement.textContent = site.consumption + ' kWh';
             if (memoryElement) memoryElement.textContent = site.efficiency + '%';
             
             // Update labels to reflect individual site
@@ -1344,9 +1348,9 @@
             const powerLabel = document.getElementById('powerLabel');
             const memoryLabel = document.getElementById('memoryLabel');
             
-            if (utilizationLabel) utilizationLabel.textContent = site.name + ' Utilization';
-            if (temperatureLabel) temperatureLabel.textContent = site.name + ' Temperature';
-            if (powerLabel) powerLabel.textContent = site.name + ' Power Output';
+            if (utilizationLabel) utilizationLabel.textContent = site.name + ' Power Production';
+            if (temperatureLabel) temperatureLabel.textContent = site.name + ' Inverter Temperature';
+            if (powerLabel) powerLabel.textContent = site.name + ' Power Consumption';
             if (memoryLabel) memoryLabel.textContent = site.name + ' Efficiency';
             
             // Update trend indicators based on individual site status
@@ -1471,20 +1475,21 @@
                 console.log('Updating charts for:', selectedSiteId);
                 
                 // Skip if charts aren't initialized yet
-                if (!utilizationChartInstance && !temperatureChartInstance && !powerChartInstance) {
+                if (!efficiencyChartInstance && !temperatureChartInstance && !powerProductionChartInstance && !powerConsumptionChartInstance) {
                     console.log('Charts not initialized yet, skipping update');
                     return;
                 }
                 
                 // Get current time periods for each chart
-                const utilizationPeriod = document.querySelector('#utilizationChart')?.closest('.chart-container')?.querySelector('.chart-btn.active')?.getAttribute('data-period') || '24h';
+                const efficiencyPeriod = document.querySelector('#efficiencyChart')?.closest('.chart-container')?.querySelector('.chart-btn.active')?.getAttribute('data-period') || '24h';
                 const temperaturePeriod = document.querySelector('#temperatureChart')?.closest('.chart-container')?.querySelector('.chart-btn.active')?.getAttribute('data-period') || '1h';
-                const powerPeriod = document.querySelector('#powerChart')?.closest('.chart-container')?.querySelector('.chart-btn.active')?.getAttribute('data-period') || '1h';
+                const powerProductionPeriod = document.querySelector('#powerProductionChart')?.closest('.chart-container')?.querySelector('.chart-btn.active')?.getAttribute('data-period') || '24h';
+                const powerConsumptionPeriod = document.querySelector('#powerConsumptionChart')?.closest('.chart-container')?.querySelector('.chart-btn.active')?.getAttribute('data-period') || '1h';
                 
                 // Update each chart with new site data
-                if (utilizationChartInstance) {
-                    const utilizationData = generateChartData(selectedSiteId, utilizationPeriod, 'utilization');
-                    updateChart(utilizationChartInstance, utilizationData.labels, utilizationData.data, selectedSiteId, utilizationPeriod, 'utilization');
+                if (efficiencyChartInstance) {
+                    const efficiencyData = generateChartData(selectedSiteId, efficiencyPeriod, 'efficiency');
+                    updateChart(efficiencyChartInstance, efficiencyData.labels, efficiencyData.data, selectedSiteId, efficiencyPeriod, 'efficiency');
                 }
                 
                 if (temperatureChartInstance) {
@@ -1492,9 +1497,14 @@
                     updateChart(temperatureChartInstance, temperatureData.labels, temperatureData.data, selectedSiteId, temperaturePeriod, 'temperature');
                 }
                 
-                if (powerChartInstance) {
-                    const powerData = generateChartData(selectedSiteId, powerPeriod, 'power');
-                    updateChart(powerChartInstance, powerData.labels, powerData.data, selectedSiteId, powerPeriod, 'power');
+                if (powerProductionChartInstance) {
+                    const powerProductionData = generateChartData(selectedSiteId, powerProductionPeriod, 'powerProduction');
+                    updateChart(powerProductionChartInstance, powerProductionData.labels, powerProductionData.data, selectedSiteId, powerProductionPeriod, 'powerProduction');
+                }
+                
+                if (powerConsumptionChartInstance) {
+                    const powerConsumptionData = generateChartData(selectedSiteId, powerConsumptionPeriod, 'powerConsumption');
+                    updateChart(powerConsumptionChartInstance, powerConsumptionData.labels, powerConsumptionData.data, selectedSiteId, powerConsumptionPeriod, 'powerConsumption');
                 }
             } catch (error) {
                 console.error('Error updating charts:', error);
@@ -1550,28 +1560,30 @@
         }
 
         // Chart instances
-        let utilizationChartInstance = null;
+        let efficiencyChartInstance = null;
         let temperatureChartInstance = null;
-        let powerChartInstance = null;
+        let powerProductionChartInstance = null;
+        let powerConsumptionChartInstance = null;
 
 
         // Initialize all charts
         function initializeCharts() {
             try {
-                initializeUtilizationChart();
+                initializeEfficiencyChart();
                 initializeTemperatureChart();
-                initializePowerChart();
+                initializePowerProductionChart();
+                initializePowerConsumptionChart();
                 console.log('Charts initialized successfully');
             } catch (error) {
                 console.error('Error initializing charts:', error);
             }
         }
 
-        // Initialize utilization chart
-        function initializeUtilizationChart() {
-            const ctx = document.getElementById('utilizationChartCanvas');
+        // Initialize efficiency chart
+        function initializeEfficiencyChart() {
+            const ctx = document.getElementById('efficiencyChartCanvas');
             if (!ctx) {
-                console.log('Utilization chart canvas not found');
+                console.log('Efficiency chart canvas not found');
                 return;
             }
 
@@ -1580,20 +1592,20 @@
                 return;
             }
 
-            if (utilizationChartInstance) {
-                utilizationChartInstance.destroy();
+            if (efficiencyChartInstance) {
+                efficiencyChartInstance.destroy();
             }
 
             try {
                 // Get initial data for the chart
-            const initialData = generateChartData('all', '24h', 'utilization');
+            const initialData = generateChartData('all', '24h', 'efficiency');
             
-            utilizationChartInstance = new Chart(ctx, {
+            efficiencyChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: initialData.labels,
                     datasets: [{
-                        label: 'Utilization %',
+                        label: 'Efficiency %',
                         data: initialData.data,
                         borderColor: '#455BF1',
                         backgroundColor: 'rgba(69, 91, 241, 0.1)',
@@ -1683,8 +1695,8 @@
                     scales: {
                         y: {
                             beginAtZero: false,
-                            min: 15,
-                            max: 45,
+                            min: 20,
+                            max: 70,
                             ticks: {
                                 callback: function(value) {
                                     return value + '°C';
@@ -1707,29 +1719,29 @@
         }
 
         // Initialize power chart
-        function initializePowerChart() {
-            const ctx = document.getElementById('powerChartCanvas');
+        function initializePowerProductionChart() {
+            const ctx = document.getElementById('powerProductionChartCanvas');
             if (!ctx) return;
 
-            if (powerChartInstance) {
-                powerChartInstance.destroy();
+            if (powerProductionChartInstance) {
+                powerProductionChartInstance.destroy();
             }
 
             // Get initial data for the chart
-            const initialPowerData = generateChartData('all', '1h', 'power');
+            const initialPowerData = generateChartData('all', '24h', 'powerProduction');
             
-            powerChartInstance = new Chart(ctx, {
+            powerProductionChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: initialPowerData.labels,
                     datasets: [{
-                        label: 'Power kW',
+                        label: 'Power Production (kWh)',
                         data: initialPowerData.data,
-                        borderColor: '#F59E0B',
-                        backgroundColor: 'rgba(245, 158, 11, 0.1)',
+                        borderColor: '#4ECDC4',
+                        backgroundColor: 'rgba(78, 205, 196, 0.1)',
                         borderWidth: 3,
-                        pointBackgroundColor: '#F59E0B',
-                        pointBorderColor: '#F59E0B',
+                        pointBackgroundColor: '#4ECDC4',
+                        pointBorderColor: '#4ECDC4',
                         pointRadius: 4,
                         pointHoverRadius: 6,
                         fill: true,
@@ -1750,6 +1762,73 @@
                             ticks: {
                                 callback: function(value) {
                                     return value + ' kW';
+                                }
+                            }
+                        },
+                        x: {
+                            grid: {
+                                display: true,
+                                color: '#e0e0e0'
+                            }
+                        }
+                    },
+                    interaction: {
+                        intersect: false,
+                        mode: 'index'
+                    }
+                }
+            });
+        }
+
+        // Initialize power consumption chart
+        function initializePowerConsumptionChart() {
+            const ctx = document.getElementById('powerConsumptionChartCanvas');
+            if (!ctx) return;
+
+            if (powerConsumptionChartInstance) {
+                powerConsumptionChartInstance.destroy();
+            }
+
+            // Get initial data for the chart
+            const initialPowerData = generateChartData('all', '1h', 'powerConsumption');
+            
+            powerConsumptionChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: initialPowerData.labels,
+                    datasets: [{
+                        label: 'Power Consumption (kWh)',
+                        data: initialPowerData.data,
+                        borderColor: '#FF6B6B',
+                        backgroundColor: 'rgba(255, 107, 107, 0.1)',
+                        borderWidth: 3,
+                        pointBackgroundColor: '#FF6B6B',
+                        pointBorderColor: '#FF6B6B',
+                        pointRadius: 4,
+                        pointHoverRadius: 6,
+                        fill: true,
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    plugins: {
+                        legend: {
+                            display: true,
+                            position: 'top'
+                        }
+                    },
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            grid: {
+                                display: true,
+                                color: '#e0e0e0'
+                            },
+                            ticks: {
+                                callback: function(value) {
+                                    return value + ' kWh';
                                 }
                             }
                         },
@@ -1827,86 +1906,115 @@
                     const cumminsWeight = cummins.capacity / totalCapacity;
                     const fnbWeight = fnb.capacity / totalCapacity;
                     
-                    if (type === 'utilization') {
-                        currentValue = Math.round((cummins.utilization * cumminsWeight) + (fnb.utilization * fnbWeight));
+                    if (type === 'efficiency') {
+                        currentValue = Math.round((cummins.efficiency * cumminsWeight) + (fnb.efficiency * fnbWeight));
                     } else if (type === 'temperature') {
                         currentValue = Math.round((cummins.temperature * cumminsWeight) + (fnb.temperature * fnbWeight));
-                    } else if (type === 'power') {
-                        currentValue = Math.round((cummins.power + fnb.power) * 100) / 100; // Sum for power
+                    } else if (type === 'powerProduction') {
+                        currentValue = Math.round((cummins.power + fnb.power) * 100) / 100; // Sum for power production
+                    } else if (type === 'powerConsumption') {
+                        // Use cached consumption data
+                        currentValue = Math.round((cummins.consumption + fnb.consumption) * 100) / 100;
                     }
                 }
             } else {
                 // For individual sites, use exact cached values
                 const siteData = getCachedSiteData(siteId);
                 if (siteData) {
-                    if (type === 'utilization') {
-                        currentValue = siteData.utilization;
+                    if (type === 'efficiency') {
+                        currentValue = siteData.efficiency;
                     } else if (type === 'temperature') {
                         currentValue = siteData.temperature;
-                    } else if (type === 'power') {
+                    } else if (type === 'powerProduction') {
                         currentValue = siteData.power;
+                    } else if (type === 'powerConsumption') {
+                        currentValue = siteData.consumption; // Use cached consumption data
                     }
                 }
             }
 
-            // Generate realistic time series data based on solar production patterns
+            // Generate realistic solar time series data
             const data = [];
             
             for (let i = 0; i < dataPoints; i++) {
                 let value = currentValue;
                 
-                // Calculate time offset based on period
-                let timeOffset = 0;
-                let timeFactor = 1;
+                // Calculate solar factor based on time of day for realistic patterns
+                let solarFactor = 1.0;
+                const timeIndex = i / (dataPoints - 1); // 0 to 1
                 
-                switch (period) {
-                    case '1h':
-                        // 5-minute intervals over 1 hour
-                        timeOffset = -(dataPoints - 1 - i) * 5; // minutes ago
-                        const pastMinute = now.getMinutes() + timeOffset;
-                        const pastHour1h = now.getHours() + Math.floor(pastMinute / 60);
-                        const adjustedMinute = ((pastMinute % 60) + 60) % 60;
-                        timeFactor = getSolarFactor(pastHour1h, adjustedMinute);
-                        break;
-                    case '6h':
-                        // 1-hour intervals over 6 hours
-                        timeOffset = -(dataPoints - 1 - i) * 60; // minutes ago
-                        const pastHour = new Date(now.getTime() + timeOffset * 60000);
-                        timeFactor = getSolarFactor(pastHour.getHours(), pastHour.getMinutes());
-                        break;
-                    case '24h':
-                        // 4-hour intervals over 24 hours
-                        timeOffset = -(dataPoints - 1 - i) * 4; // hours ago
-                        const pastDayHour = (now.getHours() + timeOffset + 24) % 24;
-                        timeFactor = getSolarFactor(pastDayHour, 0);
-                        break;
-                    case '7d':
-                        // Daily averages over 7 days
-                        timeOffset = -(dataPoints - 1 - i) * 24; // hours ago
-                        const pastDayHour7d = (now.getHours() + timeOffset + 24) % 24;
-                        timeFactor = getSolarFactor(pastDayHour7d, 0);
-                        break;
-                }
-                
-                // Apply solar factor to current value
-                if (type === 'utilization' || type === 'power') {
-                    value = currentValue * timeFactor;
+                if (type === 'powerProduction' || type === 'powerConsumption') {
+                    // Solar production follows realistic daily curve with night = zero
+                    if (period === '1h') {
+                        // Hourly: assume midday peak (solarFactor = 1.0)
+                        solarFactor = 0.95 + Math.random() * 0.1; // 95-105% variation
+                    } else if (period === '6h') {
+                        // 6-hour: morning to afternoon curve (daylight hours)
+                        solarFactor = Math.sin(timeIndex * Math.PI) * 0.3 + 0.7; // 70-100% curve
+                    } else if (period === '24h') {
+                        // 24-hour: full daily solar curve with night = zero
+                        const hourOfDay = timeIndex * 24; // 0-24 hours
+                        if (hourOfDay < 6 || hourOfDay > 18) {
+                            solarFactor = 0; // Night time = zero production
+                        } else {
+                            // Day time: bell curve centered at noon (12:00)
+                            const dayProgress = (hourOfDay - 6) / 12; // 0-1 from 6am to 6pm
+                            solarFactor = Math.sin(dayProgress * Math.PI); // Peak at noon
+                        }
+                    } else if (period === '7d') {
+                        // 7-day: daily averages with weather variation (assume daytime average)
+                        solarFactor = 0.6 + Math.random() * 0.4; // 60-100% variation
+                    }
+                    
+                    value = currentValue * solarFactor;
+                } else if (type === 'efficiency') {
+                    // Efficiency varies less and stays high during good conditions
+                    if (period === '1h') {
+                        solarFactor = 0.98 + Math.random() * 0.04; // 98-102% (very stable)
+                    } else if (period === '6h') {
+                        solarFactor = 0.95 + Math.random() * 0.1; // 95-105%
+                    } else if (period === '24h') {
+                        solarFactor = 0.9 + Math.random() * 0.2; // 90-110%
+                    } else if (period === '7d') {
+                        solarFactor = 0.85 + Math.random() * 0.3; // 85-115%
+                    }
+                    
+                    value = currentValue * solarFactor;
                 } else if (type === 'temperature') {
-                    // Temperature varies with solar intensity
-                    value = currentValue * (0.8 + 0.4 * timeFactor);
+                    // Inverter temperature follows load and ambient conditions
+                    if (period === '1h') {
+                        solarFactor = 0.95 + Math.random() * 0.1; // Small variation
+                    } else if (period === '6h') {
+                        solarFactor = Math.sin(timeIndex * Math.PI) * 0.15 + 0.85; // Daily temp curve (less variation)
+                    } else if (period === '24h') {
+                        // 24-hour: inverter temperature follows load and ambient
+                        const hourOfDay = timeIndex * 24; // 0-24 hours
+                        if (hourOfDay < 6 || hourOfDay > 18) {
+                            solarFactor = 0.8; // Night time = cooler but not ambient (inverters still warm)
+                        } else {
+                            // Day time: temperature rises with load and ambient
+                            const dayProgress = (hourOfDay - 6) / 12; // 0-1 from 6am to 6pm
+                            solarFactor = 0.8 + 0.2 * Math.sin(dayProgress * Math.PI); // 80-100% temp curve
+                        }
+                    } else if (period === '7d') {
+                        solarFactor = 0.85 + Math.random() * 0.3; // Weather variation
+                    }
+                    
+                    value = currentValue * solarFactor;
                 }
                 
-                // Add realistic variation (±5% for utilization/power, ±2°C for temperature)
-                let variation = 0;
-                if (type === 'utilization' || type === 'power') {
-                    variation = value * 0.05;
+                // Ensure values are realistic for solar systems
+                if (type === 'efficiency') {
+                    value = Math.max(60, Math.min(95, value)); // Solar efficiency: 60-95%
                 } else if (type === 'temperature') {
-                    variation = 2;
+                    value = Math.max(35, Math.min(65, value)); // Inverter temp: 35-65°C
+                } else if (type === 'powerProduction') {
+                    value = Math.max(0, value); // Power: 0+ kWh
+                } else if (type === 'powerConsumption') {
+                    value = Math.max(0, value); // Consumption: 0+ kWh
                 }
                 
-                value += (Math.random() - 0.5) * variation;
-                
-                data.push(Math.max(0, Math.round(value * 100) / 100));
+                data.push(Math.round(value * 100) / 100);
             }
             
             return { labels, data };
@@ -1979,15 +2087,18 @@
             const chartId = chartCanvas.id;
             
             let chartType, chartInstance;
-            if (chartId === 'utilizationChartCanvas') {
-                chartType = 'utilization';
-                chartInstance = utilizationChartInstance;
+            if (chartId === 'efficiencyChartCanvas') {
+                chartType = 'efficiency';
+                chartInstance = efficiencyChartInstance;
             } else if (chartId === 'temperatureChartCanvas') {
                 chartType = 'temperature';
                 chartInstance = temperatureChartInstance;
-            } else if (chartId === 'powerChartCanvas') {
-                chartType = 'power';
-                chartInstance = powerChartInstance;
+            } else if (chartId === 'powerProductionChartCanvas') {
+                chartType = 'powerProduction';
+                chartInstance = powerProductionChartInstance;
+            } else if (chartId === 'powerConsumptionChartCanvas') {
+                chartType = 'powerConsumption';
+                chartInstance = powerConsumptionChartInstance;
             }
             
             if (chartInstance && chartType) {
@@ -1998,7 +2109,8 @@
 
         // Refresh Site data
         function refreshSiteData() {
-            // Force regeneration of cached data
+            // Clear cache and regenerate (only when user explicitly refreshes)
+            cachedSiteData = null;
             generateAndCacheSiteData();
             
             const selectedSiteId = document.getElementById('siteSelector').value;
@@ -2064,8 +2176,8 @@
                 // Update average metrics
                 updateAverageMetrics();
             } else {
-                // Update individual site metrics
-                const selectedSite = siteAssets.find(site => site.id === selectedSiteId);
+                // Update individual site metrics using cached data
+                const selectedSite = getCachedSiteData(selectedSiteId);
                 if (selectedSite) {
                     updateIndividualSiteMetrics(selectedSite);
                 }
@@ -2075,31 +2187,7 @@
         
         
         
-        // Calculate solar factor based on time of day (realistic solar curve)
-        function getSolarFactor(hour, minute) {
-            // Solar production curve: 0% at night, peaks at midday
-            if (hour < 6 || hour > 18) {
-                return 0; // No solar production at night
-            }
-            
-            // Convert to decimal hours for smoother curve
-            const decimalHour = hour + (minute / 60);
-            
-            // Create realistic solar curve (bell curve centered around 12:00)
-            const centerHour = 12;
-            const width = 6; // 6-hour width for reasonable curve
-            
-            // Calculate distance from center
-            const distance = Math.abs(decimalHour - centerHour);
-            
-            // Create bell curve (Gaussian-like)
-            const factor = Math.exp(-Math.pow(distance / width, 2));
-            
-            // Add some realistic variation (±10%)
-            const variation = 0.9 + (Math.random() * 0.2);
-            
-            return Math.max(0, Math.min(1, factor * variation));
-        }
+        // Note: Solar factor calculation removed - using fixed realistic data instead
         
         
 
