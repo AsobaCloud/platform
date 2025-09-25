@@ -5363,7 +5363,6 @@
 
             // Generate realistic time series data based on solar production patterns
             const data = [];
-            const now = new Date();
             
             for (let i = 0; i < dataPoints; i++) {
                 let value = currentValue;
@@ -5376,7 +5375,10 @@
                     case '1h':
                         // 5-minute intervals over 1 hour
                         timeOffset = -(dataPoints - 1 - i) * 5; // minutes ago
-                        timeFactor = getSolarFactor(now.getHours(), now.getMinutes() + timeOffset);
+                        const pastMinute = now.getMinutes() + timeOffset;
+                        const pastHour1h = now.getHours() + Math.floor(pastMinute / 60);
+                        const adjustedMinute = ((pastMinute % 60) + 60) % 60;
+                        timeFactor = getSolarFactor(pastHour1h, adjustedMinute);
                         break;
                     case '6h':
                         // 1-hour intervals over 6 hours
