@@ -55,41 +55,7 @@ function checkJSFile(filePath) {
         }
     });
     
-    // 3. MISSING FUNCTION DEFINITIONS - Check for undefined function calls
-    const functionDefinitions = content.match(/function\s+(\w+)/g) || [];
-    const definedFunctionNames = functionDefinitions.map(f => f.match(/function\s+(\w+)/)[1]);
-    
-    const functionCalls = content.match(/\b(\w+)\s*\(/g) || [];
-    const builtInFunctions = [
-        'alert', 'console', 'parseInt', 'parseFloat', 'Math', 'Date', 'String', 'Number',
-        'setTimeout', 'setInterval', 'addEventListener', 'querySelector', 'querySelectorAll',
-        'toUpperCase', 'toLowerCase', 'trim', 'getDate', 'toISOString', 'reset', 'random',
-        'getHours', 'destroy', 'preventDefault', 'remove', 'toLocaleString',
-        'toLocaleDateString', 'click', 'push', 'find', 'forEach', 'map', 'filter',
-        'includes', 'indexOf', 'charAt', 'slice', 'split', 'join', 'replace', 'match',
-        'test', 'exec', 'toString', 'valueOf', 'hasOwnProperty', 'isPrototypeOf',
-        'propertyIsEnumerable', 'getTime', 'update', 'getContext', 'closest', 'classList',
-        'add', 'remove', 'contains', 'toggle', 'getMinutes', 'getSeconds', 'getMilliseconds',
-        'getFullYear', 'getMonth', 'getDay', 'setHours', 'setMinutes', 'setSeconds', 'setTime',
-        'log', 'error', 'warn', 'info', 'round', 'floor', 'ceil', 'max', 'min', 'abs',
-        'createElement', 'appendChild', 'removeChild', 'insertBefore', 'replaceChild',
-        'getAttribute', 'setAttribute', 'removeAttribute', 'hasAttribute', 'getElementsByTagName',
-        'getElementsByClassName', 'createTextNode', 'innerHTML', 'innerText', 'textContent',
-        'value', 'checked', 'selected', 'disabled', 'style', 'className', 'id', 'parentNode',
-        'childNodes', 'firstChild', 'lastChild', 'nextSibling', 'previousSibling',
-        'offsetWidth', 'offsetHeight', 'clientWidth', 'clientHeight', 'scrollWidth', 'scrollHeight'
-    ];
-    
-    const customFunctionCalls = functionCalls
-        .map(call => call.match(/\b(\w+)\s*\(/)[1])
-        .filter(funcName => !builtInFunctions.includes(funcName) && funcName.match(/^[a-z]/));
-    
-    const undefinedFunctions = customFunctionCalls.filter(funcName => !definedFunctionNames.includes(funcName));
-    
-    if (undefinedFunctions.length > 0) {
-        const uniqueUndefinedFunctions = [...new Set(undefinedFunctions)];
-        issues.push(`Undefined function calls: ${uniqueUndefinedFunctions.join(', ')}`);
-    }
+    // 3. MISSING FUNCTION DEFINITIONS - Skip for individual files, handled globally below
     
     // 4. EXISTING CHECKS (Maintained for backward compatibility)
     
@@ -140,6 +106,8 @@ function checkJSFile(filePath) {
     }
     
     // Check for duplicate function definitions
+    const functionDefinitions = content.match(/function\s+(\w+)/g) || [];
+    const definedFunctionNames = functionDefinitions.map(f => f.match(/function\s+(\w+)/)[1]);
     const duplicateFunctions = definedFunctionNames.filter((func, index) => definedFunctionNames.indexOf(func) !== index);
     if (duplicateFunctions.length > 0) {
         issues.push(`Duplicate function definitions: ${duplicateFunctions.join(', ')}`);
@@ -160,16 +128,83 @@ function getLineNumber(content, searchString) {
     }
 }
 
-// Check the main HTML file
-const filePath = 'admin-gpu-panel.html';
-if (fs.existsSync(filePath)) {
-    const issues = checkJSFile(filePath);
-    if (issues.length > 0) {
-        console.error(`❌ ${filePath}: ${issues.join(', ')}`);
-        process.exit(1);
-    } else {
-        console.log(`✅ ${filePath}: No issues found`);
+// Check both HTML and JS files together
+const htmlFilePath = 'admin-gpu-panel.html';
+const jsFilePath = 'admin-gpu-panel.js';
+
+let allIssues = [];
+
+// Check HTML file
+if (fs.existsSync(htmlFilePath)) {
+    const htmlIssues = checkJSFile(htmlFilePath);
+    if (htmlIssues.length > 0) {
+        allIssues.push(`${htmlFilePath}: ${htmlIssues.join(', ')}`);
     }
 } else {
     console.log('No HTML file found to check');
+}
+
+// Check JS file
+if (fs.existsSync(jsFilePath)) {
+    const jsIssues = checkJSFile(jsFilePath);
+    if (jsIssues.length > 0) {
+        allIssues.push(`${jsFilePath}: ${jsIssues.join(', ')}`);
+    }
+} else {
+    console.log('No JS file found to check');
+}
+
+// Cross-reference function calls in HTML with definitions in JS
+if (fs.existsSync(htmlFilePath) && fs.existsSync(jsFilePath)) {
+    const htmlContent = fs.readFileSync(htmlFilePath, 'utf8');
+    const jsContent = fs.readFileSync(jsFilePath, 'utf8');
+    
+    // Extract function definitions from JS file
+    const jsFunctionDefinitions = jsContent.match(/function\s+(\w+)/g) || [];
+    const definedFunctionNames = jsFunctionDefinitions.map(f => f.match(/function\s+(\w+)/)[1]);
+    
+    // Extract function calls from HTML file (only in event handlers)
+    const htmlFunctionCalls = htmlContent.match(/on\w+="[^"]*(\w+)\s*\([^"]*"/g) || [];
+    const builtInFunctions = [
+        'alert', 'console', 'parseInt', 'parseFloat', 'Math', 'Date', 'String', 'Number',
+        'setTimeout', 'setInterval', 'addEventListener', 'querySelector', 'querySelectorAll',
+        'toUpperCase', 'toLowerCase', 'trim', 'getDate', 'toISOString', 'reset', 'random',
+        'getHours', 'destroy', 'preventDefault', 'remove', 'toLocaleString',
+        'toLocaleDateString', 'click', 'push', 'find', 'forEach', 'map', 'filter',
+        'includes', 'indexOf', 'charAt', 'slice', 'split', 'join', 'replace', 'match',
+        'test', 'exec', 'toString', 'valueOf', 'hasOwnProperty', 'isPrototypeOf',
+        'propertyIsEnumerable', 'getTime', 'update', 'getContext', 'closest', 'classList',
+        'add', 'remove', 'contains', 'toggle', 'getMinutes', 'getSeconds', 'getMilliseconds',
+        'getFullYear', 'getMonth', 'getDay', 'setHours', 'setMinutes', 'setSeconds', 'setTime',
+        'log', 'error', 'warn', 'info', 'round', 'floor', 'ceil', 'max', 'min', 'abs',
+        'createElement', 'appendChild', 'removeChild', 'insertBefore', 'replaceChild',
+        'getAttribute', 'setAttribute', 'removeAttribute', 'hasAttribute', 'getElementsByTagName',
+        'getElementsByClassName', 'createTextNode', 'innerHTML', 'innerText', 'textContent',
+        'value', 'checked', 'selected', 'disabled', 'style', 'className', 'id', 'parentNode',
+        'childNodes', 'firstChild', 'lastChild', 'nextSibling', 'previousSibling',
+        'offsetWidth', 'offsetHeight', 'clientWidth', 'clientHeight', 'scrollWidth', 'scrollHeight'
+    ];
+    
+    const customFunctionCalls = htmlFunctionCalls
+        .map(call => {
+            // Extract function name from onclick="functionName(" pattern
+            const match = call.match(/on\w+="([^"()]+)\s*\(/);
+            return match ? match[1] : null;
+        })
+        .filter(funcName => funcName && !builtInFunctions.includes(funcName) && funcName.match(/^[a-z]/));
+    
+    const undefinedFunctions = customFunctionCalls.filter(funcName => !definedFunctionNames.includes(funcName));
+    
+    if (undefinedFunctions.length > 0) {
+        const uniqueUndefinedFunctions = [...new Set(undefinedFunctions)];
+        allIssues.push(`${htmlFilePath}: Undefined function calls: ${uniqueUndefinedFunctions.join(', ')}`);
+    }
+}
+
+// Report results
+if (allIssues.length > 0) {
+    allIssues.forEach(issue => console.error(`❌ ${issue}`));
+    process.exit(1);
+} else {
+    console.log(`✅ All files checked: No issues found`);
 }
