@@ -47,7 +47,7 @@ echo ""
 
 # API Gateway
 echo "API Gateway:"
-API_ID=$(aws apigateway get-rest-apis --query "items[?name=='${API_NAME}'].id | [0]" --output text --region "$AWS_REGION" || true)
+API_ID=$(aws apigateway get-rest-apis --query "items[?name=='${API_NAME}'].id | [0]" --output text --region "$AWS_REGION" || echo "None")
 if [[ -n "${API_ID}" && "${API_ID}" != "None" ]]; then
   echo "API exists: OK (ID: ${API_ID})"
   API_BASE_URL="https://${API_ID}.execute-api.${AWS_REGION}.amazonaws.com/${STAGE}"
@@ -88,13 +88,13 @@ check "weatherCache schedule" "aws events describe-rule --name ona-weatherCache-
 echo ""
 # S3 event notifications
 echo "S3 Notifications:"
-NOTIFS=$(aws s3api get-bucket-notification-configuration --bucket "${INPUT_BUCKET}" 2>/dev/null || echo '{}')
+NOTIFS=$(aws s3api get-bucket-notification-configuration --bucket "${INPUT_BUCKET}" 2>/dev/null || echo '{"LambdaFunctionConfigurations":[]}')
 if echo "${NOTIFS}" | grep -q "LambdaFunctionConfigurations"; then echo "OK"; else echo "ERROR"; ((ERRORS++)); fi
 
 echo ""
 # Logs
 echo "CloudWatch Logs:"
-COUNT=$(aws logs describe-log-groups --log-group-name-prefix "/aws/lambda/ona-" --region "${AWS_REGION}" --query 'length(logGroups)' --output text || echo 0)
+COUNT=$(aws logs describe-log-groups --log-group-name-prefix "/aws/lambda/ona-" --region "${AWS_REGION}" --query 'length(logGroups)' --output text || echo "0")
 if [[ "${COUNT}" =~ ^[0-9]+$ && ${COUNT} -ge 5 ]]; then echo "OK (${COUNT} groups)"; else echo "WARN (${COUNT})"; ((WARNINGS++)); fi
 
 echo ""

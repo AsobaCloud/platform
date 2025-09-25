@@ -42,7 +42,7 @@ fi
 
 echo "Using API ID: ${API_ID}"
 
-DOMAIN_EXISTS=$(aws apigateway get-domain-name --domain-name "${API_DOMAIN}" --region "$AWS_REGION" 2>&1 || true)
+DOMAIN_EXISTS=$(aws apigateway get-domain-name --domain-name "${API_DOMAIN}" --region "$AWS_REGION" 2>&1 || echo "NotFoundException")
 if [[ "${DOMAIN_EXISTS}" != *"NotFoundException"* && -n "${DOMAIN_EXISTS}" ]]; then
   echo "Custom domain ${API_DOMAIN} already exists"
   DOMAIN_INFO=$(aws apigateway get-domain-name --domain-name "${API_DOMAIN}" --region "$AWS_REGION")
@@ -67,7 +67,7 @@ MAPPINGS=$(aws apigateway get-base-path-mappings --domain-name "${API_DOMAIN}" -
 for path in ${MAPPINGS}; do
   [[ "${path}" == "(none)" ]] && path=""
   echo "Removing existing mapping: ${path:-'(root)'}"
-  aws apigateway delete-base-path-mapping --domain-name "${API_DOMAIN}" --base-path "${path}" --region "$AWS_REGION" 2>/dev/null || true
+  aws apigateway delete-base-path-mapping --domain-name "${API_DOMAIN}" --base-path "${path}" --region "$AWS_REGION" 2>/dev/null || log_warn "Failed to delete base path mapping for ${path}"
 done
 
 echo "Creating base path mapping to ${API_NAME}:${STAGE}"

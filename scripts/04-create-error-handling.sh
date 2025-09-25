@@ -38,7 +38,7 @@ for service in "${SERVICES[@]}"; do
     --evaluation-periods 1 \
     --alarm-actions "${TOPIC_ARN}" \
     --treat-missing-data notBreaching \
-    --region "${AWS_REGION}" 1>/dev/null || true
+    --region "${AWS_REGION}" 1>/dev/null || error_exit "Failed to create CloudWatch alarm ${ALARM_NAME}"
 
 done
 

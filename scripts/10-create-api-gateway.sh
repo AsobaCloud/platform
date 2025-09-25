@@ -32,11 +32,11 @@ create_method_integration() {
   fi
 
   # Put method (no auth)
-  aws apigateway put-method --rest-api-id "${API_ID}" --resource-id "${res_id}" --http-method "${method}" --authorization-type "NONE" --region "${AWS_REGION}" 1>/dev/null || true
+  aws apigateway put-method --rest-api-id "${API_ID}" --resource-id "${res_id}" --http-method "${method}" --authorization-type "NONE" --region "${AWS_REGION}" 1>/dev/null || error_exit "Failed to create ${method} method for ${path}"
 
   # Lambda permission
   local fn_arn=$(aws lambda get-function --function-name "${fn_name}" --region "${AWS_REGION}" --query 'Configuration.FunctionArn' --output text)
-  aws lambda add-permission --function-name "${fn_name}" --statement-id "apigw-${path}-${method}" --action lambda:InvokeFunction --principal apigateway.amazonaws.com --source-arn "arn:aws:execute-api:${AWS_REGION}:${AWS_ACCOUNT_ID}:${API_ID}/*/${method}/$path" --region "${AWS_REGION}" 2>/dev/null || true
+  aws lambda add-permission --function-name "${fn_name}" --statement-id "apigw-${path}-${method}" --action lambda:InvokeFunction --principal apigateway.amazonaws.com --source-arn "arn:aws:execute-api:${AWS_REGION}:${AWS_ACCOUNT_ID}:${API_ID}/*/${method}/$path" --region "${AWS_REGION}" 2>/dev/null || error_exit "Failed to add API Gateway permission for ${fn_name}"
 
   # Integration (Lambda proxy)
   aws apigateway put-integration \

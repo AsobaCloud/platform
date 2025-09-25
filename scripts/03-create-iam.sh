@@ -29,8 +29,8 @@ create_role_if_missing() {
 
 attach_managed_policies() {
   local role_name=$1
-  aws iam attach-role-policy --role-name "${role_name}" --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole 1>/dev/null || true
-  aws iam attach-role-policy --role-name "${role_name}" --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole 1>/dev/null || true
+  aws iam attach-role-policy --role-name "${role_name}" --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaBasicExecutionRole 1>/dev/null || error_exit "Failed to attach AWSLambdaBasicExecutionRole to ${role_name}"
+  aws iam attach-role-policy --role-name "${role_name}" --policy-arn arn:aws:iam::aws:policy/service-role/AWSLambdaVPCAccessExecutionRole 1>/dev/null || error_exit "Failed to attach AWSLambdaVPCAccessExecutionRole to ${role_name}"
 }
 
 # Add common ECR and SQS permissions to all Lambda roles
@@ -177,7 +177,7 @@ if ! aws iam get-role --role-name ona-sagemaker-execution-role >/dev/null 2>&1; 
   aws iam create-role --role-name ona-sagemaker-execution-role --assume-role-policy-document '{
     "Version":"2012-10-17",
     "Statement":[{"Effect":"Allow","Principal":{"Service":["sagemaker.amazonaws.com"]},"Action":"sts:AssumeRole"}]}' 1>/dev/null
-  aws iam attach-role-policy --role-name ona-sagemaker-execution-role --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess 1>/dev/null || true
+  aws iam attach-role-policy --role-name ona-sagemaker-execution-role --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess 1>/dev/null || error_exit "Failed to attach AmazonS3FullAccess to ona-sagemaker-execution-role"
 fi
 
 log_success "IAM configuration complete"
