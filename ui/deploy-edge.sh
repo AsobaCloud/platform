@@ -58,6 +58,10 @@ cp index.html "$TEMP_DIR/"
 cp application-select.html "$TEMP_DIR/"
 cp error.html "$TEMP_DIR/"
 
+# Copy JavaScript files
+echo "📜 Copying JavaScript files..."
+cp admin-gpu-panel.js "$TEMP_DIR/"
+
 # Copy static assets - respecting the includes folder structure
 echo "🎨 Copying static assets..."
 
