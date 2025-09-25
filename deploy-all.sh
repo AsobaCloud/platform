@@ -91,7 +91,7 @@ for script_info in "${SCRIPTS[@]}"; do
 DEPLOYMENT_END=$(date +%s)
 TOTAL_DURATION=$((DEPLOYMENT_END - DEPLOYMENT_START))
 
-API_ID=$(aws apigateway get-rest-apis --query "items[?name=='${API_NAME}'].id | [0]" --output text --region "$AWS_REGION" || true)
+API_ID=$(aws apigateway get-rest-apis --query "items[?name=='${API_NAME}'].id | [0]" --output text --region "$AWS_REGION")
 API_BASE_URL=""
 if [[ -n "${API_ID}" && "${API_ID}" != "None" ]]; then
   API_BASE_URL="https://${API_ID}.execute-api.${AWS_REGION}.amazonaws.com/${STAGE}"

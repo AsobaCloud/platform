@@ -42,11 +42,11 @@ init_cloudwatch_logging() {
     
     # Create log group if it doesn't exist
     if ! aws logs describe-log-groups --log-group-name-prefix "${log_group}" --query "logGroups[?logGroupName=='${log_group}'].logGroupName" --output text | grep -q "${log_group}"; then
-        aws logs create-log-group --log-group-name "${log_group}" --region "${AWS_REGION}" 2>/dev/null || true
+        aws logs create-log-group --log-group-name "${log_group}" --region "${AWS_REGION}" || error_exit "Failed to create CloudWatch log group: ${log_group}"
     fi
     
     # Create log stream
-    aws logs create-log-stream --log-group-name "${log_group}" --log-stream-name "${log_stream}" --region "${AWS_REGION}" 2>/dev/null || true
+    aws logs create-log-stream --log-group-name "${log_group}" --log-stream-name "${log_stream}" --region "${AWS_REGION}" || error_exit "Failed to create CloudWatch log stream: ${log_stream}"
     
     # Export for use by logging functions
     export CURRENT_LOG_GROUP="${log_group}"
@@ -89,13 +89,13 @@ send_to_cloudwatch() {
             --log-stream-name "${CURRENT_LOG_STREAM}" \
             --log-events "${log_event}" \
             --sequence-token "${sequence_token}" \
-            --region "${AWS_REGION}" >/dev/null 2>&1 || true
+            --region "${AWS_REGION}" >/dev/null 2>&1 || echo "WARNING: Failed to send log to CloudWatch" >&2
     else
         aws logs put-log-events \
             --log-group-name "${CURRENT_LOG_GROUP}" \
             --log-stream-name "${CURRENT_LOG_STREAM}" \
             --log-events "${log_event}" \
-            --region "${AWS_REGION}" >/dev/null 2>&1 || true
+            --region "${AWS_REGION}" >/dev/null 2>&1 || echo "WARNING: Failed to send log to CloudWatch" >&2
     fi
     
     # Update sequence token

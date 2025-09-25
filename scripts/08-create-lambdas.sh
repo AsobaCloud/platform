@@ -10,7 +10,7 @@ init_script_logging "08-create-lambdas.sh"
 log_info "Creating/Updating Lambda functions"
 
 # Ensure ECR login for image permissions
-aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ECR_REGISTRY}" >/dev/null 2>&1 || true
+aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ECR_REGISTRY}" >/dev/null 2>&1 || error_exit "Failed to login to ECR"
 
 create_or_update_lambda() {
   local service=$1
@@ -22,12 +22,12 @@ create_or_update_lambda() {
 
   if aws lambda get-function --function-name "${function_name}" --region "${AWS_REGION}" >/dev/null 2>&1; then
     # Wait for any pending updates
-    aws lambda wait function-active-v2 --function-name "${function_name}" --region "${AWS_REGION}" 2>/dev/null || true
-    aws lambda wait function-updated-v2 --function-name "${function_name}" --region "${AWS_REGION}" 2>/dev/null || true
+    aws lambda wait function-active-v2 --function-name "${function_name}" --region "${AWS_REGION}" 2>/dev/null || log_warn "Lambda function ${function_name} may not be in active state"
+    aws lambda wait function-updated-v2 --function-name "${function_name}" --region "${AWS_REGION}" 2>/dev/null || log_warn "Lambda function ${function_name} may not be in updated state"
     
     # Update code first
     aws lambda update-function-code --function-name "${function_name}" --image-uri "${image_uri}" --region "${AWS_REGION}" 1>/dev/null
-    aws lambda wait function-updated-v2 --function-name "${function_name}" --region "${AWS_REGION}" 2>/dev/null || true
+    aws lambda wait function-updated-v2 --function-name "${function_name}" --region "${AWS_REGION}" 2>/dev/null || log_warn "Lambda function ${function_name} update may not be complete"
     
     # Then update configuration
     aws lambda update-function-configuration --function-name "${function_name}" --timeout "${timeout}" --memory-size "${memory}" --region "${AWS_REGION}" 1>/dev/null
@@ -50,7 +50,7 @@ create_or_update_lambda() {
   fi
 
   # Wait before updating environment variables
-  aws lambda wait function-updated-v2 --function-name "${function_name}" --region "${AWS_REGION}" 2>/dev/null || true
+  aws lambda wait function-updated-v2 --function-name "${function_name}" --region "${AWS_REGION}" 2>/dev/null || log_warn "Lambda function ${function_name} may not be ready for environment updates"
   
   # Set environment variables common to all
   aws lambda update-function-configuration \
@@ -58,7 +58,7 @@ create_or_update_lambda() {
     --environment "Variables={STAGE=${STAGE},ENVIRONMENT=${ENVIRONMENT},INPUT_BUCKET=${INPUT_BUCKET},OUTPUT_BUCKET=${OUTPUT_BUCKET},LOCATIONS_TABLE=${LOCATIONS_TABLE},WEATHER_CACHE_TABLE=${WEATHER_CACHE_TABLE},LOG_LEVEL=INFO}" \
     --region "${AWS_REGION}" 1>/dev/null
   
-  aws lambda wait function-updated-v2 --function-name "${function_name}" --region "${AWS_REGION}" 2>/dev/null || true
+  aws lambda wait function-updated-v2 --function-name "${function_name}" --region "${AWS_REGION}" 2>/dev/null || log_warn "Lambda function ${function_name} environment update may not be complete"
 
   # Configure DLQ (optional - may fail if permissions not ready)
   local dlq_arn="arn:aws:sqs:${AWS_REGION}:${AWS_ACCOUNT_ID}:$(get_dlq_name "${service}")"

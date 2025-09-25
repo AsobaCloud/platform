@@ -12,7 +12,13 @@ log_info "Ensuring S3 buckets exist: ${INPUT_BUCKET}, ${OUTPUT_BUCKET}"
 ensure_bucket() {
   local bucket=$1
   if ! aws s3api head-bucket --bucket "${bucket}" >/dev/null 2>&1; then
-    aws s3api create-bucket --bucket "${bucket}" --region "${AWS_REGION}" --create-bucket-configuration LocationConstraint="${AWS_REGION}" 1>/dev/null || true
+    if aws s3api create-bucket --bucket "${bucket}" --region "${AWS_REGION}" --create-bucket-configuration LocationConstraint="${AWS_REGION}" 1>/dev/null; then
+      log_success "S3 bucket created: ${bucket}"
+    else
+      log_warn "S3 bucket creation failed: ${bucket} (may already exist or permissions issue)"
+    fi
+  else
+    log_info "S3 bucket already exists: ${bucket}"
   fi
 }
 

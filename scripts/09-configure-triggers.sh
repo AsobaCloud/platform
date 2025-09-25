@@ -22,7 +22,7 @@ aws lambda add-permission \
   --principal s3.amazonaws.com \
   --source-arn "arn:aws:s3:::${INPUT_BUCKET}" \
   --source-account "${AWS_ACCOUNT_ID}" \
-  --region "${AWS_REGION}" 2>/dev/null || true
+  --region "${AWS_REGION}" 2>/dev/null || log_warn "S3 invoke permission for ${INTERP_FN} may already exist"
 
 aws lambda add-permission \
   --function-name "${GT_FN}" \
@@ -31,7 +31,7 @@ aws lambda add-permission \
   --principal s3.amazonaws.com \
   --source-arn "arn:aws:s3:::${INPUT_BUCKET}" \
   --source-account "${AWS_ACCOUNT_ID}" \
-  --region "${AWS_REGION}" 2>/dev/null || true
+  --region "${AWS_REGION}" 2>/dev/null || log_warn "S3 invoke permission for ${GT_FN} may already exist"
 
 # Configure S3 notifications for prefixes
 aws s3api put-bucket-notification-configuration \
@@ -73,7 +73,7 @@ aws lambda add-permission \
   --action lambda:InvokeFunction \
   --principal events.amazonaws.com \
   --source-arn "arn:aws:events:${AWS_REGION}:${AWS_ACCOUNT_ID}:rule/${RULE_NAME}" \
-  --region "${AWS_REGION}" 2>/dev/null || true
+  --region "${AWS_REGION}" 2>/dev/null || log_warn "EventBridge invoke permission for ${WC_FN} may already exist"
 
 log_success "Triggers configured"
 log_script_completion "09-configure-triggers.sh" 0
