@@ -2203,7 +2203,7 @@
             <a href="application-select.html">Applications</a>
             <a href="server-management.html">Offtaker Management</a>
             <a href="admin-gpu-panel.html" style="color: var(--primary-blue);">O&M Management</a>
-            <a href="#" onclick="logout(); return false;" style="color: var(--status-red);">Logout</a>
+            <a href="#" onclick="logout();" style="color: var(--status-red);">Logout</a>
         </div>
     </div>
 
@@ -3812,7 +3812,7 @@
             container.innerHTML = '';
             
             if (components.length === 0) {
-                container.innerHTML = '<p class="no-components">No components found. <button class="add-component-btn" onclick="showAddComponentForm(\'' + sectionType + '\')">Add Component</button></p>';
+                container.innerHTML = `<p class="no-components">No components found. <button class="add-component-btn" onclick="showAddComponentForm('${sectionType}')">Add Component</button></p>`;
                 return;
             }
             
@@ -3826,8 +3826,8 @@
                             <span class="component-sku">SKU: ${component.sku}</span>
                         </div>
                         <div class="component-actions">
-                            <button class="component-action-btn" onclick="editComponent('${sectionType}', ${index})">Edit</button>
-                            <button class="component-action-btn delete" onclick="deleteComponent('${sectionType}', ${index})">Delete</button>
+                            <button class="component-action-btn" onclick="editComponent('${sectionType}', ' + index + ')">Edit</button>
+                            <button class="component-action-btn delete" onclick="deleteComponent('${sectionType}', ' + index + ')">Delete</button>
                         </div>
                     </div>
                     <div class="component-details">
@@ -4975,6 +4975,148 @@
         function updateChartTitles(siteName) {
             // Chart titles are now handled by the chart instances themselves
             console.log('Chart titles updated for:', siteName);
+        }
+
+        // Update individual site metrics display
+        function updateIndividualSiteMetrics(site) {
+            console.log('Individual site metrics updated for:', site.name);
+            
+            // Update DOM elements with individual site data
+            const utilizationElement = document.getElementById('gpuUtilization');
+            const temperatureElement = document.getElementById('gpuTemperature');
+            const powerElement = document.getElementById('gpuPower');
+            const memoryElement = document.getElementById('gpuMemory');
+            
+            if (utilizationElement) utilizationElement.textContent = site.utilization + '%';
+            if (temperatureElement) temperatureElement.textContent = site.temperature + '°C';
+            if (powerElement) powerElement.textContent = site.power + ' kW';
+            if (memoryElement) memoryElement.textContent = site.efficiency + '%';
+            
+            // Update labels to reflect individual site
+            const utilizationLabel = document.getElementById('utilizationLabel');
+            const temperatureLabel = document.getElementById('temperatureLabel');
+            const powerLabel = document.getElementById('powerLabel');
+            const memoryLabel = document.getElementById('memoryLabel');
+            
+            if (utilizationLabel) utilizationLabel.textContent = site.name + ' Utilization';
+            if (temperatureLabel) temperatureLabel.textContent = site.name + ' Temperature';
+            if (powerLabel) powerLabel.textContent = site.name + ' Power Output';
+            if (memoryLabel) memoryLabel.textContent = site.name + ' Efficiency';
+            
+            // Update trend indicators based on individual site status
+            updateIndividualTrendIndicators(site);
+        }
+
+        // Update trend indicators for individual site
+        function updateIndividualTrendIndicators(site) {
+            const utilizationTrend = document.getElementById('utilizationTrend');
+            const temperatureTrend = document.getElementById('temperatureTrend');
+            const powerTrend = document.getElementById('powerTrend');
+            const memoryTrend = document.getElementById('memoryTrend');
+            
+            // Utilization trend
+            if (site.utilization > 80) {
+                utilizationTrend.textContent = '↗ High utilization';
+                utilizationTrend.className = 'performance-trend trend-up';
+            } else if (site.utilization < 20) {
+                utilizationTrend.textContent = '↘ Low utilization';
+                utilizationTrend.className = 'performance-trend trend-down';
+            } else {
+                utilizationTrend.textContent = '→ Normal utilization';
+                utilizationTrend.className = 'performance-trend trend-stable';
+            }
+            
+            // Temperature trend
+            if (site.temperature > 50) {
+                temperatureTrend.textContent = '↗ High temperature';
+                temperatureTrend.className = 'performance-trend trend-up';
+            } else if (site.temperature < 20) {
+                temperatureTrend.textContent = '↘ Low temperature';
+                temperatureTrend.className = 'performance-trend trend-down';
+            } else {
+                temperatureTrend.textContent = '→ Normal temperature';
+                temperatureTrend.className = 'performance-trend trend-stable';
+            }
+            
+            // Power trend
+            if (site.power > 500) {
+                powerTrend.textContent = '↗ High power output';
+                powerTrend.className = 'performance-trend trend-up';
+            } else if (site.power < 50) {
+                powerTrend.textContent = '↘ Low power output';
+                powerTrend.className = 'performance-trend trend-down';
+            } else {
+                powerTrend.textContent = '→ Normal power output';
+                powerTrend.className = 'performance-trend trend-stable';
+            }
+            
+            // Efficiency trend
+            if (site.efficiency > 90) {
+                memoryTrend.textContent = '↗ High efficiency';
+                memoryTrend.className = 'performance-trend trend-up';
+            } else if (site.efficiency < 50) {
+                memoryTrend.textContent = '↘ Low efficiency';
+                memoryTrend.className = 'performance-trend trend-down';
+            } else {
+                memoryTrend.textContent = '→ Normal efficiency';
+                memoryTrend.className = 'performance-trend trend-stable';
+            }
+        }
+
+        // Update trend indicators for average metrics
+        function updateAverageTrendIndicators(avgUtil, avgTemp, avgPower, avgEfficiency) {
+            const utilizationTrend = document.getElementById('utilizationTrend');
+            const temperatureTrend = document.getElementById('temperatureTrend');
+            const powerTrend = document.getElementById('powerTrend');
+            const memoryTrend = document.getElementById('memoryTrend');
+            
+            // Average utilization trend
+            if (avgUtil > 80) {
+                utilizationTrend.textContent = '↗ High average utilization';
+                utilizationTrend.className = 'performance-trend trend-up';
+            } else if (avgUtil < 20) {
+                utilizationTrend.textContent = '↘ Low average utilization';
+                utilizationTrend.className = 'performance-trend trend-down';
+            } else {
+                utilizationTrend.textContent = '→ Normal average utilization';
+                utilizationTrend.className = 'performance-trend trend-stable';
+            }
+            
+            // Average temperature trend
+            if (avgTemp > 50) {
+                temperatureTrend.textContent = '↗ High average temperature';
+                temperatureTrend.className = 'performance-trend trend-up';
+            } else if (avgTemp < 20) {
+                temperatureTrend.textContent = '↘ Low average temperature';
+                temperatureTrend.className = 'performance-trend trend-down';
+            } else {
+                temperatureTrend.textContent = '→ Normal average temperature';
+                temperatureTrend.className = 'performance-trend trend-stable';
+            }
+            
+            // Average power trend
+            if (avgPower > 400) {
+                powerTrend.textContent = '↗ High average power output';
+                powerTrend.className = 'performance-trend trend-up';
+            } else if (avgPower < 25) {
+                powerTrend.textContent = '↘ Low average power output';
+                powerTrend.className = 'performance-trend trend-down';
+            } else {
+                powerTrend.textContent = '→ Normal average power output';
+                powerTrend.className = 'performance-trend trend-stable';
+            }
+            
+            // Average efficiency trend
+            if (avgEfficiency > 90) {
+                memoryTrend.textContent = '↗ High average efficiency';
+                memoryTrend.className = 'performance-trend trend-up';
+            } else if (avgEfficiency < 50) {
+                memoryTrend.textContent = '↘ Low average efficiency';
+                memoryTrend.className = 'performance-trend trend-down';
+            } else {
+                memoryTrend.textContent = '→ Normal average efficiency';
+                memoryTrend.className = 'performance-trend trend-stable';
+            }
         }
 
         // Update performance charts based on selected site
