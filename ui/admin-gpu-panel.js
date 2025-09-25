@@ -460,7 +460,7 @@
                     utilization: 78,        // 78% utilization
                     power: 641.1,          // 641.1 kWh power production (78% of 821.88 kW)
                     consumption: 192.3,   // 192.3 kWh power consumption (30% of production)
-                    efficiency: 82,        // 82% efficiency
+                    capacityFactor: 22,     // 22% capacity factor
                     temperature: 52,       // 52°C inverter temperature (higher due to larger system)
                     capacity: 821.88       // 821.88 kW capacity
                 },
@@ -469,7 +469,7 @@
                     utilization: 65,        // 65% utilization
                     power: 33.8,           // 33.8 kWh power production (65% of 51.98 kW)
                     consumption: 13.5,     // 13.5 kWh power consumption (40% of production)
-                    efficiency: 68,        // 68% efficiency
+                    capacityFactor: 18,     // 18% capacity factor
                     temperature: 48,       // 48°C inverter temperature (smaller system)
                     capacity: 51.98        // 51.98 kW capacity
                 },
@@ -1282,7 +1282,7 @@
                 
                 // Total power production (sum, not average) - convert to kWh
                 const totalPowerProduction = Math.round((cummins.power + fnb.power) * 100) / 100;
-                const avgEfficiency = Math.round((cummins.efficiency * cumminsWeight) + (fnb.efficiency * fnbWeight));
+                const avgCapacityFactor = Math.round((cummins.capacityFactor * cumminsWeight) + (fnb.capacityFactor * fnbWeight));
                 
                 // Weighted average temperature
                 const avgTemp = Math.round((cummins.temperature * cumminsWeight) + (fnb.temperature * fnbWeight));
@@ -1299,7 +1299,7 @@
                 if (utilizationElement) utilizationElement.textContent = totalPowerProduction + ' kWh';
                 if (temperatureElement) temperatureElement.textContent = avgTemp + '°C';
                 if (powerElement) powerElement.textContent = totalPowerConsumption + ' kWh';
-                if (memoryElement) memoryElement.textContent = avgEfficiency + '%';
+                if (memoryElement) memoryElement.textContent = avgCapacityFactor + '%';
                 
                 // Update labels to reflect averages
                 const utilizationLabel = document.getElementById('utilizationLabel');
@@ -1310,13 +1310,13 @@
                 if (utilizationLabel) utilizationLabel.textContent = 'Total Power Production';
                 if (temperatureLabel) temperatureLabel.textContent = 'Weighted Average Inverter Temperature';
                 if (powerLabel) powerLabel.textContent = 'Total Power Consumption';
-                if (memoryLabel) memoryLabel.textContent = 'Weighted Average Efficiency';
+                if (memoryLabel) memoryLabel.textContent = 'Weighted Average Capacity Factor';
                 
                 // Update trend indicators for averages
-                updateAverageTrendIndicators(totalPowerProduction, avgTemp, totalPowerConsumption, avgEfficiency);
+                updateAverageTrendIndicators(totalPowerProduction, avgTemp, totalPowerConsumption, avgCapacityFactor);
                 
                 // Return the calculated averages for chart use
-                return { totalPowerProduction, avgTemp, totalPowerConsumption, avgEfficiency };
+                return { totalPowerProduction, avgTemp, totalPowerConsumption, avgCapacityFactor };
             }
         }
 
@@ -1340,7 +1340,7 @@
             if (utilizationElement) utilizationElement.textContent = site.power + ' kWh';
             if (temperatureElement) temperatureElement.textContent = site.temperature + '°C';
             if (powerElement) powerElement.textContent = site.consumption + ' kWh';
-            if (memoryElement) memoryElement.textContent = site.efficiency + '%';
+            if (memoryElement) memoryElement.textContent = site.capacityFactor + '%';
             
             // Update labels to reflect individual site
             const utilizationLabel = document.getElementById('utilizationLabel');
@@ -1351,7 +1351,7 @@
             if (utilizationLabel) utilizationLabel.textContent = site.name + ' Power Production';
             if (temperatureLabel) temperatureLabel.textContent = site.name + ' Inverter Temperature';
             if (powerLabel) powerLabel.textContent = site.name + ' Power Consumption';
-            if (memoryLabel) memoryLabel.textContent = site.name + ' Efficiency';
+            if (memoryLabel) memoryLabel.textContent = site.name + ' Capacity Factor';
             
             // Update trend indicators based on individual site status
             updateIndividualTrendIndicators(site);
@@ -1400,21 +1400,21 @@
                 powerTrend.className = 'performance-trend trend-stable';
             }
             
-            // Efficiency trend
-            if (site.efficiency > 90) {
-                memoryTrend.textContent = '↗ High efficiency';
+            // Capacity factor trend
+            if (site.capacityFactor > 25) {
+                memoryTrend.textContent = '↗ High capacity factor';
                 memoryTrend.className = 'performance-trend trend-up';
-            } else if (site.efficiency < 50) {
-                memoryTrend.textContent = '↘ Low efficiency';
+            } else if (site.capacityFactor < 15) {
+                memoryTrend.textContent = '↘ Low capacity factor';
                 memoryTrend.className = 'performance-trend trend-down';
             } else {
-                memoryTrend.textContent = '→ Normal efficiency';
+                memoryTrend.textContent = '→ Normal capacity factor';
                 memoryTrend.className = 'performance-trend trend-stable';
             }
         }
 
         // Update trend indicators for average metrics
-        function updateAverageTrendIndicators(avgUtil, avgTemp, avgPower, avgEfficiency) {
+        function updateAverageTrendIndicators(avgUtil, avgTemp, avgPower, avgCapacityFactor) {
             const utilizationTrend = document.getElementById('utilizationTrend');
             const temperatureTrend = document.getElementById('temperatureTrend');
             const powerTrend = document.getElementById('powerTrend');
@@ -1456,15 +1456,15 @@
                 powerTrend.className = 'performance-trend trend-stable';
             }
             
-            // Average efficiency trend
-            if (avgEfficiency > 90) {
-                memoryTrend.textContent = '↗ High average efficiency';
+            // Average capacity factor trend
+            if (avgCapacityFactor > 25) {
+                memoryTrend.textContent = '↗ High average capacity factor';
                 memoryTrend.className = 'performance-trend trend-up';
-            } else if (avgEfficiency < 50) {
-                memoryTrend.textContent = '↘ Low average efficiency';
+            } else if (avgCapacityFactor < 15) {
+                memoryTrend.textContent = '↘ Low average capacity factor';
                 memoryTrend.className = 'performance-trend trend-down';
             } else {
-                memoryTrend.textContent = '→ Normal average efficiency';
+                memoryTrend.textContent = '→ Normal average capacity factor';
                 memoryTrend.className = 'performance-trend trend-stable';
             }
         }
@@ -1475,21 +1475,21 @@
                 console.log('Updating charts for:', selectedSiteId);
                 
                 // Skip if charts aren't initialized yet
-                if (!efficiencyChartInstance && !temperatureChartInstance && !powerProductionChartInstance && !powerConsumptionChartInstance) {
+                if (!capacityFactorChartInstance && !temperatureChartInstance && !powerProductionChartInstance && !powerConsumptionChartInstance) {
                     console.log('Charts not initialized yet, skipping update');
                     return;
                 }
                 
                 // Get current time periods for each chart
-                const efficiencyPeriod = document.querySelector('#efficiencyChart')?.closest('.chart-container')?.querySelector('.chart-btn.active')?.getAttribute('data-period') || '24h';
+                const capacityFactorPeriod = document.querySelector('#capacityFactorChart')?.closest('.chart-container')?.querySelector('.chart-btn.active')?.getAttribute('data-period') || '24h';
                 const temperaturePeriod = document.querySelector('#temperatureChart')?.closest('.chart-container')?.querySelector('.chart-btn.active')?.getAttribute('data-period') || '1h';
                 const powerProductionPeriod = document.querySelector('#powerProductionChart')?.closest('.chart-container')?.querySelector('.chart-btn.active')?.getAttribute('data-period') || '24h';
                 const powerConsumptionPeriod = document.querySelector('#powerConsumptionChart')?.closest('.chart-container')?.querySelector('.chart-btn.active')?.getAttribute('data-period') || '1h';
                 
                 // Update each chart with new site data
-                if (efficiencyChartInstance) {
-                    const efficiencyData = generateChartData(selectedSiteId, efficiencyPeriod, 'efficiency');
-                    updateChart(efficiencyChartInstance, efficiencyData.labels, efficiencyData.data, selectedSiteId, efficiencyPeriod, 'efficiency');
+                if (capacityFactorChartInstance) {
+                    const capacityFactorData = generateChartData(selectedSiteId, capacityFactorPeriod, 'capacityFactor');
+                    updateChart(capacityFactorChartInstance, capacityFactorData.labels, capacityFactorData.data, selectedSiteId, capacityFactorPeriod, 'capacityFactor');
                 }
                 
                 if (temperatureChartInstance) {
@@ -1560,7 +1560,7 @@
         }
 
         // Chart instances
-        let efficiencyChartInstance = null;
+        let capacityFactorChartInstance = null;
         let temperatureChartInstance = null;
         let powerProductionChartInstance = null;
         let powerConsumptionChartInstance = null;
@@ -1569,7 +1569,7 @@
         // Initialize all charts
         function initializeCharts() {
             try {
-                initializeEfficiencyChart();
+                initializeCapacityFactorChart();
                 initializeTemperatureChart();
                 initializePowerProductionChart();
                 initializePowerConsumptionChart();
@@ -1579,11 +1579,11 @@
             }
         }
 
-        // Initialize efficiency chart
-        function initializeEfficiencyChart() {
-            const ctx = document.getElementById('efficiencyChartCanvas');
+        // Initialize capacity factor chart
+        function initializeCapacityFactorChart() {
+            const ctx = document.getElementById('capacityFactorChartCanvas');
             if (!ctx) {
-                console.log('Efficiency chart canvas not found');
+                console.log('Capacity Factor chart canvas not found');
                 return;
             }
 
@@ -1592,20 +1592,21 @@
                 return;
             }
 
-            if (efficiencyChartInstance) {
-                efficiencyChartInstance.destroy();
+            if (capacityFactorChartInstance) {
+                capacityFactorChartInstance.destroy();
             }
 
             try {
                 // Get initial data for the chart
-            const initialData = generateChartData('all', '24h', 'efficiency');
+            const initialData = generateChartData('all', '24h', 'capacityFactor');
+            console.log('Capacity Factor Chart Data:', initialData);
             
-            efficiencyChartInstance = new Chart(ctx, {
+            capacityFactorChartInstance = new Chart(ctx, {
                 type: 'line',
                 data: {
                     labels: initialData.labels,
                     datasets: [{
-                        label: 'Efficiency %',
+                        label: 'Capacity Factor %',
                         data: initialData.data,
                         borderColor: '#455BF1',
                         backgroundColor: 'rgba(69, 91, 241, 0.1)',
@@ -1650,7 +1651,7 @@
                 }
             });
             } catch (error) {
-                console.error('Error creating utilization chart:', error);
+                console.error('Error creating capacity factor chart:', error);
             }
         }
 
@@ -1906,8 +1907,8 @@
                     const cumminsWeight = cummins.capacity / totalCapacity;
                     const fnbWeight = fnb.capacity / totalCapacity;
                     
-                    if (type === 'efficiency') {
-                        currentValue = Math.round((cummins.efficiency * cumminsWeight) + (fnb.efficiency * fnbWeight));
+                    if (type === 'capacityFactor') {
+                        currentValue = Math.round((cummins.capacityFactor * cumminsWeight) + (fnb.capacityFactor * fnbWeight));
                     } else if (type === 'temperature') {
                         currentValue = Math.round((cummins.temperature * cumminsWeight) + (fnb.temperature * fnbWeight));
                     } else if (type === 'powerProduction') {
@@ -1921,8 +1922,8 @@
                 // For individual sites, use exact cached values
                 const siteData = getCachedSiteData(siteId);
                 if (siteData) {
-                    if (type === 'efficiency') {
-                        currentValue = siteData.efficiency;
+                    if (type === 'capacityFactor') {
+                        currentValue = siteData.capacityFactor;
                     } else if (type === 'temperature') {
                         currentValue = siteData.temperature;
                     } else if (type === 'powerProduction') {
@@ -1967,8 +1968,8 @@
                     }
                     
                     value = currentValue * solarFactor;
-                } else if (type === 'efficiency') {
-                    // Efficiency varies less and stays high during good conditions
+                } else if (type === 'capacityFactor') {
+                    // Capacity factor varies less and stays high during good conditions
                     if (period === '1h') {
                         solarFactor = 0.98 + Math.random() * 0.04; // 98-102% (very stable)
                     } else if (period === '6h') {
@@ -2004,8 +2005,8 @@
                 }
                 
                 // Ensure values are realistic for solar systems
-                if (type === 'efficiency') {
-                    value = Math.max(60, Math.min(95, value)); // Solar efficiency: 60-95%
+                if (type === 'capacityFactor') {
+                    value = Math.max(15, Math.min(35, value)); // Solar capacity factor: 15-35%
                 } else if (type === 'temperature') {
                     value = Math.max(35, Math.min(65, value)); // Inverter temp: 35-65°C
                 } else if (type === 'powerProduction') {
@@ -2087,9 +2088,9 @@
             const chartId = chartCanvas.id;
             
             let chartType, chartInstance;
-            if (chartId === 'efficiencyChartCanvas') {
-                chartType = 'efficiency';
-                chartInstance = efficiencyChartInstance;
+            if (chartId === 'capacityFactorChartCanvas') {
+                chartType = 'capacityFactor';
+                chartInstance = capacityFactorChartInstance;
             } else if (chartId === 'temperatureChartCanvas') {
                 chartType = 'temperature';
                 chartInstance = temperatureChartInstance;
@@ -2764,7 +2765,7 @@
         }
 
         function updateCapacityFactorChart(timeframe) {
-            const canvas = document.getElementById('capacityFactorChart');
+            const canvas = document.getElementById('analyticsCapacityFactorChartCanvas');
             console.log('Capacity Factor chart canvas element:', canvas);
             
             if (!canvas) {
