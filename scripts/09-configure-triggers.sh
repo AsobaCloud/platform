@@ -2,8 +2,12 @@
 # 09-configure-triggers.sh - Configure S3 and EventBridge triggers
 set -euo pipefail
 source config/environment.sh
+source lib/cloudwatch-logging.sh
 
-echo "Configuring S3 event notifications and schedules"
+# Initialize script logging
+init_script_logging "09-configure-triggers.sh"
+
+log_info "Configuring S3 event notifications and schedules"
 
 # Permission for S3 to invoke interpolationService and globalTrainingService
 INTERP_FN="$(get_lambda_name interpolationService)"
@@ -71,4 +75,5 @@ aws lambda add-permission \
   --source-arn "arn:aws:events:${AWS_REGION}:${AWS_ACCOUNT_ID}:rule/${RULE_NAME}" \
   --region "${AWS_REGION}" 2>/dev/null || true
 
-echo "Triggers configured"
+log_success "Triggers configured"
+log_script_completion "09-configure-triggers.sh" 0

@@ -2,8 +2,12 @@
 # 04-create-error-handling.sh - Create DLQs, SNS topic, and CloudWatch alarms
 set -euo pipefail
 source config/environment.sh
+source lib/cloudwatch-logging.sh
 
-echo "Configuring error handling (SQS DLQs, SNS, Alarms)"
+# Initialize script logging
+init_script_logging "04-create-error-handling.sh"
+
+log_info "Configuring error handling (SQS DLQs, SNS, Alarms)"
 
 # SNS topic for alerts
 TOPIC_ARN="arn:aws:sns:${AWS_REGION}:${AWS_ACCOUNT_ID}:ona-platform-alerts"
@@ -38,4 +42,5 @@ for service in "${SERVICES[@]}"; do
 
 done
 
-echo "Error handling configuration complete"
+log_success "Error handling configuration complete"
+log_script_completion "04-create-error-handling.sh" 0

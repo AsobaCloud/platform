@@ -50,10 +50,17 @@ function checkJSFile(filePath) {
         issues.push(`Duplicate IDs: ${duplicateIds.join(', ')}`);
     }
     
+    // Check for duplicate function definitions
+    const functions = content.match(/function\s+(\w+)/g) || [];
+    const functionNames = functions.map(f => f.match(/function\s+(\w+)/)[1]);
+    const duplicateFunctions = functionNames.filter((func, index) => functionNames.indexOf(func) !== index);
+    if (duplicateFunctions.length > 0) {
+        issues.push(`Duplicate function definitions: ${duplicateFunctions.join(', ')}`);
+    }
+    
     // Check for undefined function calls (only check custom functions)
     const functionCalls = content.match(/\b(\w+)\(\)/g) || [];
-    const functions = content.match(/function\s+(\w+)/g) || [];
-    const definedFunctions = functions.map(f => f.match(/function\s+(\w+)/)[1]);
+    const definedFunctions = functionNames;
     
     const builtInFunctions = [
         'alert', 'console', 'parseInt', 'parseFloat', 'Math', 'Date', 'String', 'Number',
@@ -64,7 +71,9 @@ function checkJSFile(filePath) {
         'includes', 'indexOf', 'charAt', 'slice', 'split', 'join', 'replace', 'match',
         'test', 'exec', 'toString', 'valueOf', 'hasOwnProperty', 'isPrototypeOf',
         'propertyIsEnumerable', 'toLocaleString', 'valueOf', 'getTime', 'update',
-        'getContext', 'closest', 'classList', 'add', 'remove', 'contains', 'toggle'
+        'getContext', 'closest', 'classList', 'add', 'remove', 'contains', 'toggle',
+        'getMinutes', 'getSeconds', 'getMilliseconds', 'getFullYear', 'getMonth',
+        'getDay', 'setHours', 'setMinutes', 'setSeconds', 'setTime'
     ];
     
     for (const call of functionCalls) {

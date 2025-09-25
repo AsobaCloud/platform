@@ -2,8 +2,12 @@
 # 06-create-ecr-repos.sh - Create ECR repositories for base and services
 set -euo pipefail
 source config/environment.sh
+source lib/cloudwatch-logging.sh
 
-echo "Creating ECR repositories"
+# Initialize script logging
+init_script_logging "06-create-ecr-repos.sh"
+
+log_info "Creating ECR repositories"
 
 create_repo() {
   local name=$1
@@ -17,4 +21,5 @@ for service in "${SERVICES[@]}"; do
   create_repo "$(get_ecr_repo "${service}")"
 done
 
-echo "ECR repositories ensured"
+log_success "ECR repositories ensured"
+log_script_completion "06-create-ecr-repos.sh" 0

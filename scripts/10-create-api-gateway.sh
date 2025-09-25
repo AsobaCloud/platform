@@ -2,17 +2,21 @@
 # 10-create-api-gateway.sh - Create API Gateway REST API and integrate Lambdas
 set -euo pipefail
 source config/environment.sh
+source lib/cloudwatch-logging.sh
 
-echo "Creating/Updating API Gateway: ${API_NAME}"
+# Initialize script logging
+init_script_logging "10-create-api-gateway.sh"
+
+log_info "Creating/Updating API Gateway: ${API_NAME}"
 
 # Get or create API
-echo -n "Resolving API... "
+log_info "Resolving API..."
 API_ID=$(aws apigateway get-rest-apis --region "${AWS_REGION}" --query "items[?name=='${API_NAME}'].id | [0]" --output text)
 if [[ -z "${API_ID}" || "${API_ID}" == "None" ]]; then
   API_ID=$(aws apigateway create-rest-api --name "${API_NAME}" --region "${AWS_REGION}" --tags Project=ona-platform,Environment=${ENVIRONMENT} --query id --output text)
-  echo "created ${API_ID}"
+  log_success "API Gateway created: ${API_ID}"
 else
-  echo "found ${API_ID}"
+  log_info "API Gateway found: ${API_ID}"
 fi
 
 # Root resource ID
@@ -53,4 +57,5 @@ create_method_integration "forecast" "GET" "$(get_lambda_name forecastingApi)"
 # Deploy stage
 aws apigateway create-deployment --rest-api-id "${API_ID}" --stage-name "${STAGE}" --region "${AWS_REGION}" 1>/dev/null
 
-echo "API Gateway deployed (id=${API_ID}, stage=${STAGE})"
+log_success "API Gateway deployed (id=${API_ID}, stage=${STAGE})"
+log_script_completion "10-create-api-gateway.sh" 0

@@ -2,8 +2,12 @@
 # 03-create-iam.sh - Create IAM roles/policies for services
 set -euo pipefail
 source config/environment.sh
+source lib/cloudwatch-logging.sh
 
-echo "Creating IAM roles and policies"
+# Initialize script logging
+init_script_logging "03-create-iam.sh"
+
+log_info "Creating IAM roles and policies"
 
 create_role_if_missing() {
   local role_name=$1
@@ -176,4 +180,5 @@ if ! aws iam get-role --role-name ona-sagemaker-execution-role >/dev/null 2>&1; 
   aws iam attach-role-policy --role-name ona-sagemaker-execution-role --policy-arn arn:aws:iam::aws:policy/AmazonS3FullAccess 1>/dev/null || true
 fi
 
-echo "IAM configuration complete"
+log_success "IAM configuration complete"
+log_script_completion "03-create-iam.sh" 0

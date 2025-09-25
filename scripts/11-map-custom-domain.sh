@@ -2,19 +2,25 @@
 # 11-map-custom-domain.sh - Map pre-validated certificate to API Gateway (REGIONAL)
 set -euo pipefail
 source config/environment.sh
+source lib/cloudwatch-logging.sh
 
-echo "Configuring custom domain mapping..."
+# Initialize script logging
+init_script_logging "11-map-custom-domain.sh"
+
+log_info "Configuring custom domain mapping..."
 
 if [[ "${SKIP_CUSTOM_DOMAIN:-false}" == "true" ]]; then
-  echo "Skipping custom domain setup (certificate not ready)"
+  log_info "Skipping custom domain setup (certificate not ready)"
+  log_script_completion "11-map-custom-domain.sh" 0
   exit 0
 fi
 
 ROOT_DIR="$(pwd)"
 CERT_FILE="${ROOT_DIR}/.certificate-arn"
 if [[ ! -f "${CERT_FILE}" ]]; then
-  echo "WARNING: Certificate ARN file not found at ${CERT_FILE}"
-  echo "Custom domain will not be configured"
+  log_warn "Certificate ARN file not found at ${CERT_FILE}"
+  log_warn "Custom domain will not be configured"
+  log_script_completion "11-map-custom-domain.sh" 0
   exit 0
 fi
 
@@ -94,5 +100,6 @@ echo "DNS propagation complete"
 
 rm -f /tmp/api-a-record.json
 
-echo "Custom domain mapping completed"
-echo "Note: DNS propagation worldwide may take 5-15 minutes"
+log_success "Custom domain mapping completed"
+log_info "Note: DNS propagation worldwide may take 5-15 minutes"
+log_script_completion "11-map-custom-domain.sh" 0

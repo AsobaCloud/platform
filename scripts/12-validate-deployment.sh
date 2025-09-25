@@ -2,8 +2,12 @@
 # 12-validate-deployment.sh - Validate core resources and endpoints
 set -euo pipefail
 source config/environment.sh
+source lib/cloudwatch-logging.sh
 
-echo "Running deployment validation..."
+# Initialize script logging
+init_script_logging "12-validate-deployment.sh"
+
+log_info "Running deployment validation..."
 
 ERRORS=0; WARNINGS=0
 
@@ -104,16 +108,20 @@ else
   echo -e "${RED}✗${NC}"; ((ERRORS++))
 fi
 
-echo
-echo "Validation Summary:"
+log_info "Validation Summary:"
 if [[ ${ERRORS} -eq 0 ]]; then
-  if [[ ${WARNINGS} -eq 0 ]]; then echo "All checks passed"; else echo "Success with ${WARNINGS} warnings"; fi
+  if [[ ${WARNINGS} -eq 0 ]]; then 
+    log_success "All checks passed"
+  else 
+    log_warn "Success with ${WARNINGS} warnings"
+  fi
   if [[ -n "${API_BASE_URL:-}" ]]; then
-    echo "API: ${API_BASE_URL}"
-    if [[ "${SKIP_CUSTOM_DOMAIN:-false}" != "true" ]]; then echo "Custom Domain: https://${API_DOMAIN}"; fi
+    log_info "API: ${API_BASE_URL}"
+    if [[ "${SKIP_CUSTOM_DOMAIN:-false}" != "true" ]]; then log_info "Custom Domain: https://${API_DOMAIN}"; fi
   fi
 else
-  echo "${ERRORS} errors, ${WARNINGS} warnings"
+  log_error "${ERRORS} errors, ${WARNINGS} warnings"
 fi
 
+log_script_completion "12-validate-deployment.sh" ${ERRORS}
 exit ${ERRORS}

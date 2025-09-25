@@ -2,8 +2,12 @@
 # 08-create-lambdas.sh - Create or update Lambda functions from ECR images
 set -euo pipefail
 source config/environment.sh
+source lib/cloudwatch-logging.sh
 
-echo "Creating/Updating Lambda functions"
+# Initialize script logging
+init_script_logging "08-create-lambdas.sh"
+
+log_info "Creating/Updating Lambda functions"
 
 # Ensure ECR login for image permissions
 aws ecr get-login-password --region "${AWS_REGION}" | docker login --username AWS --password-stdin "${ECR_REGISTRY}" >/dev/null 2>&1 || true
@@ -69,4 +73,5 @@ for service in "${SERVICES[@]}"; do
   create_or_update_lambda "${service}"
 done
 
-echo "Lambdas created/updated"
+log_success "Lambdas created/updated"
+log_script_completion "08-create-lambdas.sh" 0

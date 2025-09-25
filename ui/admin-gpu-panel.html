@@ -2524,7 +2524,7 @@
                 <div class="content-section" id="maintenance">
                     <div class="section-header">
                         <h1 class="section-title">Maintenance & Updates</h1>
-                        <p class="section-subtitle">Driver management and hardware maintenance</p>
+                        <p class="section-subtitle">Solar site maintenance and system updates</p>
                     </div>
 
                     <!-- Scheduled Maintenance Tasks -->
@@ -4684,11 +4684,36 @@
             const fnb = getCachedSiteData('fnb-willowbridge');
             
             if (cummins && fnb) {
-                // Calculate averages from both sites for chart data
+                // Calculate averages from both sites
                 const avgUtil = Math.round((cummins.utilization + fnb.utilization) / 2);
                 const avgTemp = Math.round((cummins.temperature + fnb.temperature) / 2);
                 const avgPower = Math.round((cummins.power + fnb.power) / 2);
                 const avgEfficiency = Math.round((cummins.efficiency + fnb.efficiency) / 2);
+                
+                // Update DOM elements with calculated averages
+                const utilizationElement = document.getElementById('gpuUtilization');
+                const temperatureElement = document.getElementById('gpuTemperature');
+                const powerElement = document.getElementById('gpuPower');
+                const memoryElement = document.getElementById('gpuMemory');
+                
+                if (utilizationElement) utilizationElement.textContent = avgUtil + '%';
+                if (temperatureElement) temperatureElement.textContent = avgTemp + '°C';
+                if (powerElement) powerElement.textContent = avgPower + ' kW';
+                if (memoryElement) memoryElement.textContent = avgEfficiency + '%';
+                
+                // Update labels to reflect averages
+                const utilizationLabel = document.getElementById('utilizationLabel');
+                const temperatureLabel = document.getElementById('temperatureLabel');
+                const powerLabel = document.getElementById('powerLabel');
+                const memoryLabel = document.getElementById('memoryLabel');
+                
+                if (utilizationLabel) utilizationLabel.textContent = 'Average Site Utilization';
+                if (temperatureLabel) temperatureLabel.textContent = 'Average Temperature';
+                if (powerLabel) powerLabel.textContent = 'Average Power Output';
+                if (memoryLabel) memoryLabel.textContent = 'Average Efficiency';
+                
+                // Update trend indicators for averages
+                updateAverageTrendIndicators(avgUtil, avgTemp, avgPower, avgEfficiency);
                 
                 // Return the calculated averages for chart use
                 return { avgUtil, avgTemp, avgPower, avgEfficiency };
@@ -4747,12 +4772,32 @@
 
         // Update individual Site metrics display
         function updateIndividualSiteMetrics(site) {
-            // Performance metrics are now displayed in the site cards, not separate elements
-            // This function is kept for compatibility but doesn't update non-existent DOM elements
             console.log('Individual site metrics updated for:', site.name);
             
-            // Update trend indicators based on individual Site status
-            updateTrendIndicators(site);
+            // Update DOM elements with individual site data
+            const utilizationElement = document.getElementById('gpuUtilization');
+            const temperatureElement = document.getElementById('gpuTemperature');
+            const powerElement = document.getElementById('gpuPower');
+            const memoryElement = document.getElementById('gpuMemory');
+            
+            if (utilizationElement) utilizationElement.textContent = site.utilization + '%';
+            if (temperatureElement) temperatureElement.textContent = site.temperature + '°C';
+            if (powerElement) powerElement.textContent = site.power + ' kW';
+            if (memoryElement) memoryElement.textContent = site.efficiency + '%';
+            
+            // Update labels to reflect individual site
+            const utilizationLabel = document.getElementById('utilizationLabel');
+            const temperatureLabel = document.getElementById('temperatureLabel');
+            const powerLabel = document.getElementById('powerLabel');
+            const memoryLabel = document.getElementById('memoryLabel');
+            
+            if (utilizationLabel) utilizationLabel.textContent = site.name + ' Utilization';
+            if (temperatureLabel) temperatureLabel.textContent = site.name + ' Temperature';
+            if (powerLabel) powerLabel.textContent = site.name + ' Power Output';
+            if (memoryLabel) memoryLabel.textContent = site.name + ' Efficiency';
+            
+            // Update trend indicators based on individual site status
+            updateIndividualTrendIndicators(site);
         }
 
         // Update trend indicators for individual GPU
@@ -4808,6 +4853,118 @@
                 memoryTrend.className = 'performance-trend trend-down';
             } else {
                 memoryTrend.textContent = '→ Normal memory usage';
+                memoryTrend.className = 'performance-trend trend-stable';
+            }
+        }
+        
+        // Update trend indicators for individual site
+        function updateIndividualTrendIndicators(site) {
+            const utilizationTrend = document.getElementById('utilizationTrend');
+            const temperatureTrend = document.getElementById('temperatureTrend');
+            const powerTrend = document.getElementById('powerTrend');
+            const memoryTrend = document.getElementById('memoryTrend');
+            
+            // Utilization trend
+            if (site.utilization > 80) {
+                utilizationTrend.textContent = '↗ High utilization';
+                utilizationTrend.className = 'performance-trend trend-up';
+            } else if (site.utilization < 20) {
+                utilizationTrend.textContent = '↘ Low utilization';
+                utilizationTrend.className = 'performance-trend trend-down';
+            } else {
+                utilizationTrend.textContent = '→ Normal utilization';
+                utilizationTrend.className = 'performance-trend trend-stable';
+            }
+            
+            // Temperature trend
+            if (site.temperature > 50) {
+                temperatureTrend.textContent = '↗ High temperature';
+                temperatureTrend.className = 'performance-trend trend-up';
+            } else if (site.temperature < 20) {
+                temperatureTrend.textContent = '↘ Low temperature';
+                temperatureTrend.className = 'performance-trend trend-down';
+            } else {
+                temperatureTrend.textContent = '→ Normal temperature';
+                temperatureTrend.className = 'performance-trend trend-stable';
+            }
+            
+            // Power trend
+            if (site.power > 500) {
+                powerTrend.textContent = '↗ High power output';
+                powerTrend.className = 'performance-trend trend-up';
+            } else if (site.power < 50) {
+                powerTrend.textContent = '↘ Low power output';
+                powerTrend.className = 'performance-trend trend-down';
+            } else {
+                powerTrend.textContent = '→ Normal power output';
+                powerTrend.className = 'performance-trend trend-stable';
+            }
+            
+            // Efficiency trend
+            if (site.efficiency > 90) {
+                memoryTrend.textContent = '↗ High efficiency';
+                memoryTrend.className = 'performance-trend trend-up';
+            } else if (site.efficiency < 50) {
+                memoryTrend.textContent = '↘ Low efficiency';
+                memoryTrend.className = 'performance-trend trend-down';
+            } else {
+                memoryTrend.textContent = '→ Normal efficiency';
+                memoryTrend.className = 'performance-trend trend-stable';
+            }
+        }
+        
+        // Update trend indicators for average metrics
+        function updateAverageTrendIndicators(avgUtil, avgTemp, avgPower, avgEfficiency) {
+            const utilizationTrend = document.getElementById('utilizationTrend');
+            const temperatureTrend = document.getElementById('temperatureTrend');
+            const powerTrend = document.getElementById('powerTrend');
+            const memoryTrend = document.getElementById('memoryTrend');
+            
+            // Average utilization trend
+            if (avgUtil > 80) {
+                utilizationTrend.textContent = '↗ High average utilization';
+                utilizationTrend.className = 'performance-trend trend-up';
+            } else if (avgUtil < 20) {
+                utilizationTrend.textContent = '↘ Low average utilization';
+                utilizationTrend.className = 'performance-trend trend-down';
+            } else {
+                utilizationTrend.textContent = '→ Normal average utilization';
+                utilizationTrend.className = 'performance-trend trend-stable';
+            }
+            
+            // Average temperature trend
+            if (avgTemp > 50) {
+                temperatureTrend.textContent = '↗ High average temperature';
+                temperatureTrend.className = 'performance-trend trend-up';
+            } else if (avgTemp < 20) {
+                temperatureTrend.textContent = '↘ Low average temperature';
+                temperatureTrend.className = 'performance-trend trend-down';
+            } else {
+                temperatureTrend.textContent = '→ Normal average temperature';
+                temperatureTrend.className = 'performance-trend trend-stable';
+            }
+            
+            // Average power trend
+            if (avgPower > 400) {
+                powerTrend.textContent = '↗ High average power output';
+                powerTrend.className = 'performance-trend trend-up';
+            } else if (avgPower < 25) {
+                powerTrend.textContent = '↘ Low average power output';
+                powerTrend.className = 'performance-trend trend-down';
+            } else {
+                powerTrend.textContent = '→ Normal average power output';
+                powerTrend.className = 'performance-trend trend-stable';
+            }
+            
+            // Average efficiency trend
+            if (avgEfficiency > 90) {
+                memoryTrend.textContent = '↗ High average efficiency';
+                memoryTrend.className = 'performance-trend trend-up';
+            } else if (avgEfficiency < 50) {
+                memoryTrend.textContent = '↘ Low average efficiency';
+                memoryTrend.className = 'performance-trend trend-down';
+            } else {
+                memoryTrend.textContent = '→ Normal average efficiency';
                 memoryTrend.className = 'performance-trend trend-stable';
             }
         }
@@ -5454,44 +5611,6 @@
             });
         }
         
-        // Setup chart time controls
-        function setupChartTimeControls() {
-            const chartButtons = document.querySelectorAll('.chart-btn');
-            
-            chartButtons.forEach(btn => {
-                btn.addEventListener('click', function(e) {
-                    e.preventDefault();
-                    console.log('Chart button clicked:', this.getAttribute('data-period'));
-                    
-                    // Remove active class from all buttons in the same chart
-                    const chartContainer = this.closest('.chart-container');
-                    chartContainer.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
-                    
-                    // Add active class to clicked button
-                    this.classList.add('active');
-                    
-                    // Update charts with new time period
-                    const period = this.getAttribute('data-period');
-                    const selectedSiteId = document.getElementById('siteSelector').value;
-                    updateChartsForPeriod(selectedSiteId, period);
-                });
-            });
-        }
-        
-        // Update charts for specific time period
-        function updateChartsForPeriod(siteId, period) {
-            console.log('Updating charts for period:', period, 'site:', siteId);
-            
-            // Generate chart data for the specified period
-            const utilizationData = generateChartData(siteId, period, 'utilization');
-            const temperatureData = generateChartData(siteId, period, 'temperature');
-            const powerData = generateChartData(siteId, period, 'power');
-            
-            // Update each chart
-            updateChart(utilizationChartInstance, utilizationData.labels, utilizationData.data, siteId, period, 'utilization');
-            updateChart(temperatureChartInstance, temperatureData.labels, temperatureData.data, siteId, period, 'temperature');
-            updateChart(powerChartInstance, powerData.labels, powerData.data, siteId, period, 'power');
-        }
         
         // Generate chart data for specific period and metric
         function generateChartData(siteId, period, metricType) {
@@ -5499,39 +5618,132 @@
             let labels = [];
             let data = [];
             
-            // Generate time labels based on period
+            // Get current cached site data for realistic baseline
+            let baseData = null;
+            if (siteId === 'all') {
+                // For averages, get both sites and calculate baseline
+                const cummins = getCachedSiteData('cummins-midrand');
+                const fnb = getCachedSiteData('fnb-willowbridge');
+                if (cummins && fnb) {
+                    baseData = {
+                        utilization: Math.round((cummins.utilization + fnb.utilization) / 2),
+                        temperature: Math.round((cummins.temperature + fnb.temperature) / 2),
+                        power: Math.round((cummins.power + fnb.power) / 2),
+                        efficiency: Math.round((cummins.efficiency + fnb.efficiency) / 2)
+                    };
+                }
+            } else {
+                // For individual sites, use exact cached data
+                baseData = getCachedSiteData(siteId);
+            }
+            
+            if (!baseData) {
+                // Fallback to default values if no cached data
+                baseData = { utilization: 0, temperature: 25, power: 0, efficiency: 0 };
+            }
+            
+            // Generate time labels and realistic solar data based on period
             switch (period) {
                 case '1h':
                     for (let i = 11; i >= 0; i--) {
                         const time = new Date(now.getTime() - i * 5 * 60000); // 5-minute intervals
                         labels.push(time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
-                        data.push(Math.floor(Math.random() * 100));
+                        
+                        // Generate realistic solar data for 1-hour period
+                        const hour = time.getHours();
+                        const minute = Math.floor((time.getTime() % (60 * 60 * 1000)) / (60 * 1000));
+                        const solarFactor = getSolarFactor(hour, minute);
+                        
+                        if (metricType === 'utilization') {
+                            data.push(Math.round(baseData.utilization * solarFactor));
+                        } else if (metricType === 'temperature') {
+                            data.push(Math.round(baseData.temperature + (solarFactor * 15))); // Panels heat up in sun
+                        } else if (metricType === 'power') {
+                            data.push(Math.round(baseData.power * solarFactor));
+                        }
                     }
                     break;
                 case '6h':
                     for (let i = 11; i >= 0; i--) {
                         const time = new Date(now.getTime() - i * 30 * 60000); // 30-minute intervals
                         labels.push(time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
-                        data.push(Math.floor(Math.random() * 100));
+                        
+                        const hour = time.getHours();
+                        const minute = Math.floor((time.getTime() % (60 * 60 * 1000)) / (60 * 1000));
+                        const solarFactor = getSolarFactor(hour, minute);
+                        
+                        if (metricType === 'utilization') {
+                            data.push(Math.round(baseData.utilization * solarFactor));
+                        } else if (metricType === 'temperature') {
+                            data.push(Math.round(baseData.temperature + (solarFactor * 15)));
+                        } else if (metricType === 'power') {
+                            data.push(Math.round(baseData.power * solarFactor));
+                        }
                     }
                     break;
                 case '24h':
                     for (let i = 23; i >= 0; i--) {
                         const time = new Date(now.getTime() - i * 60 * 60000); // 1-hour intervals
                         labels.push(time.toLocaleTimeString('en-US', { hour: '2-digit' }));
-                        data.push(Math.floor(Math.random() * 100));
+                        
+                        const hour = time.getHours();
+                        const solarFactor = getSolarFactor(hour, 0);
+                        
+                        if (metricType === 'utilization') {
+                            data.push(Math.round(baseData.utilization * solarFactor));
+                        } else if (metricType === 'temperature') {
+                            data.push(Math.round(baseData.temperature + (solarFactor * 15)));
+                        } else if (metricType === 'power') {
+                            data.push(Math.round(baseData.power * solarFactor));
+                        }
                     }
                     break;
                 case '7d':
                     for (let i = 6; i >= 0; i--) {
                         const time = new Date(now.getTime() - i * 24 * 60 * 60000); // Daily intervals
                         labels.push(time.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
-                        data.push(Math.floor(Math.random() * 100));
+                        
+                        // Daily averages with some variation
+                        const dayVariation = 0.8 + (Math.random() * 0.4); // 80-120% variation
+                        
+                        if (metricType === 'utilization') {
+                            data.push(Math.round(baseData.utilization * dayVariation));
+                        } else if (metricType === 'temperature') {
+                            data.push(Math.round(baseData.temperature + (Math.random() * 10 - 5))); // ±5°C variation
+                        } else if (metricType === 'power') {
+                            data.push(Math.round(baseData.power * dayVariation));
+                        }
                     }
                     break;
             }
             
             return { labels, data };
+        }
+        
+        // Calculate solar factor based on time of day (realistic solar curve)
+        function getSolarFactor(hour, minute) {
+            // Solar production curve: 0% at night, peaks at midday
+            if (hour < 6 || hour > 18) {
+                return 0; // No solar production at night
+            }
+            
+            // Convert to decimal hours for smoother curve
+            const decimalHour = hour + (minute / 60);
+            
+            // Create realistic solar curve (bell curve centered around 12:00)
+            const centerHour = 12;
+            const width = 6; // 6-hour width for reasonable curve
+            
+            // Calculate distance from center
+            const distance = Math.abs(decimalHour - centerHour);
+            
+            // Create bell curve (Gaussian-like)
+            const factor = Math.exp(-Math.pow(distance / width, 2));
+            
+            // Add some realistic variation (±10%)
+            const variation = 0.9 + (Math.random() * 0.2);
+            
+            return Math.max(0, Math.min(1, factor * variation));
         }
         
         // Update individual chart
@@ -5543,30 +5755,6 @@
             chartInstance.update();
         }
         
-        // Update performance charts based on selected site
-        function updatePerformanceCharts(selectedSiteId) {
-            try {
-                console.log('Updating charts for:', selectedSiteId);
-                
-                // Skip if charts aren't initialized yet
-                if (!utilizationChartInstance && !temperatureChartInstance && !powerChartInstance) {
-                    console.log('Charts not initialized yet, skipping update');
-                    return;
-                }
-                
-                // Get current time periods for each chart
-                const utilizationPeriod = document.querySelector('#utilizationChartCanvas').closest('.chart-container').querySelector('.chart-btn.active')?.getAttribute('data-period') || '1h';
-                const temperaturePeriod = document.querySelector('#temperatureChartCanvas').closest('.chart-container').querySelector('.chart-btn.active')?.getAttribute('data-period') || '1h';
-                const powerPeriod = document.querySelector('#powerChartCanvas').closest('.chart-container').querySelector('.chart-btn.active')?.getAttribute('data-period') || '1h';
-                
-                // Update each chart with its current time period
-                updateChartsForPeriod(selectedSiteId, utilizationPeriod);
-                updateChartsForPeriod(selectedSiteId, temperaturePeriod);
-                updateChartsForPeriod(selectedSiteId, powerPeriod);
-            } catch (error) {
-                console.error('Error updating performance charts:', error);
-            }
-        }
 
         // Initialize alerts system
         function initializeAlerts() {
@@ -5639,36 +5827,36 @@
         const maintenanceTasks = [
             {
                 id: 'maint-001',
-                title: 'Tesla V100-01 Driver Update',
-                gpu: 'Tesla V100-01',
-                type: 'Driver Update',
+                title: 'Cummins Midrand - Panel Cleaning',
+                site: 'Cummins Midrand',
+                type: 'Panel Cleaning',
                 status: 'scheduled',
-                scheduledDate: '2024-03-15',
-                estimatedDuration: '30 minutes',
+                scheduledDate: '2024-12-15',
+                estimatedDuration: '4 hours',
                 priority: 'Medium',
-                description: 'Update NVIDIA drivers to version 535.86.10'
+                description: 'Routine panel cleaning and inspection for optimal performance'
             },
             {
                 id: 'maint-002',
-                title: 'A100-02 Hardware Inspection',
-                gpu: 'A100-02',
-                type: 'Hardware Inspection',
+                title: 'FNB Willowbridge - Inverter Inspection',
+                site: 'FNB Willowbridge',
+                type: 'Inverter Inspection',
                 status: 'completed',
-                scheduledDate: '2024-03-10',
+                scheduledDate: '2024-12-10',
                 estimatedDuration: '2 hours',
                 priority: 'High',
-                description: 'Quarterly hardware inspection and cleaning'
+                description: 'Quarterly inverter inspection and performance check'
             },
             {
                 id: 'maint-003',
-                title: 'Tesla V100-02 Firmware Update',
-                gpu: 'Tesla V100-02',
-                type: 'Firmware Update',
-                status: 'failed',
-                scheduledDate: '2024-03-12',
-                estimatedDuration: '45 minutes',
-                priority: 'High',
-                description: 'Update GPU firmware to latest version'
+                title: 'Cummins Midrand - Preventive Maintenance',
+                site: 'Cummins Midrand',
+                type: 'Preventive Maintenance',
+                status: 'in-progress',
+                scheduledDate: '2024-12-12',
+                estimatedDuration: '6 hours',
+                priority: 'Low',
+                description: 'Comprehensive preventive maintenance including all components'
             }
         ];
 
@@ -5693,35 +5881,35 @@
         // Sample maintenance history
         const maintenanceHistory = [
             {
-                date: '2024-03-10',
-                gpu: 'A100-02',
-                action: 'Hardware Inspection',
+                date: '2024-12-10',
+                site: 'FNB Willowbridge',
+                action: 'Inverter Inspection',
                 status: 'Completed',
                 duration: '2h 15m',
                 technician: 'John Smith'
             },
             {
-                date: '2024-03-08',
-                gpu: 'Tesla V100-01',
-                action: 'Driver Update',
+                date: '2024-12-08',
+                site: 'Cummins Midrand',
+                action: 'Panel Cleaning',
                 status: 'Completed',
-                duration: '25m',
+                duration: '4h 30m',
                 technician: 'Sarah Johnson'
             },
             {
-                date: '2024-03-05',
-                gpu: 'Tesla V100-02',
-                action: 'Firmware Update',
-                status: 'Failed',
-                duration: '15m',
+                date: '2024-12-05',
+                site: 'Cummins Midrand',
+                action: 'Preventive Maintenance',
+                status: 'Completed',
+                duration: '6h 15m',
                 technician: 'Mike Davis'
             },
             {
-                date: '2024-02-28',
-                gpu: 'A100-01',
-                action: 'Cleaning & Maintenance',
+                date: '2024-11-28',
+                site: 'FNB Willowbridge',
+                action: 'System Inspection',
                 status: 'Completed',
-                duration: '1h 30m',
+                duration: '3h 45m',
                 technician: 'John Smith'
             }
         ];
@@ -5758,8 +5946,8 @@
                 </div>
                 <div class="maintenance-details">
                     <div class="detail-row">
-                        <span class="detail-label">GPU:</span>
-                        <span class="detail-value">${task.gpu}</span>
+                        <span class="detail-label">Site:</span>
+                        <span class="detail-value">${task.site}</span>
                     </div>
                     <div class="detail-row">
                         <span class="detail-label">Type:</span>
@@ -5841,7 +6029,7 @@
                 <thead>
                     <tr style="background-color: var(--neutral-light);">
                         <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-grey);">Date</th>
-                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-grey);">GPU</th>
+                        <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-grey);">Site</th>
                         <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-grey);">Action</th>
                         <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-grey);">Status</th>
                         <th style="padding: 12px; text-align: left; border-bottom: 1px solid var(--border-grey);">Duration</th>
@@ -5852,7 +6040,7 @@
                     ${maintenanceHistory.map(entry => `
                         <tr>
                             <td style="padding: 12px; border-bottom: 1px solid var(--border-grey);">${entry.date}</td>
-                            <td style="padding: 12px; border-bottom: 1px solid var(--border-grey);">${entry.gpu}</td>
+                            <td style="padding: 12px; border-bottom: 1px solid var(--border-grey);">${entry.site}</td>
                             <td style="padding: 12px; border-bottom: 1px solid var(--border-grey);">${entry.action}</td>
                             <td style="padding: 12px; border-bottom: 1px solid var(--border-grey);">
                                 <span style="color: ${entry.status === 'Completed' ? 'var(--status-green)' : 'var(--status-red)'};">
@@ -5894,7 +6082,7 @@
         function viewMaintenanceDetails(taskId) {
             const task = maintenanceTasks.find(t => t.id === taskId);
             if (task) {
-                alert(`Maintenance Details:\n\nTask: ${task.title}\nGPU: ${task.gpu}\nType: ${task.type}\nStatus: ${task.status}\nScheduled: ${task.scheduledDate}\nDuration: ${task.estimatedDuration}\nPriority: ${task.priority}\nDescription: ${task.description}`);
+                alert(`Maintenance Details:\n\nTask: ${task.title}\nSite: ${task.site}\nType: ${task.type}\nStatus: ${task.status}\nScheduled: ${task.scheduledDate}\nDuration: ${task.estimatedDuration}\nPriority: ${task.priority}\nDescription: ${task.description}`);
             }
         }
 
@@ -6661,19 +6849,23 @@
                     const taskId = 'maint-' + Date.now();
                     const maintenanceTask = {
                         id: taskId,
-                        siteName: formData.siteName,
+                        title: `${formData.siteName} - ${formData.type.charAt(0).toUpperCase() + formData.type.slice(1)}`,
+                        site: formData.siteName,
                         type: formData.type.charAt(0).toUpperCase() + formData.type.slice(1),
                         scheduledDate: formData.date,
                         priority: formData.priority.charAt(0).toUpperCase() + formData.priority.slice(1),
-                        duration: formData.duration + ' hours',
-                        technician: formData.technician,
+                        estimatedDuration: formData.duration + ' hours',
                         description: formData.description,
-                        status: 'Scheduled',
+                        status: 'scheduled',
+                        technician: formData.technician,
                         createdAt: new Date().toISOString()
                     };
                     
-                    // Add to maintenance tasks (you might want to store this in a proper data structure)
-                    console.log('New maintenance task created:', maintenanceTask);
+                    // Add to maintenance tasks array
+                    maintenanceTasks.push(maintenanceTask);
+                    
+                    // Refresh maintenance display
+                    loadMaintenanceTasks();
                     
                     // Close modal and show success
                     closeSiteMaintenanceModal();

@@ -2,8 +2,12 @@
 # 05-create-storage.sh - Ensure S3 and DynamoDB resources exist
 set -euo pipefail
 source config/environment.sh
+source lib/cloudwatch-logging.sh
 
-echo "Ensuring S3 buckets exist: ${INPUT_BUCKET}, ${OUTPUT_BUCKET}"
+# Initialize script logging
+init_script_logging "05-create-storage.sh"
+
+log_info "Ensuring S3 buckets exist: ${INPUT_BUCKET}, ${OUTPUT_BUCKET}"
 
 ensure_bucket() {
   local bucket=$1
@@ -15,7 +19,7 @@ ensure_bucket() {
 ensure_bucket "${INPUT_BUCKET}"
 ensure_bucket "${OUTPUT_BUCKET}"
 
-echo "Ensuring DynamoDB tables exist"
+log_info "Ensuring DynamoDB tables exist"
 
 ensure_table() {
   local table=$1 key=$2
@@ -36,4 +40,5 @@ ensure_table "${LOCATIONS_TABLE}" "customer_id"
 # Weather cache table: partition key location_key (example)
 ensure_table "${WEATHER_CACHE_TABLE}" "location_key"
 
-echo "Storage resources ensured"
+log_success "Storage resources ensured"
+log_script_completion "05-create-storage.sh" 0

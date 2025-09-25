@@ -20,7 +20,14 @@ export LOG_LEVEL="${LOG_LEVEL:-${LOG_LEVEL_INFO}}"
 
 # Deployment metadata
 export DEPLOYMENT_ID="${DEPLOYMENT_ID:-$(date +%Y%m%d-%H%M%S)-$(uuidgen | cut -d- -f1)}"
-export SCRIPT_NAME="${SCRIPT_NAME:-$(basename "${0:-test-script}")}"
+if [[ -n "${SCRIPT_NAME:-}" ]]; then
+  # SCRIPT_NAME already set
+  :
+elif [[ "${0:-}" == "--" ]]; then
+  export SCRIPT_NAME="sourced-script"
+else
+  export SCRIPT_NAME="$(basename "${0}")"
+fi
 export SCRIPT_PID="${SCRIPT_PID:-$$}"
 
 # Log group names
