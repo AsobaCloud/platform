@@ -6,6 +6,14 @@ set -euo pipefail
 source config/environment.sh
 source lib/cloudwatch-logging.sh
 
+# Load environment variables from .env.local if it exists
+if [[ -f .env.local ]]; then
+  set -a
+  source .env.local
+  set +a
+  log_info "Loaded environment from .env.local"
+fi
+
 # Initialize logging
 init_deployment_logging "deploy"
 
@@ -43,7 +51,7 @@ fi
 # Required environment
 if [[ -z "${VISUAL_CROSSING_API_KEY:-}" ]]; then
   log_error "ENV: VISUAL_CROSSING_API_KEY missing"
-  log_error "Set it before running: export VISUAL_CROSSING_API_KEY=YOUR_KEY"
+  log_error "Set it in .env.local or export it: export VISUAL_CROSSING_API_TOKEN=your_value"
   error_exit "Required environment variable VISUAL_CROSSING_API_KEY not set"
 else
   log_info "ENV: VISUAL_CROSSING_API_KEY set"
@@ -91,7 +99,7 @@ for script_info in "${SCRIPTS[@]}"; do
 DEPLOYMENT_END=$(date +%s)
 TOTAL_DURATION=$((DEPLOYMENT_END - DEPLOYMENT_START))
 
-API_ID=$(aws apigateway get-rest-apis --query "items[?name=='${API_NAME}'].id | [0]" --output text --region "$AWS_REGION")
+API_ID=$(aws apigateway get-rest-apis --query "items[?name=='${API_NAME}'].id | [0]" --output text --region "${AWS_REGION}")
 API_BASE_URL=""
 if [[ -n "${API_ID}" && "${API_ID}" != "None" ]]; then
   API_BASE_URL="https://${API_ID}.execute-api.${AWS_REGION}.amazonaws.com/${STAGE}"
