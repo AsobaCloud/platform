@@ -12,6 +12,29 @@ function checkJSFile(filePath) {
         }
     }
     
+    // Check for specific problematic addEventListener patterns that could cause null reference errors
+    const problematicPatterns = [
+        /document\.getElementById\s*\(\s*['"][^'"]*['"]\s*\)\.addEventListener/g,
+        /document\.querySelector\s*\(\s*['"][^'"]*['"]\s*\)\.addEventListener/g
+    ];
+    
+    problematicPatterns.forEach(pattern => {
+        let patternMatch;
+        while ((patternMatch = pattern.exec(content)) !== null) {
+            const lineNumber = content.substring(0, patternMatch.index).split('\n').length;
+            const context = content.substring(Math.max(0, patternMatch.index - 50), patternMatch.index + 50);
+            issues.push(`Potential null reference in addEventListener at line ${lineNumber}: ${context.trim()}`);
+        }
+    });
+    
+    // Check for duplicate variable declarations (only global scope duplicates)
+    const globalVariableDeclarations = content.match(/^(let|const|var)\s+(\w+)/gm) || [];
+    const globalVariableNames = globalVariableDeclarations.map(decl => decl.match(/^(let|const|var)\s+(\w+)/)[2]);
+    const duplicateGlobalVariables = globalVariableNames.filter((name, index) => globalVariableNames.indexOf(name) !== index);
+    if (duplicateGlobalVariables.length > 0) {
+        issues.push(`Duplicate global variable declarations: ${duplicateGlobalVariables.join(', ')}`);
+    }
+    
     // Check bracket/paren balance
     const openBrackets = (content.match(/\{/g) || []).length;
     const closeBrackets = (content.match(/\}/g) || []).length;
@@ -40,7 +63,8 @@ function checkJSFile(filePath) {
         'toLocaleDateString', 'click', 'push', 'find', 'forEach', 'map', 'filter',
         'includes', 'indexOf', 'charAt', 'slice', 'split', 'join', 'replace', 'match',
         'test', 'exec', 'toString', 'valueOf', 'hasOwnProperty', 'isPrototypeOf',
-        'propertyIsEnumerable', 'toLocaleString', 'valueOf'
+        'propertyIsEnumerable', 'toLocaleString', 'valueOf', 'getTime', 'update',
+        'getContext', 'closest', 'classList', 'add', 'remove', 'contains', 'toggle'
     ];
     
     for (const call of functionCalls) {

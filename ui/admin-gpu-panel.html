@@ -927,6 +927,127 @@
             border-radius: 6px;
             border: 1px solid var(--border-grey);
         }
+        
+        /* Component-specific styles */
+        .components-container {
+            margin-top: 12px;
+        }
+        
+        .component-item {
+            background: var(--background-light);
+            border: 1px solid var(--border-grey);
+            border-radius: 8px;
+            padding: 16px;
+            margin-bottom: 12px;
+        }
+        
+        .component-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            margin-bottom: 12px;
+        }
+        
+        .component-info h5 {
+            margin: 0 0 4px 0;
+            color: var(--text-dark);
+            font-size: 1rem;
+            font-weight: 600;
+        }
+        
+        .component-sku {
+            color: var(--text-medium);
+            font-size: 0.85rem;
+            font-weight: 500;
+        }
+        
+        .component-actions {
+            display: flex;
+            gap: 8px;
+        }
+        
+        .component-action-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border-grey);
+            border-radius: 4px;
+            background: white;
+            color: var(--text-medium);
+            font-size: 0.85rem;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .component-action-btn:hover {
+            background: var(--background-light);
+            color: var(--text-dark);
+        }
+        
+        .component-action-btn.delete {
+            color: var(--error-color);
+            border-color: var(--error-color);
+        }
+        
+        .component-action-btn.delete:hover {
+            background: var(--error-color);
+            color: white;
+        }
+        
+        .component-details {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 8px;
+        }
+        
+        .component-detail {
+            display: flex;
+            flex-direction: column;
+            gap: 2px;
+        }
+        
+        .component-detail .detail-label {
+            font-size: 0.8rem;
+            color: var(--text-medium);
+        }
+        
+        .component-detail .detail-value {
+            font-size: 0.9rem;
+            padding: 4px 8px;
+            background: white;
+            border: 1px solid var(--border-light);
+        }
+        
+        .add-component-section {
+            margin-top: 16px;
+            text-align: center;
+            padding: 16px;
+            border: 2px dashed var(--border-grey);
+            border-radius: 8px;
+            background: var(--background-light);
+        }
+        
+        .add-component-btn {
+            background: var(--primary-color);
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .add-component-btn:hover {
+            background: var(--primary-dark);
+            transform: translateY(-1px);
+        }
+        
+        .no-components {
+            text-align: center;
+            color: var(--text-medium);
+            font-style: italic;
+            padding: 20px;
+        }
 
         .maintenance-modal-header {
             display: flex;
@@ -2156,7 +2277,8 @@
                             </div>
                             <div class="inventory-actions">
                                 <button class="action-btn primary" onclick="viewSiteInventoryDetails('cummins-midrand')">View Details</button>
-                                <button class="action-btn secondary" onclick="scheduleSiteMaintenance('cummins-midrand')">Schedule Maintenance</button>
+                                <button class="action-btn secondary" onclick="scheduleSiteMaintenance('cummins-midrand')">Maintenance</button>
+                                <button class="action-btn tertiary" onclick="viewSiteComponents('cummins-midrand')">Components</button>
                             </div>
                         </div>
 
@@ -2193,7 +2315,8 @@
                             </div>
                             <div class="inventory-actions">
                                 <button class="action-btn primary" onclick="viewSiteInventoryDetails('fnb-willowbridge')">View Details</button>
-                                <button class="action-btn secondary" onclick="scheduleSiteMaintenance('fnb-willowbridge')">Schedule Maintenance</button>
+                                <button class="action-btn secondary" onclick="scheduleSiteMaintenance('fnb-willowbridge')">Maintenance</button>
+                                <button class="action-btn tertiary" onclick="viewSiteComponents('fnb-willowbridge')">Components</button>
                             </div>
                         </div>
                     </div>
@@ -3144,6 +3267,192 @@
         </div>
     </div>
 
+    <!-- Dashboard Site Details Modal -->
+    <div id="dashboardSiteDetailsModal" class="maintenance-modal">
+        <div class="maintenance-modal-content">
+            <div class="maintenance-modal-header">
+                <h3 class="maintenance-modal-title">Site Details</h3>
+                <button class="maintenance-modal-close" onclick="closeDashboardSiteDetailsModal()">&times;</button>
+            </div>
+            
+            <div class="site-details-content">
+                <div class="site-details-section">
+                    <h4>Basic Information</h4>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Site Name:</span>
+                            <span class="detail-value" id="dashboardSiteName">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Type:</span>
+                            <span class="detail-value" id="dashboardSiteType">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Location:</span>
+                            <span class="detail-value" id="dashboardLocation">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Capacity:</span>
+                            <span class="detail-value" id="dashboardCapacity">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Inverters:</span>
+                            <span class="detail-value" id="dashboardInverters">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Status:</span>
+                            <span class="detail-value" id="dashboardStatus">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="site-details-section">
+                    <h4>Current Performance</h4>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Current Output:</span>
+                            <span class="detail-value" id="dashboardCurrentOutput">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Efficiency:</span>
+                            <span class="detail-value" id="dashboardEfficiency">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Utilization:</span>
+                            <span class="detail-value" id="dashboardUtilization">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Temperature:</span>
+                            <span class="detail-value" id="dashboardTemperature">-</span>
+                        </div>
+                    </div>
+                </div>
+                
+                <div class="site-details-section">
+                    <h4>Maintenance</h4>
+                    <div class="details-grid">
+                        <div class="detail-item">
+                            <span class="detail-label">Last Maintenance:</span>
+                            <span class="detail-value" id="dashboardLastMaintenance">-</span>
+                        </div>
+                        <div class="detail-item">
+                            <span class="detail-label">Next Maintenance:</span>
+                            <span class="detail-value" id="dashboardNextMaintenance">-</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="maintenance-modal-actions">
+                <button type="button" class="maintenance-modal-btn secondary" onclick="closeDashboardSiteDetailsModal()">Close</button>
+                <button type="button" class="maintenance-modal-btn primary" onclick="editSiteDetails()">Edit Details</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Dashboard Site Management Modal -->
+    <div id="dashboardSiteManagementModal" class="maintenance-modal">
+        <div class="maintenance-modal-content">
+            <div class="maintenance-modal-header">
+                <h3 class="maintenance-modal-title">Site Management</h3>
+                <button class="maintenance-modal-close" onclick="closeDashboardSiteManagementModal()">&times;</button>
+            </div>
+            
+            <div class="site-details-content">
+                <div class="site-details-section">
+                    <h4>Managing: <span id="managementSiteName">-</span></h4>
+                    <p>Select an action to perform on this solar site:</p>
+                </div>
+            </div>
+            
+            <form id="dashboardManagementForm">
+                <div class="maintenance-form-grid">
+                    <div class="maintenance-form-group">
+                        <label for="managementAction">Action</label>
+                        <select id="managementAction" required>
+                            <option value="">Select Action</option>
+                            <option value="schedule-maintenance">Schedule Maintenance</option>
+                            <option value="update-firmware">Update Inverter Firmware</option>
+                            <option value="configure-settings">Configure Performance Settings</option>
+                            <option value="view-logs">View Production Logs</option>
+                            <option value="weather-monitor">Monitor Weather Impact</option>
+                            <option value="emergency-shutdown">Emergency Shutdown</option>
+                        </select>
+                    </div>
+                    
+                    <div class="maintenance-form-group">
+                        <label for="managementPriority">Priority</label>
+                        <select id="managementPriority" required>
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="urgent">Urgent</option>
+                        </select>
+                    </div>
+                    
+                    <div class="maintenance-form-group full-width">
+                        <label for="managementNotes">Notes</label>
+                        <textarea id="managementNotes" placeholder="Add any additional notes or instructions..."></textarea>
+                    </div>
+                </div>
+                
+                <div class="maintenance-modal-actions">
+                    <button type="button" class="maintenance-modal-btn secondary" onclick="closeDashboardSiteManagementModal()">Cancel</button>
+                    <button type="submit" class="maintenance-modal-btn primary">Execute Action</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- Site Components Modal -->
+    <div id="siteComponentsModal" class="maintenance-modal">
+        <div class="maintenance-modal-content" style="max-width: 1000px; max-height: 90vh; overflow-y: auto;">
+            <div class="maintenance-modal-header">
+                <h3 class="maintenance-modal-title">Site Components - <span id="componentsSiteName">-</span></h3>
+                <button class="maintenance-modal-close" onclick="closeSiteComponentsModal()">&times;</button>
+            </div>
+            
+            <div class="site-details-content">
+                <!-- Inverters Section -->
+                <div class="site-details-section">
+                    <h4>Inverters & Power Conversion</h4>
+                    <div id="components-inverters" class="components-container">
+                        <!-- Components will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Meters Section -->
+                <div class="site-details-section">
+                    <h4>Meters & Monitoring</h4>
+                    <div id="components-meters" class="components-container">
+                        <!-- Components will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Monitoring Section -->
+                <div class="site-details-section">
+                    <h4>Data Monitoring & Communication</h4>
+                    <div id="components-monitoring" class="components-container">
+                        <!-- Components will be populated by JavaScript -->
+                    </div>
+                </div>
+                
+                <!-- Safety Section -->
+                <div class="site-details-section">
+                    <h4>Safety & Protection</h4>
+                    <div id="components-safety" class="components-container">
+                        <!-- Components will be populated by JavaScript -->
+                    </div>
+                </div>
+            </div>
+            
+            <div class="maintenance-modal-actions">
+                <button type="button" class="maintenance-modal-btn secondary" onclick="closeSiteComponentsModal()">Close</button>
+                <button type="button" class="maintenance-modal-btn primary" onclick="exportComponentsList()">Export Components List</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         // Authentication check
         function checkAuth() {
@@ -3176,11 +3485,415 @@
             // For now, it's a placeholder since we're using static HTML
             console.log('Inventory cards refreshed');
         }
+        
+        // Site inventory management functions
+        function viewSiteInventoryDetails(siteId) {
+            const site = siteAssets.find(s => s.id === siteId);
+            if (!site) return;
+            
+            // Get current performance data
+            const cachedData = getCachedSiteData(siteId);
+            
+            // Populate the modal with site data
+            document.getElementById('detailSiteName').textContent = site.name;
+            document.getElementById('detailSiteType').textContent = site.type;
+            document.getElementById('detailLocation').textContent = site.location;
+            document.getElementById('detailCapacity').textContent = site.capacity + ' kW';
+            document.getElementById('detailInverterCount').textContent = site.inverterCount;
+            document.getElementById('detailPanelCount').textContent = site.panelCount.toLocaleString();
+            document.getElementById('detailPanelWattage').textContent = site.panelWattage + 'W';
+            document.getElementById('detailInverterBrand').textContent = site.inverterBrand;
+            document.getElementById('detailStatus').textContent = site.status.charAt(0).toUpperCase() + site.status.slice(1);
+            document.getElementById('detailCommissionDate').textContent = new Date(site.commissionDate).toLocaleDateString();
+            document.getElementById('detailNextMaintenance').textContent = 'Dec 15, 2024'; // Static for now
+            document.getElementById('detailGridConnection').textContent = site.gridConnection;
+            document.getElementById('detailNotes').textContent = site.notes || 'No additional notes';
+            
+            // Add current performance metrics
+            if (cachedData) {
+                document.getElementById('detailUtilization').textContent = cachedData.utilization + '%';
+                document.getElementById('detailTemperature').textContent = cachedData.temperature + '°C';
+                document.getElementById('detailPower').textContent = cachedData.power + ' kW';
+                document.getElementById('detailEfficiency').textContent = cachedData.efficiency + '%';
+            } else {
+                document.getElementById('detailUtilization').textContent = '0%';
+                document.getElementById('detailTemperature').textContent = '25°C';
+                document.getElementById('detailPower').textContent = '0 kW';
+                document.getElementById('detailEfficiency').textContent = '0%';
+            }
+            
+            // Show the modal
+            document.getElementById('siteDetailsModal').style.display = 'flex';
+        }
+        
+        function scheduleSiteMaintenance(siteId) {
+            const site = siteAssets.find(s => s.id === siteId);
+            if (!site) return;
+            
+            // Set the site name in the form
+            document.getElementById('maintenanceSiteName').value = site.name;
+            
+            // Set default date to tomorrow
+            const tomorrow = new Date();
+            tomorrow.setDate(tomorrow.getDate() + 1);
+            document.getElementById('siteMaintenanceDate').value = tomorrow.toISOString().split('T')[0];
+            
+            // Reset form
+            document.getElementById('siteMaintenanceType').value = '';
+            document.getElementById('siteMaintenancePriority').value = '';
+            document.getElementById('siteMaintenanceDuration').value = '';
+            document.getElementById('siteMaintenanceTechnician').value = '';
+            document.getElementById('siteMaintenanceDescription').value = '';
+            
+            // Show the modal
+            document.getElementById('siteMaintenanceModal').style.display = 'flex';
+        }
+        
+        function viewSiteComponents(siteId) {
+            const site = siteAssets.find(s => s.id === siteId);
+            if (!site) return;
+            
+            // Set the site name in the modal
+            document.getElementById('componentsSiteName').textContent = site.name;
+            
+            // Populate component data
+            populateSiteComponents(siteId);
+            
+            // Show the modal
+            document.getElementById('siteComponentsModal').style.display = 'flex';
+        }
+        
+        function populateSiteComponents(siteId) {
+            // Sample component data for each site
+            const componentData = {
+                'cummins-midrand': {
+                    inverters: [
+                        { sku: 'SMA-SUNNY-BOY-5.0', model: 'SMA Sunny Boy 5.0', qty: 9, installDate: '2023-01-15', warranty: '2028-01-15', documents: ['Installation Manual', 'Warranty Certificate'] },
+                        { sku: 'SMA-OPTIMIZER-700', model: 'SMA Power Optimizer', qty: 18, installDate: '2023-01-15', warranty: '2028-01-15', documents: ['Technical Specs'] }
+                    ],
+                    meters: [
+                        { sku: 'SCHNEIDER-PM8000', model: 'Schneider PM8000 Power Meter', qty: 2, installDate: '2023-01-15', warranty: '2026-01-15', documents: ['Calibration Certificate', 'Installation Guide'] }
+                    ],
+                    monitoring: [
+                        { sku: 'SOLAREDGE-MONITOR', model: 'SolarEdge Monitoring Gateway', qty: 1, installDate: '2023-01-15', warranty: '2025-01-15', documents: ['Network Configuration', 'User Manual'] }
+                    ],
+                    safety: [
+                        { sku: 'ABB-RCCB-40A', model: 'ABB Residual Current Circuit Breaker', qty: 3, installDate: '2023-01-15', warranty: '2026-01-15', documents: ['Safety Certificate'] }
+                    ]
+                },
+                'fnb-willowbridge': {
+                    inverters: [
+                        { sku: 'FRONIUS-PRIMO-5.0', model: 'Fronius Primo 5.0', qty: 2, installDate: '2023-03-20', warranty: '2028-03-20', documents: ['Installation Manual', 'Warranty Certificate'] }
+                    ],
+                    meters: [
+                        { sku: 'SCHNEIDER-PM8000', model: 'Schneider PM8000 Power Meter', qty: 1, installDate: '2023-03-20', warranty: '2026-03-20', documents: ['Calibration Certificate'] }
+                    ],
+                    monitoring: [
+                        { sku: 'FRONIUS-DATAMANAGER', model: 'Fronius Data Manager', qty: 1, installDate: '2023-03-20', warranty: '2025-03-20', documents: ['Configuration Guide'] }
+                    ],
+                    safety: [
+                        { sku: 'ABB-RCCB-40A', model: 'ABB Residual Current Circuit Breaker', qty: 1, installDate: '2023-03-20', warranty: '2026-03-20', documents: ['Safety Certificate'] }
+                    ]
+                }
+            };
+            
+            const components = componentData[siteId] || {};
+            
+            // Populate each component section
+            populateComponentSection('inverters', components.inverters || []);
+            populateComponentSection('meters', components.meters || []);
+            populateComponentSection('monitoring', components.monitoring || []);
+            populateComponentSection('safety', components.safety || []);
+        }
+        
+        function populateComponentSection(sectionType, components) {
+            const container = document.getElementById(`components-${sectionType}`);
+            if (!container) return;
+            
+            // Clear existing content
+            container.innerHTML = '';
+            
+            if (components.length === 0) {
+                container.innerHTML = '<p class="no-components">No components found. <button class="add-component-btn" onclick="addComponent(\'' + sectionType + '\')">Add Component</button></p>';
+                return;
+            }
+            
+            components.forEach((component, index) => {
+                const componentDiv = document.createElement('div');
+                componentDiv.className = 'component-item';
+                componentDiv.innerHTML = `
+                    <div class="component-header">
+                        <div class="component-info">
+                            <h5>${component.model}</h5>
+                            <span class="component-sku">SKU: ${component.sku}</span>
+                        </div>
+                        <div class="component-actions">
+                            <button class="component-action-btn" onclick="editComponent('${sectionType}', ${index})">Edit</button>
+                            <button class="component-action-btn delete" onclick="deleteComponent('${sectionType}', ${index})">Delete</button>
+                        </div>
+                    </div>
+                    <div class="component-details">
+                        <div class="component-detail">
+                            <span class="detail-label">Quantity:</span>
+                            <span class="detail-value">${component.qty}</span>
+                        </div>
+                        <div class="component-detail">
+                            <span class="detail-label">Install Date:</span>
+                            <span class="detail-value">${component.installDate}</span>
+                        </div>
+                        <div class="component-detail">
+                            <span class="detail-label">Warranty Until:</span>
+                            <span class="detail-value">${component.warranty}</span>
+                        </div>
+                        <div class="component-detail">
+                            <span class="detail-label">Documents:</span>
+                            <span class="detail-value">${component.documents.join(', ')}</span>
+                        </div>
+                    </div>
+                `;
+                container.appendChild(componentDiv);
+            });
+            
+            // Add "Add Component" button
+            const addButton = document.createElement('div');
+            addButton.className = 'add-component-section';
+            addButton.innerHTML = `<button class="add-component-btn" onclick="addComponent('${sectionType}')">+ Add ${sectionType.charAt(0).toUpperCase() + sectionType.slice(1)} Component</button>`;
+            container.appendChild(addButton);
+        }
+        
+        // Site modal functions
+        function openAddSiteModal() {
+            document.getElementById('addSiteModal').style.display = 'flex';
+        }
+        
+        function closeAddSiteModal() {
+            document.getElementById('addSiteModal').style.display = 'none';
+        }
+        
+        function closeSiteDetailsModal() {
+            document.getElementById('siteDetailsModal').style.display = 'none';
+        }
+        
+        function closeSiteMaintenanceModal() {
+            document.getElementById('siteMaintenanceModal').style.display = 'none';
+            document.getElementById('siteMaintenanceForm').reset();
+        }
+        
+        function editSiteDetails() {
+            alert('Edit functionality coming soon! This will allow you to modify site details.');
+        }
+        
+        // Dashboard modal functions
+        function closeDashboardSiteDetailsModal() {
+            document.getElementById('dashboardSiteDetailsModal').style.display = 'none';
+        }
+        
+        function closeDashboardSiteManagementModal() {
+            document.getElementById('dashboardSiteManagementModal').style.display = 'none';
+            document.getElementById('dashboardManagementForm').reset();
+        }
+        
+        function closeSiteComponentsModal() {
+            document.getElementById('siteComponentsModal').style.display = 'none';
+        }
+        
+        function addComponent(sectionType) {
+            const componentData = prompt(`Add new ${sectionType} component:\n\nEnter component data in format:\nModel,SKU,Quantity,InstallDate,WarrantyDate,Documents\n\nExample:\nSMA Sunny Boy 5.0,SMA-SB-5.0,1,2024-01-15,2029-01-15,Manual,Warranty`);
+            
+            if (componentData) {
+                const parts = componentData.split(',');
+                if (parts.length >= 6) {
+                    const newComponent = {
+                        model: parts[0].trim(),
+                        sku: parts[1].trim(),
+                        qty: parseInt(parts[2].trim()) || 1,
+                        installDate: parts[3].trim(),
+                        warranty: parts[4].trim(),
+                        documents: parts.slice(5).map(doc => doc.trim())
+                    };
+                    
+                    // Add to component data (in real app, this would save to database)
+                    console.log(`Added new ${sectionType} component:`, newComponent);
+                    
+                    // Refresh the component section
+                    const currentSiteId = document.getElementById('componentsSiteName').textContent.toLowerCase().replace(' ', '-');
+                    populateSiteComponents(currentSiteId);
+                    
+                    alert(`Component added successfully!\n\nModel: ${newComponent.model}\nSKU: ${newComponent.sku}\nQuantity: ${newComponent.qty}`);
+                } else {
+                    alert('Invalid format. Please use: Model,SKU,Quantity,InstallDate,WarrantyDate,Documents');
+                }
+            }
+        }
+        
+        function editComponent(sectionType, index) {
+            alert(`Edit component functionality coming soon!\n\nSection: ${sectionType}\nIndex: ${index}\n\nThis will allow you to modify component details, upload documents, and update specifications.`);
+        }
+        
+        function deleteComponent(sectionType, index) {
+            if (confirm(`Are you sure you want to delete this ${sectionType} component?`)) {
+                // In real app, this would remove from database
+                console.log(`Deleted ${sectionType} component at index ${index}`);
+                
+                // Refresh the component section
+                const currentSiteId = document.getElementById('componentsSiteName').textContent.toLowerCase().replace(' ', '-');
+                populateSiteComponents(currentSiteId);
+                
+                alert('Component deleted successfully!');
+            }
+        }
+        
+        function exportComponentsList() {
+            const siteName = document.getElementById('componentsSiteName').textContent;
+            const componentsData = {
+                site: siteName,
+                exportDate: new Date().toISOString(),
+                components: {
+                    inverters: document.getElementById('components-inverters').innerHTML,
+                    meters: document.getElementById('components-meters').innerHTML,
+                    monitoring: document.getElementById('components-monitoring').innerHTML,
+                    safety: document.getElementById('components-safety').innerHTML
+                }
+            };
+            
+            // In real app, this would generate a proper export file
+            console.log('Components export data:', componentsData);
+            
+            alert(`Components list exported successfully!\n\nSite: ${siteName}\nExport Date: ${new Date().toLocaleDateString()}\n\nIn a real application, this would generate a CSV or PDF file with all component details and documents.`);
+        }
+        
+        function testSiteConnection() {
+            const siteName = document.getElementById('siteName').value;
+            const siteLocation = document.getElementById('siteLocation').value;
+            const gridConnection = document.getElementById('gridConnection').value;
+            
+            if (!siteName || !siteLocation || !gridConnection) {
+                alert('Please fill in Site Name, Address, and Grid Connection before testing.');
+                return;
+            }
+            
+            // Simulate connection test
+            const testBtn = document.getElementById('testSiteConnectionBtn');
+            const originalText = testBtn.textContent;
+            testBtn.textContent = '⏳ Testing...';
+            testBtn.disabled = true;
+            
+            setTimeout(() => {
+                testBtn.textContent = originalText;
+                testBtn.disabled = false;
+                
+                if (Math.random() > 0.2) { // 80% success rate
+                    alert(`Connection test successful!\n\nSite: ${siteName}\nLocation: ${siteLocation}\nGrid Connection: ${gridConnection}\n\nYou can now add this site to inventory.`);
+                } else {
+                    alert(`Connection test failed!\n\nPlease check:\n- Site details are correct\n- Network connectivity\n- Grid connection status\n\nTry again after fixing the connection issues.`);
+                }
+            }, 2000);
+        }
+        
+        // Site data management functions
+        function getSiteData(siteId) {
+            const sites = {
+                'cummins-midrand': {
+                    name: 'Cummins Midrand',
+                    utilization: 0,      // 0% (no sun currently)
+                    temperature: 25,     // 25°C ambient
+                    power: 0,           // 0 kW (no production)
+                    efficiency: 0,      // 0% efficiency (nighttime)
+                    capacity: 821.88    // Total capacity in kW
+                },
+                'fnb-willowbridge': {
+                    name: 'FNB Willowbridge',
+                    utilization: 0,      // 0% (no sun currently)
+                    temperature: 24,     // 24°C ambient
+                    power: 0,           // 0 kW (no production)
+                    efficiency: 0,      // 0% efficiency (nighttime)
+                    capacity: 51.98     // Total capacity in kW
+                }
+            };
+            return sites[siteId];
+        }
+        
+        // Simulate dynamic site data (optional - adds realistic variation)
+        function getRealtimeSiteData(siteId) {
+            const baseData = getSiteData(siteId);
+            const currentHour = new Date().getHours();
+            
+            // Calculate solar factor based on time of day
+            let solarFactor = 0;
+            if (currentHour >= 6 && currentHour <= 18) {
+                if (currentHour >= 11 && currentHour <= 15) {
+                    solarFactor = 0.8 + (Math.random() * 0.2); // 80-100%
+                } else if (currentHour >= 8 && currentHour <= 17) {
+                    solarFactor = 0.4 + (Math.random() * 0.4); // 40-80%
+                } else {
+                    solarFactor = 0.1 + (Math.random() * 0.3); // 10-40%
+                }
+            }
+            
+            return {
+                utilization: Math.round(solarFactor * 100),
+                power: Math.round(baseData.capacity * solarFactor * 100) / 100,
+                efficiency: Math.round(solarFactor * 100),
+                temperature: baseData.temperature + Math.round(solarFactor * 15) // Panels heat up in sun
+            };
+        }
+        
+        // Cache for site data to ensure consistency
+        let cachedSiteData = null;
+        
+        function getCachedSiteData(siteId) {
+            // Return cached data if it exists and is recent (within 5 seconds)
+            if (cachedSiteData && cachedSiteData.lastUpdate && (Date.now() - cachedSiteData.lastUpdate) < 5000) {
+                return cachedSiteData[siteId];
+            }
+            
+            // Generate new cached data
+            generateAndCacheSiteData();
+            return cachedSiteData[siteId];
+        }
+        
+        function generateAndCacheSiteData() {
+            const currentHour = new Date().getHours();
+            
+            // Calculate solar factor once for this time period
+            let solarFactor = 0;
+            if (currentHour >= 6 && currentHour <= 18) {
+                if (currentHour >= 11 && currentHour <= 15) {
+                    solarFactor = 0.8 + (Math.random() * 0.2); // 80-100%
+                } else if (currentHour >= 8 && currentHour <= 17) {
+                    solarFactor = 0.4 + (Math.random() * 0.4); // 40-80%
+                } else {
+                    solarFactor = 0.1 + (Math.random() * 0.3); // 10-40%
+                }
+            }
+            
+            // Generate consistent data for both sites
+            const cumminsBase = getSiteData('cummins-midrand');
+            const fnbBase = getSiteData('fnb-willowbridge');
+            
+            cachedSiteData = {
+                'cummins-midrand': {
+                    utilization: Math.round(solarFactor * 100),
+                    power: Math.round(cumminsBase.capacity * solarFactor * 100) / 100,
+                    efficiency: Math.round(solarFactor * 100),
+                    temperature: cumminsBase.temperature + Math.round(solarFactor * 15)
+                },
+                'fnb-willowbridge': {
+                    utilization: Math.round(solarFactor * 100),
+                    power: Math.round(fnbBase.capacity * solarFactor * 100) / 100,
+                    efficiency: Math.round(solarFactor * 100),
+                    temperature: fnbBase.temperature + Math.round(solarFactor * 15)
+                },
+                lastUpdate: Date.now()
+            };
+            
+            cachedSiteData.lastUpdate = Date.now();
+        }
 
         // Sample site data for solar sites
         const siteAssets = [
             {
-                id: 'site-001',
+                id: 'cummins-midrand',
                 name: 'Cummins Midrand',
                 type: 'Commercial Solar',
                 location: 'Corners Bridal Veil Road',
@@ -3199,7 +3912,7 @@
                 efficiency: 0
             },
             {
-                id: 'site-002',
+                id: 'fnb-willowbridge',
                 name: 'FNB Willowbridge',
                 type: 'Commercial Solar',
                 location: '61 Carl Cronje Drive',
@@ -4194,64 +4907,6 @@
         let temperatureChartInstance = null;
         let powerChartInstance = null;
 
-        // Cached site data to ensure consistency
-        let cachedSiteData = {
-            'cummins-midrand': null,
-            'fnb-willowbridge': null,
-            lastUpdate: null
-        };
-
-        // Get cached site data (generates once, uses multiple times)
-        function getCachedSiteData(siteId) {
-            // Generate data if not cached or if older than 5 minutes
-            const now = Date.now();
-            if (!cachedSiteData.lastUpdate || (now - cachedSiteData.lastUpdate) > 300000) {
-                generateAndCacheSiteData();
-            }
-            
-            return cachedSiteData[siteId];
-        }
-
-        // Generate and cache site data for consistency
-        function generateAndCacheSiteData() {
-            const currentHour = new Date().getHours();
-            
-            // Calculate solar factor once for this time period
-            let solarFactor = 0;
-            if (currentHour >= 6 && currentHour <= 18) {
-                if (currentHour >= 11 && currentHour <= 15) {
-                    solarFactor = 0.8 + (Math.random() * 0.2); // 80-100%
-                } else if (currentHour >= 8 && currentHour <= 17) {
-                    solarFactor = 0.4 + (Math.random() * 0.4); // 40-80%
-                } else {
-                    solarFactor = 0.1 + (Math.random() * 0.3); // 10-40%
-                }
-            }
-            
-            // Generate data for Cummins Midrand
-            const cumminsBase = getSiteData('cummins-midrand');
-            const cumminsFactor = solarFactor * 1.05; // 5% efficiency boost
-            cachedSiteData['cummins-midrand'] = {
-                ...cumminsBase,
-                utilization: Math.round(cumminsFactor * 100),
-                power: Math.round(cumminsBase.capacity * cumminsFactor),
-                efficiency: Math.round(cumminsFactor * 100),
-                temperature: cumminsBase.temperature + Math.round(cumminsFactor * 15)
-            };
-            
-            // Generate data for FNB Willowbridge
-            const fnbBase = getSiteData('fnb-willowbridge');
-            const fnbFactor = solarFactor * 0.95; // 5% efficiency reduction
-            cachedSiteData['fnb-willowbridge'] = {
-                ...fnbBase,
-                utilization: Math.round(fnbFactor * 100),
-                power: Math.round(fnbBase.capacity * fnbFactor),
-                efficiency: Math.round(fnbFactor * 100),
-                temperature: fnbBase.temperature + Math.round(fnbFactor * 15)
-            };
-            
-            cachedSiteData.lastUpdate = Date.now();
-        }
 
         // Initialize all charts
         function initializeCharts() {
@@ -4693,6 +5348,223 @@
                 if (selectedSite) {
                     updateIndividualSiteMetrics(selectedSite);
                 }
+            }
+        }
+        
+        // Initialize Chart.js charts
+        function initializeCharts() {
+            try {
+                initializeUtilizationChart();
+                initializeTemperatureChart();
+                initializePowerChart();
+                console.log('Charts initialized successfully');
+            } catch (error) {
+                console.error('Error initializing charts:', error);
+            }
+        }
+        
+        // Initialize utilization chart
+        function initializeUtilizationChart() {
+            const canvas = document.getElementById('utilizationChartCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            utilizationChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Utilization (%)',
+                        data: [],
+                        borderColor: '#3B82F6',
+                        backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true,
+                            max: 100
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize temperature chart
+        function initializeTemperatureChart() {
+            const canvas = document.getElementById('temperatureChartCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            temperatureChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Temperature (°C)',
+                        data: [],
+                        borderColor: '#EF4444',
+                        backgroundColor: 'rgba(239, 68, 68, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Initialize power chart
+        function initializePowerChart() {
+            const canvas = document.getElementById('powerChartCanvas');
+            if (!canvas) return;
+            
+            const ctx = canvas.getContext('2d');
+            powerChartInstance = new Chart(ctx, {
+                type: 'line',
+                data: {
+                    labels: [],
+                    datasets: [{
+                        label: 'Power Output (kW)',
+                        data: [],
+                        borderColor: '#10B981',
+                        backgroundColor: 'rgba(16, 185, 129, 0.1)',
+                        tension: 0.4
+                    }]
+                },
+                options: {
+                    responsive: true,
+                    maintainAspectRatio: false,
+                    scales: {
+                        y: {
+                            beginAtZero: true
+                        }
+                    }
+                }
+            });
+        }
+        
+        // Setup chart time controls
+        function setupChartTimeControls() {
+            const chartButtons = document.querySelectorAll('.chart-btn');
+            
+            chartButtons.forEach(btn => {
+                btn.addEventListener('click', function(e) {
+                    e.preventDefault();
+                    console.log('Chart button clicked:', this.getAttribute('data-period'));
+                    
+                    // Remove active class from all buttons in the same chart
+                    const chartContainer = this.closest('.chart-container');
+                    chartContainer.querySelectorAll('.chart-btn').forEach(b => b.classList.remove('active'));
+                    
+                    // Add active class to clicked button
+                    this.classList.add('active');
+                    
+                    // Update charts with new time period
+                    const period = this.getAttribute('data-period');
+                    const selectedSiteId = document.getElementById('siteSelector').value;
+                    updateChartsForPeriod(selectedSiteId, period);
+                });
+            });
+        }
+        
+        // Update charts for specific time period
+        function updateChartsForPeriod(siteId, period) {
+            console.log('Updating charts for period:', period, 'site:', siteId);
+            
+            // Generate chart data for the specified period
+            const utilizationData = generateChartData(siteId, period, 'utilization');
+            const temperatureData = generateChartData(siteId, period, 'temperature');
+            const powerData = generateChartData(siteId, period, 'power');
+            
+            // Update each chart
+            updateChart(utilizationChartInstance, utilizationData.labels, utilizationData.data, siteId, period, 'utilization');
+            updateChart(temperatureChartInstance, temperatureData.labels, temperatureData.data, siteId, period, 'temperature');
+            updateChart(powerChartInstance, powerData.labels, powerData.data, siteId, period, 'power');
+        }
+        
+        // Generate chart data for specific period and metric
+        function generateChartData(siteId, period, metricType) {
+            const now = new Date();
+            let labels = [];
+            let data = [];
+            
+            // Generate time labels based on period
+            switch (period) {
+                case '1h':
+                    for (let i = 11; i >= 0; i--) {
+                        const time = new Date(now.getTime() - i * 5 * 60000); // 5-minute intervals
+                        labels.push(time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
+                        data.push(Math.floor(Math.random() * 100));
+                    }
+                    break;
+                case '6h':
+                    for (let i = 11; i >= 0; i--) {
+                        const time = new Date(now.getTime() - i * 30 * 60000); // 30-minute intervals
+                        labels.push(time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
+                        data.push(Math.floor(Math.random() * 100));
+                    }
+                    break;
+                case '24h':
+                    for (let i = 23; i >= 0; i--) {
+                        const time = new Date(now.getTime() - i * 60 * 60000); // 1-hour intervals
+                        labels.push(time.toLocaleTimeString('en-US', { hour: '2-digit' }));
+                        data.push(Math.floor(Math.random() * 100));
+                    }
+                    break;
+                case '7d':
+                    for (let i = 6; i >= 0; i--) {
+                        const time = new Date(now.getTime() - i * 24 * 60 * 60000); // Daily intervals
+                        labels.push(time.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                        data.push(Math.floor(Math.random() * 100));
+                    }
+                    break;
+            }
+            
+            return { labels, data };
+        }
+        
+        // Update individual chart
+        function updateChart(chartInstance, labels, data, siteId, period, chartType) {
+            if (!chartInstance) return;
+            
+            chartInstance.data.labels = labels;
+            chartInstance.data.datasets[0].data = data;
+            chartInstance.update();
+        }
+        
+        // Update performance charts based on selected site
+        function updatePerformanceCharts(selectedSiteId) {
+            try {
+                console.log('Updating charts for:', selectedSiteId);
+                
+                // Skip if charts aren't initialized yet
+                if (!utilizationChartInstance && !temperatureChartInstance && !powerChartInstance) {
+                    console.log('Charts not initialized yet, skipping update');
+                    return;
+                }
+                
+                // Get current time periods for each chart
+                const utilizationPeriod = document.querySelector('#utilizationChartCanvas').closest('.chart-container').querySelector('.chart-btn.active')?.getAttribute('data-period') || '1h';
+                const temperaturePeriod = document.querySelector('#temperatureChartCanvas').closest('.chart-container').querySelector('.chart-btn.active')?.getAttribute('data-period') || '1h';
+                const powerPeriod = document.querySelector('#powerChartCanvas').closest('.chart-container').querySelector('.chart-btn.active')?.getAttribute('data-period') || '1h';
+                
+                // Update each chart with its current time period
+                updateChartsForPeriod(selectedSiteId, utilizationPeriod);
+                updateChartsForPeriod(selectedSiteId, temperaturePeriod);
+                updateChartsForPeriod(selectedSiteId, powerPeriod);
+            } catch (error) {
+                console.error('Error updating performance charts:', error);
             }
         }
 
@@ -5444,9 +6316,36 @@
             };
             
             const site = sites[siteId];
-            if (site) {
-                alert(`Solar Site Details:\n\nName: ${site.name}\nType: ${site.type}\nCapacity: ${site.capacity}\nLocation: ${site.location}\nCurrent Output: ${site.currentOutput}\nEfficiency: ${site.efficiency}\nInverters: ${site.inverters}\nStatus: ${site.status}\nLast Maintenance: ${site.lastMaintenance}\nNext Maintenance: ${site.nextMaintenance}`);
+            if (!site) return;
+            
+            // Get current performance data
+            const cachedData = getCachedSiteData(siteId);
+            
+            // Populate the dashboard site details modal
+            document.getElementById('dashboardSiteName').textContent = site.name;
+            document.getElementById('dashboardSiteType').textContent = site.type;
+            document.getElementById('dashboardLocation').textContent = site.location;
+            document.getElementById('dashboardCapacity').textContent = site.capacity;
+            document.getElementById('dashboardInverters').textContent = site.inverters;
+            document.getElementById('dashboardStatus').textContent = site.status;
+            document.getElementById('dashboardLastMaintenance').textContent = site.lastMaintenance;
+            document.getElementById('dashboardNextMaintenance').textContent = site.nextMaintenance;
+            
+            // Add current performance metrics
+            if (cachedData) {
+                document.getElementById('dashboardCurrentOutput').textContent = cachedData.power + ' kW';
+                document.getElementById('dashboardEfficiency').textContent = cachedData.efficiency + '%';
+                document.getElementById('dashboardUtilization').textContent = cachedData.utilization + '%';
+                document.getElementById('dashboardTemperature').textContent = cachedData.temperature + '°C';
+            } else {
+                document.getElementById('dashboardCurrentOutput').textContent = '0 kW';
+                document.getElementById('dashboardEfficiency').textContent = '0%';
+                document.getElementById('dashboardUtilization').textContent = '0%';
+                document.getElementById('dashboardTemperature').textContent = '25°C';
             }
+            
+            // Show the modal
+            document.getElementById('dashboardSiteDetailsModal').style.display = 'flex';
         }
 
         function manageSite(siteId) {
@@ -5456,9 +6355,18 @@
             };
             
             const siteName = sites[siteId];
-            if (siteName) {
-                alert(`Managing ${siteName}\n\nManagement options:\n- Schedule maintenance\n- Update inverter firmware\n- Configure performance settings\n- View production logs\n- Monitor weather impact\n\nFull management interface coming soon...`);
-            }
+            if (!siteName) return;
+            
+            // Set the site name in the management modal
+            document.getElementById('managementSiteName').textContent = siteName;
+            
+            // Reset form fields
+            document.getElementById('managementAction').value = '';
+            document.getElementById('managementPriority').value = '';
+            document.getElementById('managementNotes').value = '';
+            
+            // Show the modal
+            document.getElementById('dashboardSiteManagementModal').style.display = 'flex';
         }
 
         // Site inventory management functions
@@ -5770,6 +6678,55 @@
                     // Close modal and show success
                     closeSiteMaintenanceModal();
                     alert(`Maintenance task scheduled successfully!\n\nSite: ${formData.siteName}\nType: ${maintenanceTask.type}\nDate: ${new Date(formData.date).toLocaleDateString()}\nTechnician: ${formData.technician}\nDuration: ${formData.duration} hours`);
+                });
+            }
+            
+            // Dashboard modal event listeners
+            const dashboardSiteDetailsModal = document.getElementById('dashboardSiteDetailsModal');
+            if (dashboardSiteDetailsModal) {
+                dashboardSiteDetailsModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeDashboardSiteDetailsModal();
+                    }
+                });
+            }
+            
+            const dashboardSiteManagementModal = document.getElementById('dashboardSiteManagementModal');
+            if (dashboardSiteManagementModal) {
+                dashboardSiteManagementModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeDashboardSiteManagementModal();
+                    }
+                });
+            }
+            
+            const dashboardManagementForm = document.getElementById('dashboardManagementForm');
+            if (dashboardManagementForm) {
+                dashboardManagementForm.addEventListener('submit', function(e) {
+                    e.preventDefault();
+                    
+                    const formData = {
+                        action: document.getElementById('managementAction').value,
+                        priority: document.getElementById('managementPriority').value,
+                        notes: document.getElementById('managementNotes').value
+                    };
+                    
+                    // Execute management action (placeholder)
+                    console.log('Management action executed:', formData);
+                    
+                    // Close modal and show success
+                    closeDashboardSiteManagementModal();
+                    alert(`Management action executed successfully!\n\nAction: ${formData.action}\nPriority: ${formData.priority}\nNotes: ${formData.notes || 'None'}`);
+                });
+            }
+            
+            // Site Components modal event listeners
+            const siteComponentsModal = document.getElementById('siteComponentsModal');
+            if (siteComponentsModal) {
+                siteComponentsModal.addEventListener('click', function(e) {
+                    if (e.target === this) {
+                        closeSiteComponentsModal();
+                    }
                 });
             }
             
