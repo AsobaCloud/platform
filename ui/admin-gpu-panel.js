@@ -1059,37 +1059,51 @@
             const capacityContainer = document.getElementById('capacityAllocation');
             capacityContainer.innerHTML = '';
 
-            capacityData.sites.forEach(site => {
+            // Solar site data
+            const solarSites = [
+                {
+                    name: 'Cummins Midrand',
+                    totalCapacity: 821.88,
+                    activeCapacity: 700,
+                    availableCapacity: 100,
+                    maintenanceCapacity: 21.88
+                },
+                {
+                    name: 'FNB Willowbridge', 
+                    totalCapacity: 51.98,
+                    activeCapacity: 40,
+                    availableCapacity: 8,
+                    maintenanceCapacity: 3.98
+                }
+            ];
+
+            solarSites.forEach(site => {
                 const capacitySite = document.createElement('div');
                 capacitySite.className = 'capacity-site';
                 
-                const ondemandPercent = (site.ondemandGpus / site.totalGpus) * 100;
-                const spotPercent = (site.spotGpus / site.totalGpus) * 100;
-                const idlePercent = (site.idleGpus / site.totalGpus) * 100;
-                const maintenancePercent = (site.maintenanceGpus / site.totalGpus) * 100;
+                const activePercent = (site.activeCapacity / site.totalCapacity) * 100;
+                const availablePercent = (site.availableCapacity / site.totalCapacity) * 100;
+                const maintenancePercent = (site.maintenanceCapacity / site.totalCapacity) * 100;
                 
                 capacitySite.innerHTML = `
                     <div class="site-capacity-info">
                         <div class="site-capacity-name">${site.name}</div>
                         <div class="site-capacity-details">
-                            <span>Total: ${site.totalGpus} GPUs</span>
-                            <span>On-Demand: ${site.ondemandGpus}</span>
-                            <span>Spot Available: ${site.spotGpus}</span>
-                            <span>Idle: ${site.idleGpus}</span>
-                            <span>Maintenance: ${site.maintenanceGpus}</span>
+                            <span>Total: ${site.totalCapacity} kW</span>
+                            <span>Active: ${site.activeCapacity} kW</span>
+                            <span>Available: ${site.availableCapacity} kW</span>
+                            <span>Maintenance: ${site.maintenanceCapacity} kW</span>
                         </div>
                     </div>
                     <div class="capacity-bar-container">
                         <div class="capacity-bar">
-                            <div class="capacity-segment capacity-ondemand" style="width: ${ondemandPercent}%"></div>
-                            <div class="capacity-segment capacity-spot" style="width: ${spotPercent}%"></div>
-                            <div class="capacity-segment capacity-idle" style="width: ${idlePercent}%"></div>
+                            <div class="capacity-segment capacity-ondemand" style="width: ${activePercent}%"></div>
+                            <div class="capacity-segment capacity-spot" style="width: ${availablePercent}%"></div>
                             <div class="capacity-segment capacity-maintenance" style="width: ${maintenancePercent}%"></div>
                         </div>
                         <div class="capacity-labels">
-                            <span>On-Demand</span>
-                            <span>Spot</span>
-                            <span>Idle</span>
+                            <span>Active</span>
+                            <span>Available</span>
                             <span>Maintenance</span>
                         </div>
                     </div>
@@ -1099,17 +1113,42 @@
             });
         }
 
-        // Load preemption status
+        // Load maintenance scheduling
         function loadPreemptionStatus() {
             const preemptionContainer = document.getElementById('preemptionStatus');
             preemptionContainer.innerHTML = '';
 
-            capacityData.preemptionEvents.forEach(event => {
+            // Solar maintenance data
+            const maintenanceEvents = [
+                {
+                    id: 'maint-001',
+                    title: 'Cummins Midrand - Inverter Maintenance',
+                    description: 'Quarterly inverter inspection and cleaning scheduled for Dec 15, 2024',
+                    type: 'scheduled',
+                    priority: 'medium'
+                },
+                {
+                    id: 'maint-002', 
+                    title: 'FNB Willowbridge - Panel Cleaning',
+                    description: 'Monthly panel cleaning and performance check due Dec 20, 2024',
+                    type: 'routine',
+                    priority: 'low'
+                },
+                {
+                    id: 'maint-003',
+                    title: 'Cummins Midrand - Grid Connection Check',
+                    description: 'Annual grid connection inspection and safety test - Jan 5, 2025',
+                    type: 'critical',
+                    priority: 'high'
+                }
+            ];
+
+            maintenanceEvents.forEach(event => {
                 const preemptionItem = document.createElement('div');
                 preemptionItem.className = 'preemption-item';
                 
                 const iconClass = `preemption-${event.type}`;
-                const iconText = event.type === 'critical' ? '!' : event.type === 'warning' ? '⚠' : 'ℹ';
+                const iconText = event.type === 'critical' ? '!' : event.type === 'routine' ? '🧹' : '📅';
                 
                 preemptionItem.innerHTML = `
                     <div class="preemption-icon ${iconClass}">${iconText}</div>
@@ -1118,8 +1157,8 @@
                         <div class="preemption-description">${event.description}</div>
                     </div>
                     <div class="preemption-actions">
-                        <button class="preemption-btn acknowledge" onclick="acknowledgePreemption('${event.id}')">Acknowledge</button>
-                        <button class="preemption-btn execute" onclick="executePreemption('${event.id}')">Execute</button>
+                        <button class="preemption-btn acknowledge" onclick="acknowledgePreemption('${event.id}')">Schedule</button>
+                        <button class="preemption-btn execute" onclick="executePreemption('${event.id}')">Reschedule</button>
                     </div>
                 `;
                 
@@ -1127,17 +1166,42 @@
             });
         }
 
-        // Load scaling alerts
+        // Load site expansion planning
         function loadScalingAlerts() {
             const alertsContainer = document.getElementById('scalingAlerts');
             alertsContainer.innerHTML = '';
 
-            capacityData.scalingAlerts.forEach(alert => {
+            // Solar expansion data
+            const expansionAlerts = [
+                {
+                    id: 'exp-001',
+                    title: 'Cummins Midrand - Phase 2 Expansion',
+                    description: 'Additional 200 kW capacity expansion opportunity identified - Q2 2025',
+                    type: 'opportunity',
+                    priority: 'medium'
+                },
+                {
+                    id: 'exp-002',
+                    title: 'FNB Willowbridge - Battery Storage',
+                    description: 'Energy storage system integration feasibility study - Q1 2025',
+                    type: 'feasibility',
+                    priority: 'low'
+                },
+                {
+                    id: 'exp-003',
+                    title: 'New Site - Industrial Park',
+                    description: 'Potential 500 kW commercial site identified in Midrand area',
+                    type: 'critical',
+                    priority: 'high'
+                }
+            ];
+
+            expansionAlerts.forEach(alert => {
                 const scalingAlert = document.createElement('div');
                 scalingAlert.className = 'scaling-alert';
                 
                 const iconClass = `alert-${alert.type}`;
-                const iconText = alert.type === 'critical' ? '!' : alert.type === 'expand' ? '📈' : '⚠';
+                const iconText = alert.type === 'critical' ? '!' : alert.type === 'opportunity' ? '📈' : '🔍';
                 
                 scalingAlert.innerHTML = `
                     <div class="alert-icon ${iconClass}">${iconText}</div>

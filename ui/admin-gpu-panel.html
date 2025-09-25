@@ -2500,41 +2500,41 @@
                 <div class="content-section" id="allocation">
                     <div class="section-header">
                         <h1 class="section-title">Capacity Management</h1>
-                        <p class="section-subtitle">Infrastructure capacity allocation and resource availability across distributed sites</p>
+                        <p class="section-subtitle">Solar energy production capacity and resource availability across distributed sites</p>
                     </div>
 
                     <!-- Capacity Overview -->
                     <div class="metrics-grid" style="margin-bottom: 30px;">
                         <div class="metric-card">
-                            <span class="metric-value" id="totalCapacity">24</span>
-                            <span class="metric-label">Total GPU Capacity</span>
-                            <span class="metric-change positive">+4 this month</span>
+                            <span class="metric-value" id="totalCapacity">873.86</span>
+                            <span class="metric-label">Total Installed Capacity (kW)</span>
+                            <span class="metric-change positive">+821.88 kW this month</span>
                         </div>
                         <div class="metric-card">
-                            <span class="metric-value" id="ondemandCapacity">18</span>
-                            <span class="metric-label">On-Demand Reserved</span>
-                            <span class="metric-change positive">75% utilization</span>
+                            <span class="metric-value" id="ondemandCapacity">740</span>
+                            <span class="metric-label">Contracted Energy (MWh/month)</span>
+                            <span class="metric-change positive">85% of capacity contracted</span>
                         </div>
                         <div class="metric-card">
-                            <span class="metric-value" id="spotCapacity">6</span>
-                            <span class="metric-label">Spot Available</span>
-                            <span class="metric-change negative">25% capacity</span>
+                            <span class="metric-value" id="spotCapacity">108</span>
+                            <span class="metric-label">Available Capacity (MWh/month)</span>
+                            <span class="metric-change negative">15% capacity available</span>
                         </div>
                         <div class="metric-card">
-                            <span class="metric-value" id="capacityHealth">92%</span>
-                            <span class="metric-label">Capacity Health</span>
-                            <span class="metric-change positive">+3% from yesterday</span>
+                            <span class="metric-value" id="capacityHealth">96.2%</span>
+                            <span class="metric-label">Site Availability</span>
+                            <span class="metric-change positive">+2.1% from last month</span>
                         </div>
                     </div>
 
                     <!-- Capacity Allocation by Site -->
                     <div class="chart-container" style="margin-bottom: 30px;">
                         <div class="chart-header">
-                            <h3 class="chart-title">Capacity Allocation by Site</h3>
+                            <h3 class="chart-title">Energy Production by Site</h3>
                             <div class="chart-controls">
                                 <button class="chart-btn active" data-view="all">All Sites</button>
-                                <button class="chart-btn" data-view="ondemand">On-Demand</button>
-                                <button class="chart-btn" data-view="spot">Spot Available</button>
+                                <button class="chart-btn" data-view="ondemand">Active Sites</button>
+                                <button class="chart-btn" data-view="spot">Maintenance Mode</button>
                             </div>
                         </div>
                         <div id="capacityAllocation">
@@ -2542,23 +2542,23 @@
                         </div>
                     </div>
 
-                    <!-- Preemption Management -->
+                    <!-- Maintenance Scheduling -->
                     <div class="chart-container" style="margin-bottom: 30px;">
                         <div class="chart-header">
-                            <h3 class="chart-title">Preemption Management</h3>
+                            <h3 class="chart-title">Maintenance Scheduling</h3>
                         </div>
                         <div id="preemptionStatus">
-                            <!-- Preemption status will be populated by JavaScript -->
+                            <!-- Maintenance status will be populated by JavaScript -->
                         </div>
                     </div>
 
-                    <!-- Infrastructure Scaling Alerts -->
+                    <!-- Site Expansion Planning -->
                     <div class="chart-container">
                         <div class="chart-header">
-                            <h3 class="chart-title">Capacity Planning & Alerts</h3>
+                            <h3 class="chart-title">Site Expansion Planning</h3>
                         </div>
                         <div id="scalingAlerts">
-                            <!-- Scaling alerts will be populated by JavaScript -->
+                            <!-- Expansion alerts will be populated by JavaScript -->
                         </div>
                     </div>
                 </div>
