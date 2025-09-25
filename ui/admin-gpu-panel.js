@@ -2295,21 +2295,21 @@
             }
         ];
 
-        // Sample driver data
+        // Sample inverter firmware data
         const driverInfo = [
             {
-                name: 'NVIDIA Tesla V100 Driver',
-                currentVersion: '535.86.10',
-                latestVersion: '535.86.10',
-                status: 'up-to-date',
-                gpus: ['Tesla V100-01', 'Tesla V100-02']
+                name: 'SMA Sunny Boy String Inverter Firmware',
+                currentVersion: '3.12.4.R',
+                latestVersion: '3.12.5.R',
+                status: 'update-available',
+                gpus: ['SMA-SB-001', 'SMA-SB-002', 'SMA-SB-003', 'SMA-SB-004', 'SMA-SB-005', 'SMA-SB-006', 'SMA-SB-007', 'SMA-SB-008', 'SMA-SB-009']
             },
             {
-                name: 'NVIDIA A100 Driver',
-                currentVersion: '535.86.10',
-                latestVersion: '535.86.10',
+                name: 'ABB PVI Central Inverter Firmware',
+                currentVersion: '2.8.1',
+                latestVersion: '2.8.1',
                 status: 'up-to-date',
-                gpus: ['A100-01', 'A100-02']
+                gpus: ['ABB-PVI-001', 'ABB-PVI-002']
             }
         ];
 
@@ -2351,7 +2351,7 @@
 
         function loadMaintenance() {
             loadMaintenanceTasks();
-            loadDriverManagement();
+            loadFirmwareManagement();
             loadMaintenanceHistory();
         }
 
@@ -2420,32 +2420,32 @@
             return card;
         }
 
-        // Load driver management
-        function loadDriverManagement() {
+        // Load firmware management
+        function loadFirmwareManagement() {
             const driverGrid = document.getElementById('driverGrid');
             driverGrid.innerHTML = '';
 
-            driverInfo.forEach(driver => {
-                const driverCard = createDriverCard(driver);
-                driverGrid.appendChild(driverCard);
+            driverInfo.forEach(firmware => {
+                const firmwareCard = createFirmwareCard(firmware);
+                driverGrid.appendChild(firmwareCard);
             });
         }
 
-        // Create driver card
-        function createDriverCard(driver) {
+        // Create firmware card
+        function createFirmwareCard(firmware) {
             const card = document.createElement('div');
             card.className = 'driver-card';
             
             card.innerHTML = `
-                <div class="driver-name">${driver.name}</div>
-                <div class="driver-version">Current: ${driver.currentVersion} | Latest: ${driver.latestVersion}</div>
+                <div class="driver-name">${firmware.name}</div>
+                <div class="driver-version">Current: ${firmware.currentVersion} | Latest: ${firmware.latestVersion}</div>
                 <div class="driver-status">
-                    <span>Status: <strong>${driver.status}</strong></span>
-                    <span>GPUs: ${driver.gpus.length}</span>
+                    <span>Status: <strong>${firmware.status}</strong></span>
+                    <span>Inverters: ${firmware.gpus.length}</span>
                 </div>
                 <div class="driver-actions">
-                    <button class="driver-btn update" onclick="updateDriver('${driver.name}')">Update</button>
-                    <button class="driver-btn rollback" onclick="rollbackDriver('${driver.name}')">Rollback</button>
+                    <button class="driver-btn update" onclick="updateFirmware('${firmware.name}')">Update</button>
+                    <button class="driver-btn rollback" onclick="rollbackFirmware('${firmware.name}')">Rollback</button>
                 </div>
             `;
             
@@ -2540,19 +2540,19 @@
             }
         }
 
-        // Driver management functions
-        function updateDriver(driverName) {
-            alert(`Updating ${driverName}...\n\nThis will:\n- Download latest driver\n- Stop GPU services\n- Install new driver\n- Restart GPU services\n\nEstimated time: 10-15 minutes`);
+        // Firmware management functions
+        function updateFirmware(firmwareName) {
+            alert(`Updating ${firmwareName}...\n\nThis will:\n- Download latest firmware\n- Stop inverter services\n- Install new firmware\n- Restart inverter services\n\nEstimated time: 15-20 minutes`);
         }
 
-        function rollbackDriver(driverName) {
-            if (confirm(`Rollback ${driverName} to previous version?`)) {
-                alert(`Rolling back ${driverName}...\n\nThis will restore the previous driver version.`);
+        function rollbackFirmware(firmwareName) {
+            if (confirm(`Rollback ${firmwareName} to previous version?`)) {
+                alert(`Rolling back ${firmwareName}...\n\nThis will restore the previous firmware version.`);
             }
         }
 
-        function checkDriverUpdates() {
-            alert('Checking for driver updates...\n\nAll drivers are up to date!');
+        function checkFirmwareUpdates() {
+            alert('Checking for firmware updates...\n\nSMA Sunny Boy firmware update available!\nABB PVI firmware is up to date.');
         }
 
         // Configuration functions
