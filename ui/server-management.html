@@ -491,6 +491,102 @@
                 grid-template-columns: 1fr;
             }
         }
+        
+        .status-badge {
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+            font-weight: 500;
+        }
+        
+        .status-badge.on-track {
+            background-color: #d1fae5;
+            color: #065f46;
+        }
+        
+        .status-badge.over-utilized {
+            background-color: #fee2e2;
+            color: #991b1b;
+        }
+        
+        .status-badge.under-utilized {
+            background-color: #fef3c7;
+            color: #92400e;
+        }
+        
+        /* Analytics Table Styles */
+        .analytics-table-section {
+            background: var(--white);
+            border: 1px solid var(--border-grey);
+            border-radius: 12px;
+            padding: 25px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.05);
+        }
+
+        .table-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .table-header h3 {
+            font-size: 1.2rem;
+            font-weight: 600;
+            color: var(--text-dark);
+            margin: 0;
+        }
+
+        .table-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .export-btn {
+            background: var(--primary-blue);
+            color: var(--white);
+            border: none;
+            padding: 8px 16px;
+            border-radius: 6px;
+            font-size: 0.9rem;
+            font-weight: 500;
+            cursor: pointer;
+            transition: background 0.2s ease;
+        }
+
+        .export-btn:hover {
+            background: var(--accent-blue);
+        }
+
+        .analytics-table-container {
+            overflow-x: auto;
+        }
+
+        .analytics-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.9rem;
+        }
+
+        .analytics-table th {
+            background: var(--neutral-grey);
+            color: var(--text-dark);
+            font-weight: 600;
+            padding: 12px;
+            text-align: left;
+            border-bottom: 2px solid var(--border-grey);
+        }
+
+        .analytics-table td {
+            padding: 12px;
+            border-bottom: 1px solid var(--border-grey);
+            color: var(--text-dark);
+        }
+
+        .analytics-table tr:hover {
+            background: rgba(69, 91, 241, 0.05);
+        }
     </style>
 </head>
 <body>
@@ -641,6 +737,11 @@
                     <div class="section-header">
                         <h1 class="section-title">PPA Contracts</h1>
                         <p class="section-subtitle">Manage your power purchase agreements and offtaker relationships</p>
+                        <div style="margin-top: 15px;">
+                            <button class="config-btn primary" onclick="openAddContractModal()" style="padding: 12px 24px; font-size: 1rem;">
+                                ➕ Add New Contract
+                            </button>
+                        </div>
                     </div>
 
                     <div class="servers-grid" id="contractsGrid">
@@ -709,26 +810,59 @@
                         <p class="section-subtitle">Real-time energy consumption and contract performance</p>
                     </div>
 
-                    <div class="metrics-grid">
+                    <!-- Consumption Overview Metrics -->
+                    <div class="metrics-grid" style="margin-bottom: 30px;">
                         <div class="metric-card">
-                            <span class="metric-value" id="capacityUtilization">67%</span>
-                            <span class="metric-label">Average Capacity Utilization</span>
-                            <span class="metric-change negative">-5% from yesterday</span>
+                            <span class="metric-value" id="totalConsumption">0.53</span>
+                            <span class="metric-label">GWh Total Consumption</span>
+                            <span class="metric-change positive">+0.02 GWh from yesterday</span>
                         </div>
                         <div class="metric-card">
-                            <span class="metric-value" id="dailyConsumption">4.2</span>
-                            <span class="metric-label">GWh Today's Consumption</span>
-                            <span class="metric-change positive">+0.8 GWh from yesterday</span>
+                            <span class="metric-value" id="contractUtilization">96.5%</span>
+                            <span class="metric-label">Contract Utilization</span>
+                            <span class="metric-change positive">+1.2% from yesterday</span>
                         </div>
                         <div class="metric-card">
-                            <span class="metric-value" id="peakDemand">245</span>
-                            <span class="metric-label">MW Peak Demand</span>
-                            <span class="metric-change positive">+12 MW from yesterday</span>
+                            <span class="metric-value" id="activeContracts">6</span>
+                            <span class="metric-label">Active Contracts</span>
+                            <span class="metric-change stable">No change</span>
                         </div>
                         <div class="metric-card">
-                            <span class="metric-value" id="currentOutput">189</span>
-                            <span class="metric-label">MW Current Output</span>
-                            <span class="metric-change positive">+8 MW from yesterday</span>
+                            <span class="metric-value" id="avgPerformance">96.5%</span>
+                            <span class="metric-label">Average Performance</span>
+                            <span class="metric-change positive">+0.8% from yesterday</span>
+                        </div>
+                    </div>
+
+                    <!-- Consumption vs Contract Allotment Table -->
+                    <div class="analytics-table-section">
+                        <div class="table-header">
+                            <h3>Consumption vs Contract Allotment</h3>
+                            <div class="table-controls">
+                                <div class="chart-controls">
+                                    <button class="chart-btn active" data-period="24h">24 Hours</button>
+                                    <button class="chart-btn" data-period="7d">7 Days</button>
+                                    <button class="chart-btn" data-period="30d">30 Days</button>
+                                    <button class="chart-btn" data-period="90d">90 Days</button>
+                                </div>
+                                <button class="export-btn">📊 Export Data</button>
+                            </div>
+                        </div>
+                        <div class="analytics-table-container">
+                            <table class="analytics-table" id="consumptionTable">
+                                <thead>
+                                    <tr>
+                                        <th>Contract</th>
+                                        <th>Allotted (GWh)</th>
+                                        <th>Consumed (GWh)</th>
+                                        <th>Utilization</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="consumptionTableBody">
+                                    <!-- Table will be populated by JavaScript -->
+                                </tbody>
+                            </table>
                         </div>
                     </div>
 
@@ -932,73 +1066,236 @@
             window.location.href = 'index.html';
         }
 
+        // Add Contract Modal function
+        function openAddContractModal() {
+            alert('Add New Contract functionality would open a modal here');
+        }
+
+        // Consumption monitoring data
+        const consumptionData = {
+            '24h': [
+                { contract: 'Office-Tower-Midrand', allotted: 0.049, consumed: 0.047, utilization: '95.9%', status: 'On Track' },
+                { contract: 'Corporate-Center-Sandton', allotted: 0.060, consumed: 0.059, utilization: '98.3%', status: 'On Track' },
+                { contract: 'Riverside-Apartments', allotted: 0.170, consumed: 0.167, utilization: '98.2%', status: 'On Track' },
+                { contract: 'Manufacturing-Plant-Alpha', allotted: 0.096, consumed: 0.091, utilization: '94.8%', status: 'On Track' },
+                { contract: 'Textile-Factory-Beta', allotted: 0.104, consumed: 0.099, utilization: '95.2%', status: 'On Track' },
+                { contract: 'Food-Processing-Gamma', allotted: 0.085, consumed: 0.082, utilization: '96.5%', status: 'On Track' }
+            ],
+            '7d': [
+                { contract: 'Office-Tower-Midrand', allotted: 0.345, consumed: 0.331, utilization: '95.9%', status: 'On Track' },
+                { contract: 'Corporate-Center-Sandton', allotted: 0.425, consumed: 0.418, utilization: '98.3%', status: 'On Track' },
+                { contract: 'Riverside-Apartments', allotted: 1.192, consumed: 1.170, utilization: '98.2%', status: 'On Track' },
+                { contract: 'Manufacturing-Plant-Alpha', allotted: 0.672, consumed: 0.637, utilization: '94.8%', status: 'On Track' },
+                { contract: 'Textile-Factory-Beta', allotted: 0.728, consumed: 0.693, utilization: '95.2%', status: 'On Track' },
+                { contract: 'Food-Processing-Gamma', allotted: 0.595, consumed: 0.574, utilization: '96.5%', status: 'On Track' }
+            ],
+            '30d': [
+                { contract: 'Office-Tower-Midrand', allotted: 1.48, consumed: 1.42, utilization: '95.9%', status: 'On Track' },
+                { contract: 'Corporate-Center-Sandton', allotted: 1.82, consumed: 1.79, utilization: '98.3%', status: 'On Track' },
+                { contract: 'Riverside-Apartments', allotted: 5.11, consumed: 5.01, utilization: '98.2%', status: 'On Track' },
+                { contract: 'Manufacturing-Plant-Alpha', allotted: 2.88, consumed: 2.73, utilization: '94.8%', status: 'On Track' },
+                { contract: 'Textile-Factory-Beta', allotted: 3.12, consumed: 2.97, utilization: '95.2%', status: 'On Track' },
+                { contract: 'Food-Processing-Gamma', allotted: 2.55, consumed: 2.46, utilization: '96.5%', status: 'On Track' }
+            ],
+            '90d': [
+                { contract: 'Office-Tower-Midrand', allotted: 4.44, consumed: 4.26, utilization: '95.9%', status: 'On Track' },
+                { contract: 'Corporate-Center-Sandton', allotted: 5.46, consumed: 5.37, utilization: '98.3%', status: 'On Track' },
+                { contract: 'Riverside-Apartments', allotted: 15.33, consumed: 15.03, utilization: '98.2%', status: 'On Track' },
+                { contract: 'Manufacturing-Plant-Alpha', allotted: 8.64, consumed: 8.19, utilization: '94.8%', status: 'On Track' },
+                { contract: 'Textile-Factory-Beta', allotted: 9.36, consumed: 8.91, utilization: '95.2%', status: 'On Track' },
+                { contract: 'Food-Processing-Gamma', allotted: 7.65, consumed: 7.38, utilization: '96.5%', status: 'On Track' }
+            ]
+        };
+
+        // Load consumption monitoring table
+        function loadConsumptionTable(period = '24h') {
+            const tableBody = document.getElementById('consumptionTableBody');
+            if (!tableBody) return;
+
+            tableBody.innerHTML = '';
+            const data = consumptionData[period] || [];
+
+            data.forEach(row => {
+                const tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td>${row.contract}</td>
+                    <td>${row.allotted}</td>
+                    <td>${row.consumed}</td>
+                    <td>${row.utilization}</td>
+                    <td><span class="status-badge ${row.status.toLowerCase().replace(' ', '-')}">${row.status}</span></td>
+                `;
+                tableBody.appendChild(tr);
+            });
+        }
+
+        // Setup consumption monitoring controls
+        function setupConsumptionControls() {
+            const chartControls = document.querySelector('#monitoring .chart-controls');
+            if (!chartControls) return;
+
+            chartControls.addEventListener('click', function(e) {
+                if (e.target.classList.contains('chart-btn')) {
+                    // Remove active class from all buttons
+                    chartControls.querySelectorAll('.chart-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked button
+                    e.target.classList.add('active');
+                    
+                    // Get period and update table
+                    const period = e.target.getAttribute('data-period');
+                    loadConsumptionTable(period);
+                }
+            });
+
+            // Add export button functionality
+            const exportBtn = document.querySelector('#monitoring .export-btn');
+            if (exportBtn) {
+                exportBtn.addEventListener('click', function() {
+                    alert('Export functionality would download consumption data as CSV');
+                });
+            }
+        }
+
+        // Contract management functions
+        function suspendContract(contractId) {
+            alert(`Contract ${contractId} suspended successfully!`);
+        }
+
+        function activateContract(contractId) {
+            alert(`Contract ${contractId} activated successfully!`);
+        }
+
+        function viewContractDetails(contractId) {
+            alert(`Viewing details for contract ${contractId}`);
+        }
+
+        function terminateContract(contractId) {
+            if (confirm(`Are you sure you want to terminate contract ${contractId}?`)) {
+                alert(`Contract ${contractId} terminated successfully!`);
+            }
+        }
+
         // Sample contract data - CHANGED FROM sampleServers
         const sampleContracts = [
             {
                 id: 1,
-                name: 'Municipal-PPA-01',
-                type: 'Municipal Utility',
+                name: 'Office-Tower-Midrand',
+                type: 'Small Office Building',
                 status: 'active',
-                capacity: '50 MW',
-                price: '\$45/MWh',
-                volume: '200 GWh/year',
-                location: 'Grid Node A1',
-                performance: '98.5%'
+                capacity: '2.5 MW',
+                price: '$58/MWh',
+                volume: '18 GWh/year',
+                location: 'Midrand Business District',
+                performance: '96.8%',
+                roi: '14.2%',
+                participants: ['Midrand Office Complex', 'Ona Energy'],
+                powerSource: 'Cummins Midrand Solar Farm',
+                contractValue: '$1.04M/year',
+                termLength: '12 years',
+                startDate: '2023-02-15',
+                buildingSize: '15,000 sq ft',
+                occupancy: '85%'
             },
             {
                 id: 2,
-                name: 'Commercial-PPA-03',
-                type: 'Commercial',
+                name: 'Corporate-Center-Sandton',
+                type: 'Small Office Building',
                 status: 'active',
-                capacity: '25 MW',
-                price: '\$52/MWh',
-                volume: '150 GWh/year',
-                location: 'Grid Node A2',
-                performance: '97.2%'
+                capacity: '3.2 MW',
+                price: '$62/MWh',
+                volume: '22 GWh/year',
+                location: 'Sandton CBD',
+                performance: '97.5%',
+                roi: '16.8%',
+                participants: ['Sandton Corporate Center', 'Ona Energy'],
+                powerSource: 'FNB Willowbridge Solar Installation',
+                contractValue: '$1.36M/year',
+                termLength: '15 years',
+                startDate: '2023-04-20',
+                buildingSize: '18,500 sq ft',
+                occupancy: '92%'
             },
             {
                 id: 3,
-                name: 'Industrial-PPA-02',
-                type: 'Industrial',
-                status: 'provisioning',
-                capacity: '100 MW',
-                price: '\$38/MWh',
-                volume: '500 GWh/year',
-                location: 'Grid Node B1',
-                performance: 'Pending...'
+                name: 'Riverside-Apartments',
+                type: 'Large Apartment Building',
+                status: 'active',
+                capacity: '8.5 MW',
+                price: '$52/MWh',
+                volume: '62 GWh/year',
+                location: 'Riverside District',
+                performance: '98.1%',
+                roi: '13.5%',
+                participants: ['Riverside Property Group', 'Ona Energy'],
+                powerSource: 'Combined Solar Portfolio',
+                contractValue: '$3.22M/year',
+                termLength: '20 years',
+                startDate: '2023-01-10',
+                buildingSize: '120,000 sq ft',
+                units: '180 units',
+                occupancy: '88%'
             },
             {
                 id: 4,
-                name: 'Residential-Cluster',
-                type: 'Residential',
+                name: 'Manufacturing-Plant-Alpha',
+                type: 'Factory (20k sq ft)',
                 status: 'active',
-                capacity: '15 MW',
-                price: '\$55/MWh',
-                volume: '75 GWh/year',
-                location: 'Grid Node A1',
-                performance: '99.1%'
+                capacity: '4.8 MW',
+                price: '$48/MWh',
+                volume: '35 GWh/year',
+                location: 'Industrial Zone A',
+                performance: '95.2%',
+                roi: '12.8%',
+                participants: ['Alpha Manufacturing', 'Ona Energy'],
+                powerSource: 'Cummins Midrand Solar Farm',
+                contractValue: '$1.68M/year',
+                termLength: '18 years',
+                startDate: '2023-03-05',
+                buildingSize: '20,000 sq ft',
+                operationHours: '24/7',
+                equipmentLoad: 'High'
             },
             {
                 id: 5,
-                name: 'Mining-Operation-01',
-                type: 'Industrial',
+                name: 'Textile-Factory-Beta',
+                type: 'Factory (20k sq ft)',
                 status: 'active',
-                capacity: '75 MW',
-                price: '\$35/MWh',
-                volume: '400 GWh/year',
-                location: 'Grid Node C1',
-                performance: '96.8%'
+                capacity: '5.2 MW',
+                price: '$46/MWh',
+                volume: '38 GWh/year',
+                location: 'Industrial Zone B',
+                performance: '94.7%',
+                roi: '11.9%',
+                participants: ['Beta Textile Corp', 'Ona Energy'],
+                powerSource: 'FNB Willowbridge Solar Installation',
+                contractValue: '$1.75M/year',
+                termLength: '16 years',
+                startDate: '2023-05-12',
+                buildingSize: '20,000 sq ft',
+                operationHours: '16/7',
+                equipmentLoad: 'Very High'
             },
             {
                 id: 6,
-                name: 'Agricultural-Coop',
-                type: 'Agricultural',
-                status: 'suspended',
-                capacity: '20 MW',
-                price: '\$48/MWh',
-                volume: '100 GWh/year',
-                location: 'Grid Node B2',
-                performance: 'Suspended'
+                name: 'Food-Processing-Gamma',
+                type: 'Factory (20k sq ft)',
+                status: 'active',
+                capacity: '4.2 MW',
+                price: '$50/MWh',
+                volume: '31 GWh/year',
+                location: 'Industrial Zone C',
+                performance: '96.3%',
+                roi: '13.2%',
+                participants: ['Gamma Food Processing', 'Ona Energy'],
+                powerSource: 'Combined Solar Portfolio',
+                contractValue: '$1.55M/year',
+                termLength: '17 years',
+                startDate: '2023-06-18',
+                buildingSize: '20,000 sq ft',
+                operationHours: '20/7',
+                equipmentLoad: 'High'
             }
         ];
 
@@ -1018,11 +1315,14 @@
             document.getElementById(sectionId).classList.add('active');
             
             // Add active class to corresponding nav button
-            document.querySelector(`[data-section="\${sectionId}"]`).classList.add('active');
+            document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
             
             // Load section-specific content - CHANGED FROM loadServers
             if (sectionId === 'contracts') {
                 loadContracts();
+            } else if (sectionId === 'monitoring') {
+                loadConsumptionTable('24h');
+                setupConsumptionControls();
             }
         }
 
@@ -1047,42 +1347,46 @@
             
             card.innerHTML = `
                 <div class="server-header">
-                    <div class="server-name">\${contract.name}</div>
-                    <div class="server-status \${statusClass}">\${statusText}</div>
+                    <div class="server-name">${contract.name}</div>
+                    <div class="server-status ${statusClass}">${statusText}</div>
                 </div>
                 <div class="server-specs">
                     <div class="spec-row">
                         <span class="spec-label">Type:</span>
-                        <span class="spec-value">\${contract.type}</span>
+                        <span class="spec-value">${contract.type}</span>
                     </div>
                     <div class="spec-row">
                         <span class="spec-label">Capacity:</span>
-                        <span class="spec-value">\${contract.capacity}</span>
+                        <span class="spec-value">${contract.capacity}</span>
                     </div>
                     <div class="spec-row">
                         <span class="spec-label">Price:</span>
-                        <span class="spec-value">\${contract.price}</span>
+                        <span class="spec-value">${contract.price}</span>
                     </div>
                     <div class="spec-row">
-                        <span class="spec-label">Volume:</span>
-                        <span class="spec-value">\${contract.volume}</span>
+                        <span class="spec-label">ROI:</span>
+                        <span class="spec-value">${contract.roi || 'TBD'}</span>
                     </div>
                     <div class="spec-row">
-                        <span class="spec-label">Location:</span>
-                        <span class="spec-value">\${contract.location}</span>
+                        <span class="spec-label">Contract Value:</span>
+                        <span class="spec-value">${contract.contractValue || 'TBD'}</span>
+                    </div>
+                    <div class="spec-row">
+                        <span class="spec-label">Power Source:</span>
+                        <span class="spec-value">${contract.powerSource || 'TBD'}</span>
                     </div>
                     <div class="spec-row">
                         <span class="spec-label">Performance:</span>
-                        <span class="spec-value">\${contract.performance}</span>
+                        <span class="spec-value">${contract.performance}</span>
                     </div>
                 </div>
                 <div class="server-actions">
-                    \${contract.status === 'active' ? 
-                        `<button class="action-btn secondary" onclick="suspendContract(\${contract.id})">Suspend</button>` : 
-                        `<button class="action-btn primary" onclick="activateContract(\${contract.id})">Activate</button>`
+                    ${contract.status === 'active' ? 
+                        `<button class="action-btn secondary" onclick="suspendContract('${contract.id}')">Suspend</button>` : 
+                        `<button class="action-btn primary" onclick="activateContract('${contract.id}')">Activate</button>`
                     }
-                    <button class="action-btn secondary" onclick="viewContractDetails(\${contract.id})">Details</button>
-                    <button class="action-btn danger" onclick="terminateContract(\${contract.id})">Terminate</button>
+                    <button class="action-btn secondary" onclick="viewContractDetails('${contract.id}')">Details</button>
+                    <button class="action-btn danger" onclick="terminateContract('${contract.id}')">Terminate</button>
                 </div>
             `;
             
