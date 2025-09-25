@@ -4080,18 +4080,11 @@
         
         function generateAndCacheSiteData() {
             const currentHour = new Date().getHours();
+            const currentMinute = new Date().getMinutes();
             
-            // Calculate solar factor once for this time period
-            let solarFactor = 0;
-            if (currentHour >= 6 && currentHour <= 18) {
-                if (currentHour >= 11 && currentHour <= 15) {
-                    solarFactor = 0.8 + (Math.random() * 0.2); // 80-100%
-                } else if (currentHour >= 8 && currentHour <= 17) {
-                    solarFactor = 0.4 + (Math.random() * 0.4); // 40-80%
-                } else {
-                    solarFactor = 0.1 + (Math.random() * 0.3); // 10-40%
-                }
-            }
+            // Generate realistic site-specific solar factors
+            const cumminsSolarFactor = getSiteSpecificSolarFactor('cummins-midrand', currentHour, currentMinute);
+            const fnbSolarFactor = getSiteSpecificSolarFactor('fnb-willowbridge', currentHour, currentMinute);
             
             // Generate consistent data for both sites
             const cumminsBase = getSiteData('cummins-midrand');
@@ -4099,21 +4092,43 @@
             
             cachedSiteData = {
                 'cummins-midrand': {
-                    utilization: Math.round(solarFactor * 100),
-                    power: Math.round(cumminsBase.capacity * solarFactor * 100) / 100,
-                    efficiency: Math.round(solarFactor * 100),
-                    temperature: cumminsBase.temperature + Math.round(solarFactor * 15)
+                    utilization: Math.round(cumminsSolarFactor * 100),
+                    power: Math.round(cumminsBase.capacity * cumminsSolarFactor * 100) / 100,
+                    efficiency: Math.round(cumminsSolarFactor * 100),
+                    temperature: cumminsBase.temperature + Math.round(cumminsSolarFactor * 15),
+                    capacity: cumminsBase.capacity
                 },
                 'fnb-willowbridge': {
-                    utilization: Math.round(solarFactor * 100),
-                    power: Math.round(fnbBase.capacity * solarFactor * 100) / 100,
-                    efficiency: Math.round(solarFactor * 100),
-                    temperature: fnbBase.temperature + Math.round(solarFactor * 15)
+                    utilization: Math.round(fnbSolarFactor * 100),
+                    power: Math.round(fnbBase.capacity * fnbSolarFactor * 100) / 100,
+                    efficiency: Math.round(fnbSolarFactor * 100),
+                    temperature: fnbBase.temperature + Math.round(fnbSolarFactor * 15),
+                    capacity: fnbBase.capacity
                 },
                 lastUpdate: Date.now()
             };
             
             cachedSiteData.lastUpdate = Date.now();
+        }
+        
+        // Generate site-specific solar factors based on location and conditions
+        function getSiteSpecificSolarFactor(siteId, hour, minute) {
+            // Base solar curve
+            let baseFactor = getSolarFactor(hour, minute);
+            
+            // Site-specific adjustments
+            if (siteId === 'cummins-midrand') {
+                // Cummins Midrand: Better location, higher efficiency
+                baseFactor *= (0.95 + Math.random() * 0.1); // 95-105% of base
+            } else if (siteId === 'fnb-willowbridge') {
+                // FNB Willowbridge: Urban location, potential shading
+                baseFactor *= (0.85 + Math.random() * 0.15); // 85-100% of base
+            }
+            
+            // Add some realistic variation
+            baseFactor += (Math.random() - 0.5) * 0.05; // ±2.5% variation
+            
+            return Math.max(0, Math.min(1, baseFactor)); // Clamp between 0 and 1
         }
 
         // Sample site data for solar sites
@@ -4903,18 +4918,27 @@
             }
         }
 
-        // Update average metrics display
+        // Update average metrics display with proper weighted averaging
         function updateAverageMetrics() {
-            // Get cached data for both solar sites (same values used consistently)
+            // Get cached data for both solar sites
             const cummins = getCachedSiteData('cummins-midrand');
             const fnb = getCachedSiteData('fnb-willowbridge');
             
             if (cummins && fnb) {
-                // Calculate averages from both sites
-                const avgUtil = Math.round((cummins.utilization + fnb.utilization) / 2);
-                const avgTemp = Math.round((cummins.temperature + fnb.temperature) / 2);
-                const avgPower = Math.round((cummins.power + fnb.power) / 2);
-                const avgEfficiency = Math.round((cummins.efficiency + fnb.efficiency) / 2);
+                // Calculate weighted averages based on site capacity
+                const totalCapacity = cummins.capacity + fnb.capacity;
+                const cumminsWeight = cummins.capacity / totalCapacity;
+                const fnbWeight = fnb.capacity / totalCapacity;
+                
+                // Weighted average utilization and efficiency
+                const avgUtil = Math.round((cummins.utilization * cumminsWeight) + (fnb.utilization * fnbWeight));
+                const avgEfficiency = Math.round((cummins.efficiency * cumminsWeight) + (fnb.efficiency * fnbWeight));
+                
+                // Weighted average temperature
+                const avgTemp = Math.round((cummins.temperature * cumminsWeight) + (fnb.temperature * fnbWeight));
+                
+                // Total power (sum, not average)
+                const totalPower = Math.round((cummins.power + fnb.power) * 100) / 100;
                 
                 // Update DOM elements with calculated averages
                 const utilizationElement = document.getElementById('gpuUtilization');
@@ -4924,7 +4948,7 @@
                 
                 if (utilizationElement) utilizationElement.textContent = avgUtil + '%';
                 if (temperatureElement) temperatureElement.textContent = avgTemp + '°C';
-                if (powerElement) powerElement.textContent = avgPower + ' kW';
+                if (powerElement) powerElement.textContent = totalPower + ' kW';
                 if (memoryElement) memoryElement.textContent = avgEfficiency + '%';
                 
                 // Update labels to reflect averages
@@ -4933,16 +4957,16 @@
                 const powerLabel = document.getElementById('powerLabel');
                 const memoryLabel = document.getElementById('memoryLabel');
                 
-                if (utilizationLabel) utilizationLabel.textContent = 'Average Site Utilization';
-                if (temperatureLabel) temperatureLabel.textContent = 'Average Temperature';
-                if (powerLabel) powerLabel.textContent = 'Average Power Output';
-                if (memoryLabel) memoryLabel.textContent = 'Average Efficiency';
+                if (utilizationLabel) utilizationLabel.textContent = 'Weighted Average Utilization';
+                if (temperatureLabel) temperatureLabel.textContent = 'Weighted Average Temperature';
+                if (powerLabel) powerLabel.textContent = 'Total Power Output';
+                if (memoryLabel) memoryLabel.textContent = 'Weighted Average Efficiency';
                 
                 // Update trend indicators for averages
-                updateAverageTrendIndicators(avgUtil, avgTemp, avgPower, avgEfficiency);
+                updateAverageTrendIndicators(avgUtil, avgTemp, totalPower, avgEfficiency);
                 
                 // Return the calculated averages for chart use
-                return { avgUtil, avgTemp, avgPower, avgEfficiency };
+                return { avgUtil, avgTemp, avgPower: totalPower, avgEfficiency };
             }
         }
 
@@ -5260,22 +5284,43 @@
         function generateChartData(siteId, period, type) {
             let labels, dataPoints;
             
-            // Generate labels based on period
+            // Generate realistic labels based on period
+            const now = new Date();
             switch (period) {
                 case '1h':
-                    labels = ['0m', '10m', '20m', '30m', '40m', '50m'];
+                    // 5-minute intervals over 1 hour
+                    labels = [];
+                    for (let i = 5; i >= 0; i--) {
+                        const time = new Date(now.getTime() - i * 5 * 60000);
+                        labels.push(time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
+                    }
                     dataPoints = 6;
                     break;
                 case '6h':
-                    labels = ['0h', '1h', '2h', '3h', '4h', '5h'];
+                    // 1-hour intervals over 6 hours
+                    labels = [];
+                    for (let i = 5; i >= 0; i--) {
+                        const time = new Date(now.getTime() - i * 60 * 60000);
+                        labels.push(time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
+                    }
                     dataPoints = 6;
                     break;
                 case '24h':
-                    labels = ['00:00', '04:00', '08:00', '12:00', '16:00', '20:00'];
+                    // 4-hour intervals over 24 hours
+                    labels = [];
+                    for (let i = 5; i >= 0; i--) {
+                        const time = new Date(now.getTime() - i * 4 * 60 * 60000);
+                        labels.push(time.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' }));
+                    }
                     dataPoints = 6;
                     break;
                 case '7d':
-                    labels = ['Day 1', 'Day 2', 'Day 3', 'Day 4', 'Day 5', 'Day 6'];
+                    // Daily averages over 7 days
+                    labels = [];
+                    for (let i = 5; i >= 0; i--) {
+                        const time = new Date(now.getTime() - i * 24 * 60 * 60000);
+                        labels.push(time.toLocaleDateString('en-US', { month: 'short', day: 'numeric' }));
+                    }
                     dataPoints = 6;
                     break;
                 default:
@@ -5286,16 +5331,20 @@
             // Get current cached values for the site(s)
             let currentValue = 0;
             if (siteId === 'all') {
-                // For averages, use the same values shown in performance cards
+                // For averages, use weighted averages based on capacity
                 const cummins = getCachedSiteData('cummins-midrand');
                 const fnb = getCachedSiteData('fnb-willowbridge');
                 if (cummins && fnb) {
+                    const totalCapacity = cummins.capacity + fnb.capacity;
+                    const cumminsWeight = cummins.capacity / totalCapacity;
+                    const fnbWeight = fnb.capacity / totalCapacity;
+                    
                     if (type === 'utilization') {
-                        currentValue = Math.round((cummins.utilization + fnb.utilization) / 2);
+                        currentValue = Math.round((cummins.utilization * cumminsWeight) + (fnb.utilization * fnbWeight));
                     } else if (type === 'temperature') {
-                        currentValue = Math.round((cummins.temperature + fnb.temperature) / 2);
+                        currentValue = Math.round((cummins.temperature * cumminsWeight) + (fnb.temperature * fnbWeight));
                     } else if (type === 'power') {
-                        currentValue = Math.round((cummins.power + fnb.power) / 2);
+                        currentValue = Math.round((cummins.power + fnb.power) * 100) / 100; // Sum for power
                     }
                 }
             } else {
@@ -5312,29 +5361,60 @@
                 }
             }
 
-            // Generate time series that shows variation around the current value
+            // Generate realistic time series data based on solar production patterns
             const data = [];
+            const now = new Date();
+            
             for (let i = 0; i < dataPoints; i++) {
                 let value = currentValue;
                 
-                // Add realistic time-based variation based on period
-                if (period === '24h') {
-                    // Solar pattern over 24 hours
-                    if (type === 'utilization' || type === 'power') {
-                        if (i === 0 || i === 5) value = 0; // Night hours
-                        else if (i === 1) value = currentValue * 0.2; // Dawn
-                        else if (i === 4) value = currentValue * 0.6; // Dusk
-                        else if (i === 3) value = currentValue * 1.1; // Peak noon
-                        // i === 2 uses currentValue (morning)
-                    } else if (type === 'temperature') {
-                        if (i === 0 || i === 5) value = currentValue - 8; // Cooler at night
-                        else if (i === 3) value = currentValue + 5; // Hottest at noon
-                    }
-                } else {
-                    // For other periods, add small variation around current value
-                    const variation = currentValue * 0.1; // ±10% variation
-                    value = currentValue + (Math.random() - 0.5) * variation;
+                // Calculate time offset based on period
+                let timeOffset = 0;
+                let timeFactor = 1;
+                
+                switch (period) {
+                    case '1h':
+                        // 5-minute intervals over 1 hour
+                        timeOffset = -(dataPoints - 1 - i) * 5; // minutes ago
+                        timeFactor = getSolarFactor(now.getHours(), now.getMinutes() + timeOffset);
+                        break;
+                    case '6h':
+                        // 1-hour intervals over 6 hours
+                        timeOffset = -(dataPoints - 1 - i) * 60; // minutes ago
+                        const pastHour = new Date(now.getTime() + timeOffset * 60000);
+                        timeFactor = getSolarFactor(pastHour.getHours(), pastHour.getMinutes());
+                        break;
+                    case '24h':
+                        // 4-hour intervals over 24 hours
+                        timeOffset = -(dataPoints - 1 - i) * 4; // hours ago
+                        const pastDayHour = (now.getHours() + timeOffset + 24) % 24;
+                        timeFactor = getSolarFactor(pastDayHour, 0);
+                        break;
+                    case '7d':
+                        // Daily averages over 7 days
+                        timeOffset = -(dataPoints - 1 - i) * 24; // hours ago
+                        const pastDayHour7d = (now.getHours() + timeOffset + 24) % 24;
+                        timeFactor = getSolarFactor(pastDayHour7d, 0);
+                        break;
                 }
+                
+                // Apply solar factor to current value
+                if (type === 'utilization' || type === 'power') {
+                    value = currentValue * timeFactor;
+                } else if (type === 'temperature') {
+                    // Temperature varies with solar intensity
+                    value = currentValue * (0.8 + 0.4 * timeFactor);
+                }
+                
+                // Add realistic variation (±5% for utilization/power, ±2°C for temperature)
+                let variation = 0;
+                if (type === 'utilization' || type === 'power') {
+                    variation = value * 0.05;
+                } else if (type === 'temperature') {
+                    variation = 2;
+                }
+                
+                value += (Math.random() - 0.5) * variation;
                 
                 data.push(Math.max(0, Math.round(value * 100) / 100));
             }
@@ -5351,10 +5431,26 @@
             
             // Update dataset label based on site
             if (siteId === 'all') {
-                chartInstance.data.datasets[0].label = `Average ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+                if (type === 'power') {
+                    chartInstance.data.datasets[0].label = `Total Power Output (kW)`;
+                } else {
+                    chartInstance.data.datasets[0].label = `Weighted Average ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+                }
             } else {
                 const siteName = siteId === 'cummins-midrand' ? 'Cummins Midrand' : 'FNB Willowbridge';
                 chartInstance.data.datasets[0].label = `${siteName} ${type.charAt(0).toUpperCase() + type.slice(1)}`;
+            }
+            
+            // Update chart title based on site and period
+            if (siteId === 'all') {
+                if (type === 'power') {
+                    chartInstance.options.plugins.title.text = `Total Power Output - ${period.toUpperCase()}`;
+                } else {
+                    chartInstance.options.plugins.title.text = `Weighted Average ${type.charAt(0).toUpperCase() + type.slice(1)} - ${period.toUpperCase()}`;
+                }
+            } else {
+                const siteName = siteId === 'cummins-midrand' ? 'Cummins Midrand' : 'FNB Willowbridge';
+                chartInstance.options.plugins.title.text = `${siteName} ${type.charAt(0).toUpperCase() + type.slice(1)} - ${period.toUpperCase()}`;
             }
             
             chartInstance.update('active');
