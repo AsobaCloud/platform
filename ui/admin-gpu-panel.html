@@ -1048,6 +1048,124 @@
             font-style: italic;
             padding: 20px;
         }
+        
+        /* Add Component Form Styles */
+        .add-component-form {
+            background-color: var(--neutral-light);
+            border: 1px solid var(--border-grey);
+            border-radius: 8px;
+            padding: 20px;
+            margin-top: 15px;
+        }
+        
+        .add-component-form h5 {
+            margin: 0 0 15px 0;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+        }
+        
+        .form-row {
+            display: flex;
+            gap: 10px;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .component-input {
+            flex: 1;
+            min-width: 150px;
+            padding: 8px 12px;
+            border: 1px solid var(--border-grey);
+            border-radius: 4px;
+            font-size: 0.9rem;
+        }
+        
+        .component-input:focus {
+            outline: none;
+            border-color: var(--primary-blue);
+        }
+        
+        .file-label {
+            display: flex;
+            align-items: center;
+            padding: 8px 12px;
+            background-color: var(--primary-blue);
+            color: var(--white);
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: background-color 0.2s;
+        }
+        
+        .file-label:hover {
+            background-color: var(--primary-blue-dark);
+        }
+        
+        .form-actions {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+            margin-top: 15px;
+        }
+        
+        .btn-primary, .btn-secondary {
+            padding: 8px 16px;
+            border: none;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 0.9rem;
+            transition: all 0.2s;
+        }
+        
+        .btn-primary {
+            background-color: var(--primary-blue);
+            color: var(--white);
+        }
+        
+        .btn-primary:hover {
+            background-color: var(--primary-blue-dark);
+        }
+        
+        .btn-secondary {
+            background-color: var(--neutral-grey);
+            color: var(--text-dark);
+        }
+        
+        .btn-secondary:hover {
+            background-color: var(--text-light);
+        }
+        
+        .add-component-btn {
+            width: 100%;
+            padding: 12px;
+            background-color: var(--neutral-light);
+            border: 2px dashed var(--border-grey);
+            border-radius: 8px;
+            color: var(--text-dark);
+            cursor: pointer;
+            font-size: 0.9rem;
+            margin-top: 15px;
+            transition: all 0.2s;
+        }
+        
+        .add-component-btn:hover {
+            background-color: var(--primary-blue-light);
+            border-color: var(--primary-blue);
+            color: var(--primary-blue);
+        }
+        
+        .section-header-with-action {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+        }
+        
+        .section-header-with-action h4 {
+            margin: 0;
+            color: var(--text-dark);
+            font-size: 1.1rem;
+        }
 
         .maintenance-modal-header {
             display: flex;
@@ -3419,6 +3537,26 @@
                     <div id="components-inverters" class="components-container">
                         <!-- Components will be populated by JavaScript -->
                     </div>
+                    <div class="add-component-form" id="add-inverters-form" style="display: none;">
+                        <h5>Add New Inverter Component</h5>
+                        <div class="form-row">
+                            <input type="text" id="inverter-sku" placeholder="SKU (e.g., SMA-SB-5.0)" class="component-input">
+                            <input type="text" id="inverter-model" placeholder="Model (e.g., SMA Sunny Boy 5.0)" class="component-input">
+                            <input type="number" id="inverter-qty" placeholder="Quantity" class="component-input" min="1" value="1">
+                        </div>
+                        <div class="form-row">
+                            <input type="date" id="inverter-install-date" class="component-input">
+                            <input type="date" id="inverter-warranty-date" class="component-input">
+                        </div>
+                        <div class="form-row">
+                            <input type="file" id="inverter-documents" multiple accept=".pdf,.doc,.docx,.txt" class="component-input">
+                            <label for="inverter-documents" class="file-label">📁 Upload Documents</label>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-primary" onclick="saveComponent('inverters')">Add Component</button>
+                            <button type="button" class="btn-secondary" onclick="cancelAddComponent('inverters')">Cancel</button>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Meters Section -->
@@ -3426,6 +3564,26 @@
                     <h4>Meters & Monitoring</h4>
                     <div id="components-meters" class="components-container">
                         <!-- Components will be populated by JavaScript -->
+                    </div>
+                    <div class="add-component-form" id="add-meters-form" style="display: none;">
+                        <h5>Add New Meter Component</h5>
+                        <div class="form-row">
+                            <input type="text" id="meter-sku" placeholder="SKU (e.g., ABB-METER-AC)" class="component-input">
+                            <input type="text" id="meter-model" placeholder="Model (e.g., ABB AC Meter)" class="component-input">
+                            <input type="number" id="meter-qty" placeholder="Quantity" class="component-input" min="1" value="1">
+                        </div>
+                        <div class="form-row">
+                            <input type="date" id="meter-install-date" class="component-input">
+                            <input type="date" id="meter-warranty-date" class="component-input">
+                        </div>
+                        <div class="form-row">
+                            <input type="file" id="meter-documents" multiple accept=".pdf,.doc,.docx,.txt" class="component-input">
+                            <label for="meter-documents" class="file-label">📁 Upload Documents</label>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-primary" onclick="saveComponent('meters')">Add Component</button>
+                            <button type="button" class="btn-secondary" onclick="cancelAddComponent('meters')">Cancel</button>
+                        </div>
                     </div>
                 </div>
                 
@@ -3435,6 +3593,26 @@
                     <div id="components-monitoring" class="components-container">
                         <!-- Components will be populated by JavaScript -->
                     </div>
+                    <div class="add-component-form" id="add-monitoring-form" style="display: none;">
+                        <h5>Add New Monitoring Component</h5>
+                        <div class="form-row">
+                            <input type="text" id="monitoring-sku" placeholder="SKU (e.g., SOLAREDGE-MONITOR)" class="component-input">
+                            <input type="text" id="monitoring-model" placeholder="Model (e.g., SolarEdge Monitoring)" class="component-input">
+                            <input type="number" id="monitoring-qty" placeholder="Quantity" class="component-input" min="1" value="1">
+                        </div>
+                        <div class="form-row">
+                            <input type="date" id="monitoring-install-date" class="component-input">
+                            <input type="date" id="monitoring-warranty-date" class="component-input">
+                        </div>
+                        <div class="form-row">
+                            <input type="file" id="monitoring-documents" multiple accept=".pdf,.doc,.docx,.txt" class="component-input">
+                            <label for="monitoring-documents" class="file-label">📁 Upload Documents</label>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-primary" onclick="saveComponent('monitoring')">Add Component</button>
+                            <button type="button" class="btn-secondary" onclick="cancelAddComponent('monitoring')">Cancel</button>
+                        </div>
+                    </div>
                 </div>
                 
                 <!-- Safety Section -->
@@ -3442,6 +3620,26 @@
                     <h4>Safety & Protection</h4>
                     <div id="components-safety" class="components-container">
                         <!-- Components will be populated by JavaScript -->
+                    </div>
+                    <div class="add-component-form" id="add-safety-form" style="display: none;">
+                        <h5>Add New Safety Component</h5>
+                        <div class="form-row">
+                            <input type="text" id="safety-sku" placeholder="SKU (e.g., SCHNEIDER-SAFETY)" class="component-input">
+                            <input type="text" id="safety-model" placeholder="Model (e.g., Schneider Safety Switch)" class="component-input">
+                            <input type="number" id="safety-qty" placeholder="Quantity" class="component-input" min="1" value="1">
+                        </div>
+                        <div class="form-row">
+                            <input type="date" id="safety-install-date" class="component-input">
+                            <input type="date" id="safety-warranty-date" class="component-input">
+                        </div>
+                        <div class="form-row">
+                            <input type="file" id="safety-documents" multiple accept=".pdf,.doc,.docx,.txt" class="component-input">
+                            <label for="safety-documents" class="file-label">📁 Upload Documents</label>
+                        </div>
+                        <div class="form-actions">
+                            <button type="button" class="btn-primary" onclick="saveComponent('safety')">Add Component</button>
+                            <button type="button" class="btn-secondary" onclick="cancelAddComponent('safety')">Cancel</button>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -3614,7 +3812,7 @@
             container.innerHTML = '';
             
             if (components.length === 0) {
-                container.innerHTML = '<p class="no-components">No components found. <button class="add-component-btn" onclick="addComponent(\'' + sectionType + '\')">Add Component</button></p>';
+                container.innerHTML = '<p class="no-components">No components found. <button class="add-component-btn" onclick="showAddComponentForm(\'' + sectionType + '\')">Add Component</button></p>';
                 return;
             }
             
@@ -3657,7 +3855,7 @@
             // Add "Add Component" button
             const addButton = document.createElement('div');
             addButton.className = 'add-component-section';
-            addButton.innerHTML = `<button class="add-component-btn" onclick="addComponent('${sectionType}')">+ Add ${sectionType.charAt(0).toUpperCase() + sectionType.slice(1)} Component</button>`;
+            addButton.innerHTML = `<button class="add-component-btn" onclick="showAddComponentForm('${sectionType}')">+ Add ${sectionType.charAt(0).toUpperCase() + sectionType.slice(1)} Component</button>`;
             container.appendChild(addButton);
         }
         
@@ -3697,33 +3895,69 @@
             document.getElementById('siteComponentsModal').style.display = 'none';
         }
         
-        function addComponent(sectionType) {
-            const componentData = prompt(`Add new ${sectionType} component:\n\nEnter component data in format:\nModel,SKU,Quantity,InstallDate,WarrantyDate,Documents\n\nExample:\nSMA Sunny Boy 5.0,SMA-SB-5.0,1,2024-01-15,2029-01-15,Manual,Warranty`);
+        function showAddComponentForm(sectionType) {
+            // Hide all other forms first
+            document.querySelectorAll('.add-component-form').forEach(form => {
+                form.style.display = 'none';
+            });
             
-            if (componentData) {
-                const parts = componentData.split(',');
-                if (parts.length >= 6) {
-                    const newComponent = {
-                        model: parts[0].trim(),
-                        sku: parts[1].trim(),
-                        qty: parseInt(parts[2].trim()) || 1,
-                        installDate: parts[3].trim(),
-                        warranty: parts[4].trim(),
-                        documents: parts.slice(5).map(doc => doc.trim())
-                    };
-                    
-                    // Add to component data (in real app, this would save to database)
-                    console.log(`Added new ${sectionType} component:`, newComponent);
-                    
-                    // Refresh the component section
-                    const currentSiteId = document.getElementById('componentsSiteName').textContent.toLowerCase().replace(' ', '-');
-                    populateSiteComponents(currentSiteId);
-                    
-                    alert(`Component added successfully!\n\nModel: ${newComponent.model}\nSKU: ${newComponent.sku}\nQuantity: ${newComponent.qty}`);
-                } else {
-                    alert('Invalid format. Please use: Model,SKU,Quantity,InstallDate,WarrantyDate,Documents');
-                }
+            // Show the specific form
+            document.getElementById(`add-${sectionType}-form`).style.display = 'block';
+        }
+        
+        function cancelAddComponent(sectionType) {
+            // Hide the form
+            document.getElementById(`add-${sectionType}-form`).style.display = 'none';
+            
+            // Clear form fields
+            document.getElementById(`${sectionType}-sku`).value = '';
+            document.getElementById(`${sectionType}-model`).value = '';
+            document.getElementById(`${sectionType}-qty`).value = '1';
+            document.getElementById(`${sectionType}-install-date`).value = '';
+            document.getElementById(`${sectionType}-warranty-date`).value = '';
+            document.getElementById(`${sectionType}-documents`).value = '';
+        }
+        
+        function saveComponent(sectionType) {
+            const sku = document.getElementById(`${sectionType}-sku`).value.trim();
+            const model = document.getElementById(`${sectionType}-model`).value.trim();
+            const qty = parseInt(document.getElementById(`${sectionType}-qty`).value) || 1;
+            const installDate = document.getElementById(`${sectionType}-install-date`).value;
+            const warrantyDate = document.getElementById(`${sectionType}-warranty-date`).value;
+            const fileInput = document.getElementById(`${sectionType}-documents`);
+            
+            // Validate required fields
+            if (!sku || !model) {
+                alert('Please fill in SKU and Model fields.');
+                return;
             }
+            
+            // Handle file uploads
+            let documents = [];
+            if (fileInput.files.length > 0) {
+                documents = Array.from(fileInput.files).map(file => file.name);
+            }
+            
+            const newComponent = {
+                model: model,
+                sku: sku,
+                qty: qty,
+                installDate: installDate || new Date().toISOString().split('T')[0],
+                warranty: warrantyDate || new Date(Date.now() + 5 * 365 * 24 * 60 * 60 * 1000).toISOString().split('T')[0], // 5 years from now
+                documents: documents
+            };
+            
+            // Add to component data (in real app, this would save to database)
+            console.log(`Added new ${sectionType} component:`, newComponent);
+            
+            // Refresh the component section
+            const currentSiteId = document.getElementById('componentsSiteName').textContent.toLowerCase().replace(' ', '-');
+            populateSiteComponents(currentSiteId);
+            
+            // Hide form and show buttons
+            cancelAddComponent(sectionType);
+            
+            alert(`Component added successfully!\n\nModel: ${newComponent.model}\nSKU: ${newComponent.sku}\nQuantity: ${newComponent.qty}\nDocuments: ${documents.length} file(s) uploaded`);
         }
         
         function editComponent(sectionType, index) {

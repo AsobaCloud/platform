@@ -28,7 +28,7 @@ safe_delete() {
   else 
     local exit_code=$?
     # Check if it's a "resource not found" error (which is actually success for cleanup)
-    if echo "${output}" | grep -q "ResourceNotFoundException\|not found\|does not exist"; then
+    if echo "${output}" | grep -q "ResourceNotFoundException\|not found\|does not exist\|NoSuchEntity\|cannot be found\|ParameterNotFound"; then
       log_success "${desc} completed (resource already deleted)"
     else
       log_error "${desc} FAILED with exit code ${exit_code}"
@@ -56,8 +56,7 @@ if aws apigateway get-domain-name --domain-name "${API_DOMAIN}" --region "${AWS_
   # Delete all base path mappings first
   MAPPINGS=$(aws apigateway get-base-path-mappings --domain-name "${API_DOMAIN}" --region "${AWS_REGION}" --query 'items[].basePath' --output text 2>/dev/null || echo "")
   for path in ${MAPPINGS}; do
-    [[ "${path}" == "(none)" ]] && path=""
-    safe_delete "aws apigateway delete-base-path-mapping --domain-name ${API_DOMAIN} --base-path '${path}' --region ${AWS_REGION}" "Removing base path mapping"
+    safe_delete "aws apigateway delete-base-path-mapping --domain-name ${API_DOMAIN} --base-path '${path}' --region ${AWS_REGION}" "Removing base path mapping '${path}'"
   done
   
   # Delete the custom domain mapping entirely
@@ -82,7 +81,8 @@ log_info "Deleting ECR repositories..."
 safe_delete "aws ecr delete-repository --repository-name ona-base --force --region ${AWS_REGION}" "Deleting ECR repo ona-base"
 # Delete service repos
 for service in "${SERVICES[@]}"; do
-  safe_delete "aws ecr delete-repository --repository-name ona-${service} --force --region ${AWS_REGION}" "Deleting ECR repo ona-${service}"
+  repo_name="$(get_ecr_repo "${service}")"
+  safe_delete "aws ecr delete-repository --repository-name ${repo_name} --force --region ${AWS_REGION}" "Deleting ECR repo ${repo_name}"
 done
 
 # IAM roles and policies
@@ -118,12 +118,7 @@ for service in "${SERVICES[@]}"; do
   fi
   
   # Delete the role
-  log_info "  Deleting role ${role}..."
-  if aws iam delete-role --role-name "${role}" >/dev/null 2>&1; then
-    log_success "  Role ${role} deleted"
-  else
-    log_error "  Failed to delete role ${role}"
-  fi
+  safe_delete "aws iam delete-role --role-name ${role}" "Deleting role ${role}"
 done
 
 # Delete SageMaker role
@@ -150,21 +145,8 @@ if [[ -n "${attached}" ]]; then
     fi
   done
 fi
-log_info "  Deleting SageMaker role..."
-if aws iam delete-role --role-name "ona-sagemaker-execution-role" >/dev/null 2>&1; then
-  log_success "  SageMaker role deleted"
-else
-  log_error "  Failed to delete SageMaker role"
-fi
+safe_delete "aws iam delete-role --role-name ona-sagemaker-execution-role" "Deleting SageMaker role"
 
-# DLQs
-log_info "Deleting SQS DLQs..."
-for service in "${SERVICES[@]}"; do
-  url=$(aws sqs get-queue-url --queue-name "ona-${service}-dlq" --region "${AWS_REGION}" --query 'QueueUrl' --output text 2>/dev/null || echo "")
-  if [[ -n "${url}" && "${url}" != "None" ]]; then
-    safe_delete "aws sqs delete-queue --queue-url ${url} --region ${AWS_REGION}" "Deleting ona-${service}-dlq"
-  fi
- done
 
 # CloudWatch Alarms
 log_info "Deleting CloudWatch alarms..."
@@ -200,7 +182,12 @@ safe_delete "aws sns delete-topic --topic-arn arn:aws:sns:${AWS_REGION}:${AWS_AC
 log_info "Deleting SQS DLQs..."
 for service in "${SERVICES[@]}"; do
   dlq_name="ona-${service}-dlq-${STAGE}"
-  safe_delete "aws sqs delete-queue --queue-url $(aws sqs get-queue-url --queue-name ${dlq_name} --region ${AWS_REGION} --query 'QueueUrl' --output text 2>/dev/null || echo '') --region ${AWS_REGION}" "Deleting DLQ ${dlq_name}"
+  queue_url=$(aws sqs get-queue-url --queue-name "${dlq_name}" --region "${AWS_REGION}" --query 'QueueUrl' --output text 2>/dev/null || echo "")
+  if [[ -n "${queue_url}" && "${queue_url}" != "None" ]]; then
+    safe_delete "aws sqs delete-queue --queue-url ${queue_url} --region ${AWS_REGION}" "Deleting DLQ ${dlq_name}"
+  else
+    log_success "DLQ ${dlq_name} already deleted"
+  fi
 done
 
 # CloudWatch alarms
