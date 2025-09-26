@@ -321,6 +321,364 @@
             alert('OODA Logs would show detailed audit trail of all automated decisions and their reasoning.\n\nThis feature would display:\n- Fault detection events\n- Risk analysis calculations\n- Decision parameters\n- Execution results\n- Performance metrics');
         }
 
+        // BOM Builder Functions
+        let currentBOM = [];
+        let skuCatalog = [
+            {
+                sku: "SG20KTL-FAN-STD",
+                oem: "Sungrow",
+                model: "SG20KTL",
+                description: "DC cooling fan, standard",
+                type: "fan",
+                price_usd: 95.0,
+                lead_time_days: 10,
+                compatible_assets: ["SG20-series"],
+                attributes: {"voltage": "24VDC", "cfm": 120}
+            },
+            {
+                sku: "SG20KTL-FUSE-20A",
+                oem: "Sungrow",
+                model: "SG20KTL",
+                description: "20A DC fuse",
+                type: "fuse",
+                price_usd: 25.0,
+                lead_time_days: 5,
+                compatible_assets: ["SG20-series"],
+                attributes: {"voltage": "1000VDC", "current": "20A"}
+            },
+            {
+                sku: "SG20KTL-IGBT-MAIN",
+                oem: "Sungrow",
+                model: "SG20KTL",
+                description: "Main IGBT module",
+                type: "igbt",
+                price_usd: 450.0,
+                lead_time_days: 14,
+                compatible_assets: ["SG20-series"],
+                attributes: {"voltage": "1200V", "current": "50A"}
+            },
+            {
+                sku: "SMA-SB5000-FAN",
+                oem: "SMA",
+                model: "Sunny Boy 5000",
+                description: "Cooling fan assembly",
+                type: "fan",
+                price_usd: 120.0,
+                lead_time_days: 7,
+                compatible_assets: ["SB5000-series"],
+                attributes: {"voltage": "12VDC", "cfm": 150}
+            },
+            {
+                sku: "SMA-SB5000-CAP",
+                oem: "SMA",
+                model: "Sunny Boy 5000",
+                description: "DC link capacitor",
+                type: "capacitor",
+                price_usd: 85.0,
+                lead_time_days: 12,
+                compatible_assets: ["SB5000-series"],
+                attributes: {"voltage": "800V", "capacitance": "470uF"}
+            },
+            {
+                sku: "FRONIUS-PRIMO-FAN",
+                oem: "Fronius",
+                model: "Primo 5.0-1",
+                description: "Internal cooling fan",
+                type: "fan",
+                price_usd: 110.0,
+                lead_time_days: 8,
+                compatible_assets: ["Primo-series"],
+                attributes: {"voltage": "24VDC", "cfm": 180}
+            },
+            {
+                sku: "HUAWEI-SUN2000-FUSE",
+                oem: "Huawei",
+                model: "SUN2000-5KTL",
+                description: "DC input fuse",
+                type: "fuse",
+                price_usd: 35.0,
+                lead_time_days: 6,
+                compatible_assets: ["SUN2000-series"],
+                attributes: {"voltage": "1000VDC", "current": "15A"}
+            },
+            {
+                sku: "HUAWEI-SUN2000-IGBT",
+                oem: "Huawei",
+                model: "SUN2000-5KTL",
+                description: "Power module IGBT",
+                type: "igbt",
+                price_usd: 380.0,
+                lead_time_days: 15,
+                compatible_assets: ["SUN2000-series"],
+                attributes: {"voltage": "1200V", "current": "40A"}
+            }
+        ];
+
+        function loadBOMBuilder() {
+            console.log('Loading BOM Builder section...');
+            populateCatalog();
+            updateBOMDisplay();
+            updateEARCalculation();
+            setupCatalogFilters();
+        }
+
+        function populateCatalog() {
+            const catalogList = document.getElementById('catalogList');
+            if (!catalogList) return;
+
+            catalogList.innerHTML = skuCatalog.map(item => `
+                <div class="catalog-item">
+                    <div class="catalog-item-header">
+                        <span class="catalog-sku">${item.sku}</span>
+                        <span class="catalog-price">$${item.price_usd}</span>
+                    </div>
+                    <div class="catalog-details">
+                        <strong>${item.oem} ${item.model}</strong><br>
+                        ${item.description}
+                    </div>
+                    <div class="catalog-meta">
+                        <span>Type: ${item.type}</span>
+                        <span>Lead Time: ${item.lead_time_days} days</span>
+                        <span>Compatible: ${item.compatible_assets.join(', ')}</span>
+                    </div>
+                    <button class="add-to-bom-btn" onclick="addToBOM('${item.sku}')">
+                        ➕ Add to BOM
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function setupCatalogFilters() {
+            const oemFilter = document.getElementById('catalogOemFilter');
+            const typeFilter = document.getElementById('catalogTypeFilter');
+            const searchInput = document.getElementById('catalogSearch');
+
+            if (oemFilter) {
+                oemFilter.addEventListener('change', filterCatalog);
+            }
+            if (typeFilter) {
+                typeFilter.addEventListener('change', filterCatalog);
+            }
+            if (searchInput) {
+                searchInput.addEventListener('input', filterCatalog);
+            }
+        }
+
+        function filterCatalog() {
+            const oemFilter = document.getElementById('catalogOemFilter')?.value || '';
+            const typeFilter = document.getElementById('catalogTypeFilter')?.value || '';
+            const searchTerm = document.getElementById('catalogSearch')?.value.toLowerCase() || '';
+
+            const catalogList = document.getElementById('catalogList');
+            if (!catalogList) return;
+
+            const filteredItems = skuCatalog.filter(item => {
+                const matchesOem = !oemFilter || item.oem === oemFilter;
+                const matchesType = !typeFilter || item.type === typeFilter;
+                const matchesSearch = !searchTerm || 
+                    item.sku.toLowerCase().includes(searchTerm) ||
+                    item.model.toLowerCase().includes(searchTerm) ||
+                    item.description.toLowerCase().includes(searchTerm);
+
+                return matchesOem && matchesType && matchesSearch;
+            });
+
+            catalogList.innerHTML = filteredItems.map(item => `
+                <div class="catalog-item">
+                    <div class="catalog-item-header">
+                        <span class="catalog-sku">${item.sku}</span>
+                        <span class="catalog-price">$${item.price_usd}</span>
+                    </div>
+                    <div class="catalog-details">
+                        <strong>${item.oem} ${item.model}</strong><br>
+                        ${item.description}
+                    </div>
+                    <div class="catalog-meta">
+                        <span>Type: ${item.type}</span>
+                        <span>Lead Time: ${item.lead_time_days} days</span>
+                        <span>Compatible: ${item.compatible_assets.join(', ')}</span>
+                    </div>
+                    <button class="add-to-bom-btn" onclick="addToBOM('${item.sku}')">
+                        ➕ Add to BOM
+                    </button>
+                </div>
+            `).join('');
+        }
+
+        function addToBOM(sku) {
+            const item = skuCatalog.find(i => i.sku === sku);
+            if (!item) return;
+
+            const existingItem = currentBOM.find(i => i.sku === sku);
+            if (existingItem) {
+                existingItem.qty += 1;
+            } else {
+                currentBOM.push({
+                    ...item,
+                    qty: 1,
+                    bom_id: 'BOM-' + Date.now(),
+                    recommended: true,
+                    selection_metrics: {
+                        ear_usd_day: 0, // Will be calculated
+                        total_cost_ear: 0, // Will be calculated
+                        rank: 1
+                    }
+                });
+            }
+
+            updateBOMDisplay();
+            updateEARCalculation();
+            updateBOMMetrics();
+        }
+
+        function removeFromBOM(sku) {
+            currentBOM = currentBOM.filter(item => item.sku !== sku);
+            updateBOMDisplay();
+            updateEARCalculation();
+            updateBOMMetrics();
+        }
+
+        function updateBOMQuantity(sku, newQty) {
+            const item = currentBOM.find(i => i.sku === sku);
+            if (item) {
+                item.qty = Math.max(1, parseInt(newQty) || 1);
+                updateBOMDisplay();
+                updateEARCalculation();
+                updateBOMMetrics();
+            }
+        }
+
+        function updateBOMDisplay() {
+            const bomItems = document.getElementById('bomItems');
+            if (!bomItems) return;
+
+            if (currentBOM.length === 0) {
+                bomItems.innerHTML = '<div class="empty-bom"><p>No components added yet. Browse the catalog to add components.</p></div>';
+                return;
+            }
+
+            bomItems.innerHTML = currentBOM.map(item => `
+                <div class="bom-item">
+                    <div class="bom-item-info">
+                        <div class="bom-item-sku">${item.sku}</div>
+                        <div class="bom-item-details">
+                            ${item.oem} ${item.model} - ${item.description}<br>
+                            <small>$${item.price_usd} × ${item.qty} = $${(item.price_usd * item.qty).toFixed(2)}</small>
+                        </div>
+                    </div>
+                    <div class="bom-item-controls">
+                        <input type="number" class="quantity-input" value="${item.qty}" 
+                               min="1" onchange="updateBOMQuantity('${item.sku}', this.value)">
+                        <button class="remove-bom-btn" onclick="removeFromBOM('${item.sku}')">✕</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function updateEARCalculation() {
+            const siteEarRate = parseFloat(document.getElementById('siteEarRate')?.value) || 120;
+            
+            let totalMaterialCost = 0;
+            let maxLeadTime = 0;
+            let totalDowntimeCost = 0;
+
+            currentBOM.forEach(item => {
+                const itemCost = item.price_usd * item.qty;
+                const downtimeCost = siteEarRate * item.lead_time_days * item.qty;
+                
+                totalMaterialCost += itemCost;
+                totalDowntimeCost += downtimeCost;
+                maxLeadTime = Math.max(maxLeadTime, item.lead_time_days);
+
+                // Update selection metrics
+                item.selection_metrics.ear_usd_day = siteEarRate;
+                item.selection_metrics.total_cost_ear = itemCost + downtimeCost;
+            });
+
+            const totalCost = totalMaterialCost + totalDowntimeCost;
+
+            // Update EAR display
+            document.getElementById('materialCost').textContent = `$${totalMaterialCost.toFixed(2)}`;
+            document.getElementById('downtimeCost').textContent = `$${totalDowntimeCost.toFixed(2)}`;
+            document.getElementById('totalCost').textContent = `$${totalCost.toFixed(2)}`;
+
+            // Update metrics
+            document.getElementById('totalBomCost').textContent = `$${totalMaterialCost.toFixed(2)}`;
+            document.getElementById('maxLeadTime').textContent = `${maxLeadTime} days`;
+            document.getElementById('totalEarImpact').textContent = `$${totalDowntimeCost.toFixed(2)}`;
+            document.getElementById('bomItemCount').textContent = currentBOM.length;
+        }
+
+        function updateBOMMetrics() {
+            // This function is called by other BOM functions
+            // Metrics are updated in updateEARCalculation()
+        }
+
+        function exportBOM() {
+            if (currentBOM.length === 0) {
+                alert('No components in BOM to export.');
+                return;
+            }
+
+            const bomData = {
+                bom_id: 'BOM-' + Date.now(),
+                asset_id: 'MANUAL-BOM',
+                created_at: new Date().toISOString(),
+                site_ear_rate: parseFloat(document.getElementById('siteEarRate')?.value) || 120,
+                items: currentBOM.map(item => ({
+                    sku: item.sku,
+                    oem: item.oem,
+                    model: item.model,
+                    description: item.description,
+                    uom: "each",
+                    qty: item.qty,
+                    price_usd: item.price_usd,
+                    lead_time_days: item.lead_time_days,
+                    type: item.type,
+                    recommended: item.recommended,
+                    selection_metrics: item.selection_metrics
+                }))
+            };
+
+            const blob = new Blob([JSON.stringify(bomData, null, 2)], { type: 'application/json' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = `bom-${bomData.bom_id}.json`;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+
+            alert(`BOM exported successfully!\n\nComponents: ${currentBOM.length}\nTotal Cost: $${(bomData.items.reduce((sum, item) => sum + (item.price_usd * item.qty), 0)).toFixed(2)}`);
+        }
+
+        function clearBOM() {
+            if (currentBOM.length === 0) {
+                alert('BOM is already empty.');
+                return;
+            }
+
+            if (confirm(`Are you sure you want to clear all ${currentBOM.length} components from the BOM?`)) {
+                currentBOM = [];
+                updateBOMDisplay();
+                updateEARCalculation();
+                updateBOMMetrics();
+                alert('BOM cleared successfully.');
+            }
+        }
+
+        function saveBOM() {
+            if (currentBOM.length === 0) {
+                alert('No components in BOM to save.');
+                return;
+            }
+
+            // In a real implementation, this would save to the backend
+            // For now, we'll just show a success message
+            alert(`BOM saved successfully!\n\nComponents: ${currentBOM.length}\nTotal Cost: $${(currentBOM.reduce((sum, item) => sum + (item.price_usd * item.qty), 0)).toFixed(2)}\n\nThis would be saved to the OODA backend system.`);
+        }
+
         // WebSocket Simulation for Real-time OODA Updates
         let oodaWebSocket = null;
 
@@ -979,6 +1337,9 @@
                     break;
                 case 'analytics':
                     loadAnalytics();
+                    break;
+                case 'bom-builder':
+                    loadBOMBuilder();
                     break;
             }
         }

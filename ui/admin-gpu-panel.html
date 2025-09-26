@@ -2599,6 +2599,245 @@
             grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
             gap: 1rem;
         }
+
+        /* BOM Builder Styles */
+        .bom-project-overview {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .project-metrics {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .bom-creation-interface {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .bom-left-panel,
+        .bom-right-panel {
+            display: flex;
+            flex-direction: column;
+            gap: 1.5rem;
+        }
+
+        .catalog-browser,
+        .current-bom,
+        .ear-calculator {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .catalog-filters {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1rem;
+            flex-wrap: wrap;
+        }
+
+        .catalog-filters .form-select,
+        .catalog-filters .form-input {
+            flex: 1;
+            min-width: 150px;
+        }
+
+        .catalog-list {
+            max-height: 400px;
+            overflow-y: auto;
+            border: 1px solid var(--border-grey);
+            border-radius: 8px;
+        }
+
+        .catalog-item {
+            padding: 1rem;
+            border-bottom: 1px solid var(--border-grey);
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .catalog-item:hover {
+            background-color: var(--neutral-light);
+        }
+
+        .catalog-item:last-child {
+            border-bottom: none;
+        }
+
+        .catalog-item-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 0.5rem;
+        }
+
+        .catalog-sku {
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .catalog-price {
+            font-weight: 600;
+            color: var(--status-green);
+        }
+
+        .catalog-details {
+            font-size: 0.9rem;
+            color: var(--neutral-medium);
+            margin-bottom: 0.5rem;
+        }
+
+        .catalog-meta {
+            display: flex;
+            gap: 1rem;
+            font-size: 0.8rem;
+            color: var(--neutral-medium);
+        }
+
+        .add-to-bom-btn {
+            background: var(--primary-blue);
+            color: white;
+            border: none;
+            padding: 0.5rem 1rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: background-color 0.2s;
+        }
+
+        .add-to-bom-btn:hover {
+            background: var(--secondary-blue);
+        }
+
+        .bom-items {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .bom-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border: 1px solid var(--border-grey);
+            border-radius: 8px;
+            margin-bottom: 0.5rem;
+            background: var(--neutral-light);
+        }
+
+        .bom-item-info {
+            flex: 1;
+        }
+
+        .bom-item-sku {
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .bom-item-details {
+            font-size: 0.9rem;
+            color: var(--neutral-medium);
+        }
+
+        .bom-item-controls {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .quantity-input {
+            width: 60px;
+            padding: 0.25rem;
+            border: 1px solid var(--border-grey);
+            border-radius: 4px;
+            text-align: center;
+        }
+
+        .remove-bom-btn {
+            background: var(--status-red);
+            color: white;
+            border: none;
+            padding: 0.25rem 0.5rem;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+        }
+
+        .empty-bom {
+            text-align: center;
+            padding: 2rem;
+            color: var(--neutral-medium);
+        }
+
+        .ear-inputs {
+            margin-bottom: 1rem;
+        }
+
+        .ear-display {
+            background: var(--neutral-light);
+            border-radius: 8px;
+            padding: 1rem;
+        }
+
+        .ear-breakdown {
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .ear-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+        }
+
+        .ear-item.total {
+            border-top: 2px solid var(--primary-blue);
+            font-weight: 600;
+            color: var(--primary-blue);
+        }
+
+        .ear-label {
+            color: var(--neutral-medium);
+        }
+
+        .ear-value {
+            font-weight: 600;
+        }
+
+        .bom-actions {
+            display: flex;
+            gap: 1rem;
+            justify-content: center;
+        }
+
+        .bom-actions .btn {
+            flex: 1;
+        }
+
+        @media (max-width: 768px) {
+            .bom-creation-interface {
+                grid-template-columns: 1fr;
+            }
+            
+            .catalog-filters {
+                flex-direction: column;
+            }
+            
+            .bom-actions {
+                flex-direction: column;
+            }
+        }
     </style>
 </head>
 <body>
@@ -2649,6 +2888,10 @@
                     <button class="nav-button" data-section="analytics">
                         <span class="nav-icon">📊</span>
                         Analytics
+                    </button>
+                    <button class="nav-button" data-section="bom-builder">
+                        <span class="nav-icon">📋</span>
+                        BOM Builder
                     </button>
                 </div>
             </nav>
@@ -3529,6 +3772,117 @@
                                     <!-- Table rows will be populated by JavaScript -->
                                 </tbody>
                             </table>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- BOM Builder Section -->
+                <div class="content-section" id="bom-builder">
+                    <div class="section-header">
+                        <h1 class="section-title">BOM Builder</h1>
+                        <p class="section-subtitle">Manual Bill of Materials creation with EAR-based component selection</p>
+                    </div>
+
+                    <!-- BOM Project Overview -->
+                    <div class="bom-project-overview">
+                        <div class="project-metrics">
+                            <div class="metric-card">
+                                <span class="metric-value" id="totalBomCost">$0</span>
+                                <span class="metric-label">Total Material Cost</span>
+                                <span class="metric-change">Including all components</span>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-value" id="maxLeadTime">0 days</span>
+                                <span class="metric-label">Max Lead Time</span>
+                                <span class="metric-change">Longest component delivery</span>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-value" id="totalEarImpact">$0</span>
+                                <span class="metric-label">Total EAR Impact</span>
+                                <span class="metric-change">During downtime</span>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-value" id="bomItemCount">0</span>
+                                <span class="metric-label">Components</span>
+                                <span class="metric-change">In current BOM</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- BOM Creation Interface -->
+                    <div class="bom-creation-interface">
+                        <div class="bom-left-panel">
+                            <!-- Component Catalog Browser -->
+                            <div class="catalog-browser">
+                                <h3>📦 Component Catalog</h3>
+                                <div class="catalog-filters">
+                                    <select id="catalogOemFilter" class="form-select">
+                                        <option value="">All OEMs</option>
+                                        <option value="SMA">SMA</option>
+                                        <option value="Sungrow">Sungrow</option>
+                                        <option value="Fronius">Fronius</option>
+                                        <option value="Huawei">Huawei</option>
+                                    </select>
+                                    <select id="catalogTypeFilter" class="form-select">
+                                        <option value="">All Types</option>
+                                        <option value="inverter">Inverters</option>
+                                        <option value="fan">Fans</option>
+                                        <option value="fuse">Fuses</option>
+                                        <option value="igbt">IGBTs</option>
+                                        <option value="capacitor">Capacitors</option>
+                                    </select>
+                                    <input type="text" id="catalogSearch" class="form-input" placeholder="Search SKU, model, description...">
+                                </div>
+                                <div class="catalog-list" id="catalogList">
+                                    <!-- Catalog items will be populated by JavaScript -->
+                                </div>
+                            </div>
+                        </div>
+
+                        <div class="bom-right-panel">
+                            <!-- Current BOM -->
+                            <div class="current-bom">
+                                <h3>📋 Current BOM</h3>
+                                <div class="bom-items" id="bomItems">
+                                    <div class="empty-bom">
+                                        <p>No components added yet. Browse the catalog to add components.</p>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- EAR Calculator -->
+                            <div class="ear-calculator">
+                                <h3>💰 EAR Calculator</h3>
+                                <div class="ear-inputs">
+                                    <div class="form-group">
+                                        <label class="form-label">Site EAR Rate (USD/day)</label>
+                                        <input type="number" id="siteEarRate" class="form-input" value="120" step="0.01">
+                                    </div>
+                                    <div class="ear-display">
+                                        <div class="ear-breakdown" id="earBreakdown">
+                                            <div class="ear-item">
+                                                <span class="ear-label">Material Cost:</span>
+                                                <span class="ear-value" id="materialCost">$0</span>
+                                            </div>
+                                            <div class="ear-item">
+                                                <span class="ear-label">Downtime Cost:</span>
+                                                <span class="ear-value" id="downtimeCost">$0</span>
+                                            </div>
+                                            <div class="ear-item total">
+                                                <span class="ear-label">Total Cost:</span>
+                                                <span class="ear-value" id="totalCost">$0</span>
+                                            </div>
+                                        </div>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- BOM Actions -->
+                            <div class="bom-actions">
+                                <button class="btn btn-primary" onclick="exportBOM()">📄 Export BOM</button>
+                                <button class="btn btn-secondary" onclick="clearBOM()">🗑️ Clear BOM</button>
+                                <button class="btn btn-success" onclick="saveBOM()">💾 Save BOM</button>
+                            </div>
                         </div>
                     </div>
                 </div>
