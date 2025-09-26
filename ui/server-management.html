@@ -9,6 +9,8 @@
     <link rel="apple-touch-icon" sizes="180x180" href="includes/Artboard-7.png">
     <link rel="stylesheet" href="includes/common.css">
     <link rel="stylesheet" href="includes/dashboard.css">
+    <!-- Chart.js CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <script src="includes/loader.js"></script>
     <style>
         /* Server Management Specific Styles */
@@ -520,6 +522,7 @@
             border: 1px solid var(--border-grey);
             border-radius: 12px;
             padding: 25px;
+            margin-bottom: 30px;
             box-shadow: 0 2px 8px rgba(0,0,0,0.05);
         }
 
@@ -586,6 +589,71 @@
 
         .analytics-table tr:hover {
             background: rgba(69, 91, 241, 0.05);
+        }
+
+        /* Chart Button Styles (matching Energy Production by Site) */
+        .chart-controls {
+            display: flex;
+            gap: 10px;
+            align-items: center;
+        }
+
+        .chart-btn {
+            padding: 6px 12px;
+            border: 1px solid var(--border-grey);
+            border-radius: 4px;
+            background: var(--white);
+            color: var(--text-dark);
+            font-size: 0.9rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .chart-btn:hover {
+            background: var(--neutral-light);
+        }
+
+        .chart-btn.active {
+            background: var(--primary-blue);
+            color: var(--white);
+            border-color: var(--primary-blue);
+        }
+
+        /* Chart Canvas Styles */
+        .chart-canvas {
+            width: 100%;
+            height: 300px;
+            background: #f8f9fa;
+            border-radius: 8px;
+            position: relative;
+            overflow: hidden;
+            padding: 10px;
+        }
+
+        /* Config Button Styles (matching admin-gpu-panel.html) */
+        .config-btn {
+            padding: 12px 24px;
+            border: none;
+            border-radius: 6px;
+            font-family: 'DM Sans', sans-serif;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.3s ease;
+        }
+
+        .config-btn.primary {
+            background-color: var(--primary-blue);
+            color: var(--white);
+        }
+
+        .config-btn.secondary {
+            background-color: var(--neutral-grey);
+            color: var(--text-dark);
+        }
+
+        .config-btn:hover {
+            transform: translateY(-1px);
         }
     </style>
 </head>
@@ -866,6 +934,33 @@
                         </div>
                     </div>
 
+                    <!-- Consumption vs Allotment Chart -->
+                    <div class="analytics-table-section">
+                        <div class="table-header">
+                            <h3>Consumption vs Allotment Trend</h3>
+                            <div class="table-controls">
+                                <select id="contractSelector" style="padding: 6px 12px; border: 1px solid var(--border-grey); border-radius: 4px; font-size: 0.9rem; background: var(--white); margin-right: 15px;">
+                                    <option value="aggregate">Aggregate (All Contracts)</option>
+                                    <option value="Office-Tower-Midrand">Office-Tower-Midrand</option>
+                                    <option value="Corporate-Center-Sandton">Corporate-Center-Sandton</option>
+                                    <option value="Riverside-Apartments">Riverside-Apartments</option>
+                                    <option value="Manufacturing-Plant-Alpha">Manufacturing-Plant-Alpha</option>
+                                    <option value="Textile-Factory-Beta">Textile-Factory-Beta</option>
+                                    <option value="Food-Processing-Gamma">Food-Processing-Gamma</option>
+                                </select>
+                                <div class="chart-controls">
+                                    <button class="chart-btn active" data-period="24h">24 Hours</button>
+                                    <button class="chart-btn" data-period="7d">7 Days</button>
+                                    <button class="chart-btn" data-period="30d">30 Days</button>
+                                    <button class="chart-btn" data-period="90d">90 Days</button>
+                                </div>
+                            </div>
+                        </div>
+                        <div class="chart-canvas">
+                            <canvas id="consumptionChartCanvas" width="800" height="300"></canvas>
+                        </div>
+                    </div>
+
                     <div class="activity-feed">
                         <h3 style="margin-bottom: 20px; color: var(--text-dark);">System Events</h3>
                         <div class="activity-item">
@@ -1071,6 +1166,115 @@
             alert('Add New Contract functionality would open a modal here');
         }
 
+        // Chart instance for consumption chart
+        let consumptionChartInstance = null;
+
+        // Cached consumption data for charts (time-series data)
+        let cachedConsumptionChartData = null;
+
+        // Generate cached chart data
+        function generateCachedConsumptionChartData() {
+            if (!cachedConsumptionChartData) {
+                cachedConsumptionChartData = {};
+                
+                // Generate time-series data for each period
+                ['24h', '7d', '30d', '90d'].forEach(period => {
+                    cachedConsumptionChartData[period] = {
+                        aggregate: generateTimeSeriesData('aggregate', period),
+                        'Office-Tower-Midrand': generateTimeSeriesData('Office-Tower-Midrand', period),
+                        'Corporate-Center-Sandton': generateTimeSeriesData('Corporate-Center-Sandton', period),
+                        'Riverside-Apartments': generateTimeSeriesData('Riverside-Apartments', period),
+                        'Manufacturing-Plant-Alpha': generateTimeSeriesData('Manufacturing-Plant-Alpha', period),
+                        'Textile-Factory-Beta': generateTimeSeriesData('Textile-Factory-Beta', period),
+                        'Food-Processing-Gamma': generateTimeSeriesData('Food-Processing-Gamma', period)
+                    };
+                });
+            }
+        }
+
+        // Generate time-series data for a specific contract and period
+        function generateTimeSeriesData(contract, period) {
+            const dataPoints = getDataPointsForPeriod(period);
+            const labels = generateTimeLabels(period, dataPoints);
+            
+            if (contract === 'aggregate') {
+                // Aggregate data - sum all contracts
+                const allotted = [];
+                const consumed = [];
+                
+                for (let i = 0; i < dataPoints; i++) {
+                    let totalAllotted = 0;
+                    let totalConsumed = 0;
+                    
+                    // Sum all contracts for this time point
+                    Object.keys(consumptionData[period]).forEach(contractName => {
+                        const contractData = consumptionData[period].find(c => c.contract === contractName);
+                        if (contractData) {
+                            totalAllotted += contractData.allotted / dataPoints;
+                            totalConsumed += contractData.consumed / dataPoints;
+                        }
+                    });
+                    
+                    allotted.push(totalAllotted);
+                    consumed.push(totalConsumed);
+                }
+                
+                return { labels, allotted, consumed };
+            } else {
+                // Individual contract data
+                const contractData = consumptionData[period].find(c => c.contract === contract);
+                if (!contractData) return { labels: [], allotted: [], consumed: [] };
+                
+                const allotted = [];
+                const consumed = [];
+                
+                for (let i = 0; i < dataPoints; i++) {
+                    // Add some realistic variation (±5%)
+                    const variation = 0.95 + Math.random() * 0.1;
+                    allotted.push(contractData.allotted / dataPoints * variation);
+                    consumed.push(contractData.consumed / dataPoints * variation);
+                }
+                
+                return { labels, allotted, consumed };
+            }
+        }
+
+        // Get number of data points based on period
+        function getDataPointsForPeriod(period) {
+            switch(period) {
+                case '24h': return 24; // Hourly data
+                case '7d': return 7;   // Daily data
+                case '30d': return 30; // Daily data
+                case '90d': return 90; // Daily data
+                default: return 24;
+            }
+        }
+
+        // Generate time labels based on period
+        function generateTimeLabels(period, dataPoints) {
+            const labels = [];
+            const now = new Date();
+            
+            switch(period) {
+                case '24h':
+                    for (let i = 23; i >= 0; i--) {
+                        const time = new Date(now.getTime() - i * 60 * 60 * 1000);
+                        labels.push(time.getHours().toString().padStart(2, '0') + ':00');
+                    }
+                    break;
+                case '7d':
+                case '30d':
+                case '90d':
+                    for (let i = dataPoints - 1; i >= 0; i--) {
+                        const date = new Date(now.getTime() - i * 24 * 60 * 60 * 1000);
+                        labels.push((date.getMonth() + 1) + '/' + date.getDate());
+                    }
+                    break;
+            }
+            
+            return labels;
+        }
+
         // Consumption monitoring data
         const consumptionData = {
             '24h': [
@@ -1155,6 +1359,145 @@
                 exportBtn.addEventListener('click', function() {
                     alert('Export functionality would download consumption data as CSV');
                 });
+            }
+
+            // Setup chart controls
+            setupConsumptionChartControls();
+        }
+
+        // Setup consumption chart controls
+        function setupConsumptionChartControls() {
+            const chartControls = document.querySelector('#monitoring .chart-controls');
+            const contractSelector = document.getElementById('contractSelector');
+            
+            if (!chartControls || !contractSelector) return;
+
+            // Time period button handlers
+            chartControls.addEventListener('click', function(e) {
+                if (e.target.classList.contains('chart-btn')) {
+                    // Remove active class from all buttons
+                    chartControls.querySelectorAll('.chart-btn').forEach(btn => {
+                        btn.classList.remove('active');
+                    });
+                    
+                    // Add active class to clicked button
+                    e.target.classList.add('active');
+                    
+                    // Update chart
+                    const period = e.target.getAttribute('data-period');
+                    const contract = contractSelector.value;
+                    updateConsumptionChart(contract, period);
+                }
+            });
+
+            // Contract selector handler
+            contractSelector.addEventListener('change', function() {
+                const period = chartControls.querySelector('.chart-btn.active').getAttribute('data-period');
+                updateConsumptionChart(this.value, period);
+            });
+        }
+
+        // Initialize consumption chart
+        function initializeConsumptionChart() {
+            const canvas = document.getElementById('consumptionChartCanvas');
+            if (!canvas) return;
+
+            // Generate cached data
+            generateCachedConsumptionChartData();
+
+            // Initialize with default data
+            updateConsumptionChart('aggregate', '24h');
+        }
+
+        // Update consumption chart
+        function updateConsumptionChart(contract, period) {
+            const canvas = document.getElementById('consumptionChartCanvas');
+            if (!canvas) return;
+
+            const ctx = canvas.getContext('2d');
+            
+            // Check if Chart.js is loaded
+            if (typeof Chart === 'undefined') {
+                console.error('Chart.js not loaded');
+                return;
+            }
+
+            // Destroy existing chart if it exists
+            if (consumptionChartInstance) {
+                consumptionChartInstance.destroy();
+            }
+
+            // Get data for the selected contract and period
+            const data = cachedConsumptionChartData[period][contract];
+            if (!data) return;
+
+            try {
+                consumptionChartInstance = new Chart(ctx, {
+                    type: 'line',
+                    data: {
+                        labels: data.labels,
+                        datasets: [
+                            {
+                                label: 'Allotted (GWh)',
+                                data: data.allotted,
+                                borderColor: '#3b82f6',
+                                backgroundColor: 'rgba(59, 130, 246, 0.1)',
+                                borderDash: [5, 5], // Dotted line
+                                borderWidth: 2,
+                                fill: false,
+                                tension: 0.1
+                            },
+                            {
+                                label: 'Consumed (GWh)',
+                                data: data.consumed,
+                                borderColor: '#10b981',
+                                backgroundColor: 'rgba(16, 185, 129, 0.2)',
+                                borderWidth: 2,
+                                fill: true,
+                                tension: 0.1
+                            }
+                        ]
+                    },
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            title: {
+                                display: true,
+                                text: `Consumption vs Allotment - ${contract === 'aggregate' ? 'All Contracts' : contract}`,
+                                font: {
+                                    size: 16,
+                                    weight: 'bold'
+                                }
+                            },
+                            legend: {
+                                display: true,
+                                position: 'top'
+                            }
+                        },
+                        scales: {
+                            x: {
+                                title: {
+                                    display: true,
+                                    text: period === '24h' ? 'Time (Hours)' : 'Date'
+                                }
+                            },
+                            y: {
+                                title: {
+                                    display: true,
+                                    text: 'Energy (GWh)'
+                                },
+                                beginAtZero: true
+                            }
+                        },
+                        interaction: {
+                            intersect: false,
+                            mode: 'index'
+                        }
+                    }
+                });
+            } catch (error) {
+                console.error('Error creating consumption chart:', error);
             }
         }
 
@@ -1323,6 +1666,11 @@
             } else if (sectionId === 'monitoring') {
                 loadConsumptionTable('24h');
                 setupConsumptionControls();
+                
+                // Initialize chart after a short delay to ensure DOM is ready
+                setTimeout(() => {
+                    initializeConsumptionChart();
+                }, 500);
             }
         }
 
