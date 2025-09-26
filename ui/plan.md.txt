@@ -1,0 +1,2223 @@
+## Revised Understanding
+
+**OODA Reality:**
+- **Continuous loop** - never stops, cycles every 10-60 minutes with new inverter data
+- **Human gate at Act phase** - maintenance plans generated automatically, humans approve before execution
+- **Generates trackable work** - component orders and site visit schedules that have lifecycles
+- **Push notifications** - real-time updates to dashboard when decisions need approval
+- **Single admin user type** - simplified permissions for now
+
+## Proper Integration Plan
+
+### Phase 1: Decision Approval Dashboard
+**Goal:** Surface pending maintenance decisions for human approval in real-time
+
+**Dashboard Integration:**
+- **Pending Approvals Widget**: Shows count of maintenance plans awaiting approval with quick approve/reject actions
+- **Recent OODA Activity Stream**: Live feed of Observe→Orient→Decide cycles completing
+- **Critical Alerts**: High-priority maintenance recommendations that need immediate attention
+- **Workflow Health**: Status of continuous OODA loop (last cycle, next expected, any errors)
+
+**Implementation:**
+- WebSocket/SSE connection for push notifications when Decide phase completes
+- Quick approval buttons that communicate decisions back to OODA Act phase
+- "View Details" links that navigate to full Maintenance tab breakdown
+
+### Phase 2: Maintenance Plan Management
+**Goal:** Full maintenance workflow tracking in dedicated Maintenance tab
+
+**Maintenance Tab Enhancement:**
+- **Pending Plans Section**: Complete details of maintenance recommendations awaiting approval
+- **Active Work Orders**: Approved maintenance plans in execution (scheduled visits, ordered components)
+- **Maintenance History**: Completed work with outcomes and performance impact
+- **Plan Details View**: Deep dive into OODA reasoning (fault analysis, EAR calculations, risk scores)
+
+**Workflow States:**
+- Pending → Approved → Scheduled → In Progress → Completed
+- Component orders: Pending → Approved → Ordered → Received → Installed
+- Each state change pushes updates to dashboard
+
+### Phase 3: Off-Cycle Controls & Monitoring
+**Goal:** Manual OODA triggers and continuous loop monitoring
+
+**Performance Tab Integration:**
+- **"Analyze Now" Button**: Trigger off-cycle OODA for specific assets or all sites
+- **OODA Loop Monitor**: Visualization of continuous cycle timing and health
+- **Decision Audit Trail**: Historical view of OODA reasoning for past maintenance decisions
+
+**Analytics Tab Enhancement:**  
+- **Maintenance Effectiveness**: Track outcomes of OODA-generated maintenance plans
+- **EAR Trend Analysis**: Historical Energy-at-Risk and actual avoided losses
+- **Decision Pattern Analysis**: How often different fault categories trigger maintenance
+
+## Technical Architecture Implications
+
+**Push Notification Flow:**
+1. OODA Decide phase completes → writes to state files
+2. File watcher/webhook notifies web app
+3. Web app pushes update to connected dashboard clients
+4. Dashboard shows new pending approval with summary info
+
+**State Synchronization:**
+- OODA writes decisions to `state/maintenance/pending/`  
+- Human approvals write back to `state/maintenance/approved/`
+- OODA Act phase processes approved decisions and moves to `state/maintenance/active/`
+
+**Off-Cycle Triggers:**
+- Dashboard "Analyze Now" → API call → triggers OODA `/detect` → `/diagnose` → `/schedule` chain
+- Results flow back through normal approval process
+
+This positions the admin panel as the **human oversight interface** for the continuous OODA automation, with the dashboard as mission control and the Maintenance tab as the detailed workflow manager.
+
+
+
+
+
+## admin-gpu-panel.html
+
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Ona Energy Management - O&M Dashboard</title>
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    <style>
+        :root {
+            --primary-blue: #455BF1;
+            --secondary-blue: #6B7FFF;
+            --accent-teal: #4ECDC4;
+            --neutral-dark: #2D3748;
+            --neutral-medium: #4A5568;
+            --neutral-light: #F7FAFC;
+            --status-green: #22C55E;
+            --status-yellow: #F59E0B;
+            --status-red: #EF4444;
+            --border-grey: #E2E8F0;
+            --bg-grey: #F8FAFC;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            background-color: var(--bg-grey);
+            color: var(--neutral-dark);
+            line-height: 1.6;
+        }
+
+        /* Header Styles */
+        .header {
+            background: linear-gradient(135deg, var(--primary-blue), var(--secondary-blue));
+            color: white;
+            padding: 1rem 2rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+        }
+
+        .header-nav {
+            display: flex;
+            gap: 2rem;
+            align-items: center;
+        }
+
+        .header-nav a {
+            color: white;
+            text-decoration: none;
+            font-weight: 500;
+            transition: opacity 0.2s;
+        }
+
+        .header-nav a:hover {
+            opacity: 0.8;
+        }
+
+        /* Main Layout */
+        .main-container {
+            display: flex;
+            max-width: 1400px;
+            margin: 0 auto;
+            min-height: calc(100vh - 80px);
+        }
+
+        /* Sidebar Navigation */
+        .sidebar {
+            width: 250px;
+            background: white;
+            box-shadow: 2px 0 4px rgba(0,0,0,0.05);
+            padding: 2rem 0;
+        }
+
+        .nav-section h3 {
+            padding: 0 2rem;
+            margin-bottom: 1rem;
+            font-size: 0.9rem;
+            font-weight: 600;
+            color: var(--neutral-medium);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .nav-button {
+            display: flex;
+            align-items: center;
+            width: 100%;
+            padding: 0.75rem 2rem;
+            border: none;
+            background: none;
+            text-align: left;
+            cursor: pointer;
+            color: var(--neutral-medium);
+            transition: all 0.2s;
+        }
+
+        .nav-button:hover {
+            background-color: var(--neutral-light);
+            color: var(--primary-blue);
+        }
+
+        .nav-button.active {
+            background-color: var(--primary-blue);
+            color: white;
+            border-right: 3px solid var(--accent-teal);
+        }
+
+        .nav-icon {
+            margin-right: 0.75rem;
+            font-size: 1.1rem;
+        }
+
+        /* Main Content */
+        .content {
+            flex: 1;
+            padding: 2rem;
+            overflow-y: auto;
+        }
+
+        .content-section {
+            display: none;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        .section-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 2rem;
+        }
+
+        .section-title {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--neutral-dark);
+        }
+
+        .section-subtitle {
+            color: var(--neutral-medium);
+            margin-top: 0.5rem;
+        }
+
+        /* Dashboard Specific Styles */
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .metric-card {
+            background: white;
+            padding: 1.5rem;
+            border-radius: 12px;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--primary-blue);
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary-blue);
+            margin-bottom: 0.5rem;
+        }
+
+        .metric-label {
+            color: var(--neutral-medium);
+            font-size: 0.9rem;
+            margin-bottom: 0.25rem;
+        }
+
+        .metric-change {
+            font-size: 0.8rem;
+            color: var(--status-green);
+        }
+
+        /* OODA Workflow Styles */
+        .ooda-workflow {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .workflow-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-grey);
+        }
+
+        .workflow-status {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+        }
+
+        .workflow-phase {
+            display: flex;
+            align-items: center;
+            gap: 0.5rem;
+            padding: 0.5rem 1rem;
+            border-radius: 20px;
+            font-size: 0.9rem;
+            font-weight: 600;
+        }
+
+        .workflow-phase.active {
+            background: var(--status-green);
+            color: white;
+        }
+
+        .workflow-phase.pending {
+            background: var(--status-yellow);
+            color: white;
+        }
+
+        .workflow-phase.completed {
+            background: var(--status-green);
+            color: white;
+            opacity: 0.7;
+        }
+
+        .pending-approvals {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--status-yellow);
+        }
+
+        .approval-item {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 1rem;
+            border-radius: 8px;
+            background: var(--neutral-light);
+            margin-bottom: 1rem;
+        }
+
+        .approval-item:last-child {
+            margin-bottom: 0;
+        }
+
+        .approval-info {
+            flex: 1;
+        }
+
+        .approval-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .approval-details {
+            font-size: 0.9rem;
+            color: var(--neutral-medium);
+        }
+
+        .approval-actions {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border-radius: 6px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 0.9rem;
+        }
+
+        .btn-primary {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: var(--secondary-blue);
+        }
+
+        .btn-success {
+            background: var(--status-green);
+            color: white;
+        }
+
+        .btn-success:hover {
+            opacity: 0.9;
+        }
+
+        .btn-danger {
+            background: var(--status-red);
+            color: white;
+        }
+
+        .btn-danger:hover {
+            opacity: 0.9;
+        }
+
+        .btn-secondary {
+            background: var(--border-grey);
+            color: var(--neutral-dark);
+        }
+
+        .btn-secondary:hover {
+            background: var(--neutral-medium);
+            color: white;
+        }
+
+        /* Activity Stream */
+        .activity-stream {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            display: flex;
+            align-items: center;
+            gap: 1rem;
+            padding: 0.75rem 0;
+            border-bottom: 1px solid var(--border-grey);
+        }
+
+        .activity-item:last-child {
+            border-bottom: none;
+        }
+
+        .activity-icon {
+            width: 40px;
+            height: 40px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 1.2rem;
+        }
+
+        .activity-icon.observe {
+            background: #E0E7FF;
+            color: var(--primary-blue);
+        }
+
+        .activity-icon.orient {
+            background: #ECFDF5;
+            color: var(--status-green);
+        }
+
+        .activity-icon.decide {
+            background: #FEF3C7;
+            color: var(--status-yellow);
+        }
+
+        .activity-icon.act {
+            background: #FECACA;
+            color: var(--status-red);
+        }
+
+        .activity-content {
+            flex: 1;
+        }
+
+        .activity-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-description {
+            font-size: 0.9rem;
+            color: var(--neutral-medium);
+            margin-bottom: 0.25rem;
+        }
+
+        .activity-time {
+            font-size: 0.8rem;
+            color: var(--neutral-medium);
+        }
+
+        /* Site Cards */
+        .sites-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(350px, 1fr));
+            gap: 1.5rem;
+            margin-bottom: 2rem;
+        }
+
+        .site-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            transition: transform 0.2s;
+        }
+
+        .site-card:hover {
+            transform: translateY(-2px);
+        }
+
+        .site-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .site-name {
+            font-weight: 700;
+            font-size: 1.1rem;
+        }
+
+        .site-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .site-status.active {
+            background: var(--status-green);
+            color: white;
+        }
+
+        .site-metrics {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 1rem;
+            margin-bottom: 1rem;
+        }
+
+        .site-metric {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 0.9rem;
+        }
+
+        .site-metric-label {
+            color: var(--neutral-medium);
+        }
+
+        .site-metric-value {
+            font-weight: 600;
+        }
+
+        .site-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        /* Charts */
+        .charts-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .chart-container {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        }
+
+        .chart-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .chart-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .chart-controls {
+            display: flex;
+            gap: 0.5rem;
+        }
+
+        .chart-btn {
+            padding: 0.25rem 0.75rem;
+            border: 1px solid var(--border-grey);
+            background: white;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .chart-btn.active {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--primary-blue);
+        }
+
+        .chart-canvas {
+            height: 300px;
+            position: relative;
+        }
+
+        /* Maintenance Styles */
+        .maintenance-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
+            gap: 1.5rem;
+        }
+
+        .maintenance-card {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid;
+        }
+
+        .maintenance-card.pending {
+            border-left-color: var(--status-yellow);
+        }
+
+        .maintenance-card.active {
+            border-left-color: var(--primary-blue);
+        }
+
+        .maintenance-card.completed {
+            border-left-color: var(--status-green);
+        }
+
+        .maintenance-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1rem;
+        }
+
+        .maintenance-title {
+            font-weight: 600;
+            font-size: 1.1rem;
+        }
+
+        .maintenance-status {
+            padding: 0.25rem 0.75rem;
+            border-radius: 20px;
+            font-size: 0.8rem;
+            font-weight: 600;
+        }
+
+        .maintenance-status.pending {
+            background: var(--status-yellow);
+            color: white;
+        }
+
+        .maintenance-status.active {
+            background: var(--primary-blue);
+            color: white;
+        }
+
+        .maintenance-status.completed {
+            background: var(--status-green);
+            color: white;
+        }
+
+        .maintenance-details {
+            margin-bottom: 1rem;
+        }
+
+        .detail-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 0.5rem 0;
+            font-size: 0.9rem;
+        }
+
+        .detail-label {
+            color: var(--neutral-medium);
+        }
+
+        .detail-value {
+            font-weight: 600;
+        }
+
+        .maintenance-actions {
+            display: flex;
+            gap: 0.5rem;
+            justify-content: flex-end;
+        }
+
+        /* Modal Styles */
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0,0,0,0.5);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 12px;
+            padding: 2rem;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.5rem;
+            padding-bottom: 1rem;
+            border-bottom: 2px solid var(--border-grey);
+        }
+
+        .modal-title {
+            font-size: 1.5rem;
+            font-weight: 700;
+        }
+
+        .modal-close {
+            background: none;
+            border: none;
+            font-size: 1.5rem;
+            cursor: pointer;
+            color: var(--neutral-medium);
+        }
+
+        .modal-body {
+            margin-bottom: 1.5rem;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 1rem;
+            justify-content: flex-end;
+        }
+
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 600;
+            color: var(--neutral-dark);
+        }
+
+        .form-input,
+        .form-select,
+        .form-textarea {
+            width: 100%;
+            padding: 0.75rem;
+            border: 1px solid var(--border-grey);
+            border-radius: 6px;
+            font-size: 1rem;
+        }
+
+        .form-textarea {
+            resize: vertical;
+            min-height: 100px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 768px) {
+            .main-container {
+                flex-direction: column;
+            }
+
+            .sidebar {
+                width: 100%;
+                padding: 1rem 0;
+            }
+
+            .nav-section {
+                display: none;
+            }
+
+            .nav-section.mobile-visible {
+                display: block;
+            }
+
+            .content {
+                padding: 1rem;
+            }
+        }
+
+        /* Status and Priority Colors */
+        .status-active { color: var(--status-green); }
+        .status-pending { color: var(--status-yellow); }
+        .status-maintenance { color: var(--status-red); }
+        .priority-high { color: var(--status-red); }
+        .priority-medium { color: var(--status-yellow); }
+        .priority-low { color: var(--status-green); }
+
+        /* OODA Phase Indicators */
+        .ooda-phases {
+            display: flex;
+            gap: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .ooda-phase {
+            flex: 1;
+            text-align: center;
+            padding: 1rem;
+            border-radius: 8px;
+            background: var(--neutral-light);
+            border: 2px solid transparent;
+            transition: all 0.3s;
+        }
+
+        .ooda-phase.active {
+            background: var(--primary-blue);
+            color: white;
+            border-color: var(--accent-teal);
+        }
+
+        .ooda-phase.completed {
+            background: var(--status-green);
+            color: white;
+        }
+
+        .phase-icon {
+            font-size: 2rem;
+            margin-bottom: 0.5rem;
+            display: block;
+        }
+
+        .phase-label {
+            font-weight: 600;
+            font-size: 0.9rem;
+        }
+
+        .phase-time {
+            font-size: 0.8rem;
+            opacity: 0.8;
+            margin-top: 0.25rem;
+        }
+
+        /* Alert Notifications */
+        .alert-notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background: white;
+            border-radius: 8px;
+            padding: 1rem;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.15);
+            border-left: 4px solid var(--status-green);
+            z-index: 1001;
+            min-width: 300px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+
+        .notification-title {
+            font-weight: 600;
+            margin-bottom: 0.25rem;
+        }
+
+        .notification-message {
+            font-size: 0.9rem;
+            color: var(--neutral-medium);
+        }
+
+        /* Off-cycle Analysis */
+        .off-cycle-controls {
+            background: white;
+            border-radius: 12px;
+            padding: 1.5rem;
+            margin-bottom: 2rem;
+            box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+            border-left: 4px solid var(--accent-teal);
+        }
+
+        .analysis-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+            flex-wrap: wrap;
+        }
+
+        .analysis-select {
+            min-width: 200px;
+        }
+    </style>
+</head>
+<body>
+    <!-- Header -->
+    <header class="header">
+        <div class="header-content">
+            <h1 class="header-title">Ona Energy Management</h1>
+            
+            <nav class="header-nav">
+                <a href="#applications">Applications</a>
+                <a href="#offtaker">Offtaker Management</a>
+                <a href="#om">O&M Management</a>
+                <a href="#" onclick="logout()">Logout</a>
+            </nav>
+        </div>
+    </header>
+
+    <!-- Main Container -->
+    <div class="main-container">
+        <!-- Sidebar Navigation -->
+        <aside class="sidebar">
+            <div class="nav-section">
+                <h3>Overview</h3>
+                <button class="nav-button active" data-section="dashboard">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Dashboard</span>
+                </button>
+                <button class="nav-button" data-section="inventory">
+                    <span class="nav-icon">🖥️</span>
+                    <span class="nav-text">Inventory</span>
+                </button>
+                <button class="nav-button" data-section="allocation">
+                    <span class="nav-icon">⚡</span>
+                    <span class="nav-text">Resource Allocation</span>
+                </button>
+            </div>
+
+            <div class="nav-section">
+                <h3>Monitoring</h3>
+                <button class="nav-button" data-section="performance">
+                    <span class="nav-icon">📈</span>
+                    <span class="nav-text">Performance</span>
+                </button>
+                <button class="nav-button" data-section="maintenance">
+                    <span class="nav-icon">🔧</span>
+                    <span class="nav-text">Maintenance</span>
+                </button>
+                <button class="nav-button" data-section="analytics">
+                    <span class="nav-icon">📊</span>
+                    <span class="nav-text">Analytics</span>
+                </button>
+            </div>
+        </aside>
+
+        <!-- Main Content -->
+        <main class="content">
+            <!-- Dashboard Section -->
+            <div class="content-section active" id="dashboard">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Dashboard</h2>
+                        <p class="section-subtitle">Real-time monitoring and management of energy infrastructure</p>
+                    </div>
+                </div>
+
+                <!-- Key Metrics -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="totalInverters">11</div>
+                        <div class="metric-label">Total Inverters</div>
+                        <div class="metric-change">+4 this month</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="activeInverters">11</div>
+                        <div class="metric-label">Active Inverters</div>
+                        <div class="metric-change">75% utilization</div>
+                    </div>
+                    <div class="metric-value" id="avgUtilization">78%</div>
+                        <div class="metric-label">Avg Utilization</div>
+                        <div class="metric-change">+5% from yesterday</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="pendingApprovals">3</div>
+                        <div class="metric-label">Pending Approvals</div>
+                        <div class="metric-change">2 high priority</div>
+                    </div>
+                </div>
+
+                <!-- OODA Workflow Status -->
+                <div class="ooda-workflow">
+                    <div class="workflow-header">
+                        <h3>OODA Loop Status</h3>
+                        <div class="workflow-status">
+                            <span class="workflow-phase completed">Last Cycle: 2 min ago</span>
+                            <span class="workflow-phase active">Next Cycle: 8 min</span>
+                        </div>
+                    </div>
+                    
+                    <div class="ooda-phases">
+                        <div class="ooda-phase completed">
+                            <span class="phase-icon">👁️</span>
+                            <div class="phase-label">Observe</div>
+                            <div class="phase-time">Completed 2 min ago</div>
+                        </div>
+                        <div class="ooda-phase completed">
+                            <span class="phase-icon">🧭</span>
+                            <div class="phase-label">Orient</div>
+                            <div class="phase-time">Completed 2 min ago</div>
+                        </div>
+                        <div class="ooda-phase completed">
+                            <span class="phase-icon">🎯</span>
+                            <div class="phase-label">Decide</div>
+                            <div class="phase-time">Completed 1 min ago</div>
+                        </div>
+                        <div class="ooda-phase pending">
+                            <span class="phase-icon">⚡</span>
+                            <div class="phase-label">Act</div>
+                            <div class="phase-time">Awaiting approval</div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Pending Approvals -->
+                <div class="pending-approvals">
+                    <h3>🔔 Pending Maintenance Approvals</h3>
+                    <div id="pendingApprovalsList">
+                        <div class="approval-item">
+                            <div class="approval-info">
+                                <div class="approval-title">Cummins Midrand - Inverter Maintenance</div>
+                                <div class="approval-details">EAR: $2,340 over 72h | Priority: High | Affected: INV-003, INV-007</div>
+                            </div>
+                            <div class="approval-actions">
+                                <button class="btn btn-success" onclick="approveMaintenancePlan('plan-001')">✓ Approve</button>
+                                <button class="btn btn-secondary" onclick="viewMaintenancePlan('plan-001')">View Details</button>
+                                <button class="btn btn-danger" onclick="rejectMaintenancePlan('plan-001')">✗ Reject</button>
+                            </div>
+                        </div>
+                        <div class="approval-item">
+                            <div class="approval-info">
+                                <div class="approval-title">FNB Willowbridge - Panel Cleaning</div>
+                                <div class="approval-details">EAR: $580 over 48h | Priority: Medium | Scheduled: Tomorrow 09:00</div>
+                            </div>
+                            <div class="approval-actions">
+                                <button class="btn btn-success" onclick="approveMaintenancePlan('plan-002')">✓ Approve</button>
+                                <button class="btn btn-secondary" onclick="viewMaintenancePlan('plan-002')">View Details</button>
+                                <button class="btn btn-danger" onclick="rejectMaintenancePlan('plan-002')">✗ Reject</button>
+                            </div>
+                        </div>
+                        <div class="approval-item">
+                            <div class="approval-info">
+                                <div class="approval-title">System-wide Performance Analysis</div>
+                                <div class="approval-details">Forecasting deviation detected | Requires component orders | EAR: $4,120</div>
+                            </div>
+                            <div class="approval-actions">
+                                <button class="btn btn-success" onclick="approveMaintenancePlan('plan-003')">✓ Approve</button>
+                                <button class="btn btn-secondary" onclick="viewMaintenancePlan('plan-003')">View Details</button>
+                                <button class="btn btn-danger" onclick="rejectMaintenancePlan('plan-003')">✗ Reject</button>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Recent OODA Activity -->
+                <div class="activity-stream">
+                    <h3>Recent OODA Activity</h3>
+                    <div id="oodaActivityStream">
+                        <div class="activity-item">
+                            <div class="activity-icon decide">🎯</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Maintenance Plan Generated</div>
+                                <div class="activity-description">High-priority maintenance scheduled for Cummins Midrand INV-003</div>
+                                <div class="activity-time">2 minutes ago</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon orient">🧭</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Risk Analysis Completed</div>
+                                <div class="activity-description">EAR calculation: $7,040 potential losses identified across 2 sites</div>
+                                <div class="activity-time">3 minutes ago</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon observe">👁️</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Fault Detection Completed</div>
+                                <div class="activity-description">3 new anomalies detected, 2 require immediate attention</div>
+                                <div class="activity-time">4 minutes ago</div>
+                            </div>
+                        </div>
+                        <div class="activity-item">
+                            <div class="activity-icon act">⚡</div>
+                            <div class="activity-content">
+                                <div class="activity-title">Work Order Executed</div>
+                                <div class="activity-description">FNB Willowbridge maintenance completed successfully</div>
+                                <div class="activity-time">2 hours ago</div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Site Status Grid -->
+                <div class="sites-grid">
+                    <div class="site-card">
+                        <div class="site-header">
+                            <div class="site-name">Cummins Midrand</div>
+                            <div class="site-status active">Active</div>
+                        </div>
+                        <div class="site-metrics">
+                            <div class="site-metric">
+                                <span class="site-metric-label">Type:</span>
+                                <span class="site-metric-value">Commercial</span>
+                            </div>
+                            <div class="site-metric">
+                                <span class="site-metric-label">Capacity:</span>
+                                <span class="site-metric-value">821.88 kW</span>
+                            </div>
+                            <div class="site-metric">
+                                <span class="site-metric-label">Location:</span>
+                                <span class="site-metric-value">Corners Bridal Veil Road</span>
+                            </div>
+                            <div class="site-metric">
+                                <span class="site-metric-label">Current Output:</span>
+                                <span class="site-metric-value" id="cumminsOutput">641 kW</span>
+                            </div>
+                            <div class="site-metric">
+                                <span class="site-metric-label">Efficiency:</span>
+                                <span class="site-metric-value" id="cumminsEfficiency">78%</span>
+                            </div>
+                        </div>
+                        <div class="site-actions">
+                            <button class="btn btn-primary" onclick="viewSiteDetails('cummins-midrand')">View Details</button>
+                            <button class="btn btn-secondary" onclick="manageSite('cummins-midrand')">Manage</button>
+                        </div>
+                    </div>
+
+                    <div class="site-card">
+                        <div class="site-header">
+                            <div class="site-name">FNB Willowbridge</div>
+                            <div class="site-status active">Active</div>
+                        </div>
+                        <div class="site-metrics">
+                            <div class="site-metric">
+                                <span class="site-metric-label">Type:</span>
+                                <span class="site-metric-value">Commercial</span>
+                            </div>
+                            <div class="site-metric">
+                                <span class="site-metric-label">Capacity:</span>
+                                <span class="site-metric-value">51.98 kW</span>
+                            </div>
+                            <div class="site-metric">
+                                <span class="site-metric-label">Location:</span>
+                                <span class="site-metric-value">61 Carl Cronje Drive</span>
+                            </div>
+                            <div class="site-metric">
+                                <span class="site-metric-label">Current Output:</span>
+                                <span class="site-metric-value" id="fnbOutput">34 kW</span>
+                            </div>
+                            <div class="site-metric">
+                                <span class="site-metric-label">Efficiency:</span>
+                                <span class="site-metric-value" id="fnbEfficiency">65%</span>
+                            </div>
+                        </div>
+                        <div class="site-actions">
+                            <button class="btn btn-primary" onclick="viewSiteDetails('fnb-willowbridge')">View Details</button>
+                            <button class="btn btn-secondary" onclick="manageSite('fnb-willowbridge')">Manage</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Inventory Section -->
+            <div class="content-section" id="inventory">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Asset Inventory</h2>
+                        <p class="section-subtitle">Solar site specifications and asset tracking</p>
+                    </div>
+                    <button class="btn btn-primary" onclick="openAddSiteModal()">➕ Add New Site</button>
+                </div>
+
+                <div class="sites-grid" id="inventoryGrid">
+                    <!-- Inventory items will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Resource Allocation Section -->
+            <div class="content-section" id="allocation">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Capacity Management</h2>
+                        <p class="section-subtitle">Solar energy production capacity and resource availability across distributed sites</p>
+                    </div>
+                </div>
+
+                <!-- Capacity metrics will be loaded by JavaScript -->
+            </div>
+
+            <!-- Performance Section -->
+            <div class="content-section" id="performance">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Performance Monitoring</h2>
+                        <p class="section-subtitle">Real-time metrics and system health</p>
+                    </div>
+                </div>
+
+                <!-- Off-cycle OODA Controls -->
+                <div class="off-cycle-controls">
+                    <h3>🔄 Off-Cycle OODA Analysis</h3>
+                    <div class="analysis-controls">
+                        <select class="form-select analysis-select" id="offCycleAsset">
+                            <option value="all">All Sites</option>
+                            <option value="cummins-midrand">Cummins Midrand</option>
+                            <option value="fnb-willowbridge">FNB Willowbridge</option>
+                        </select>
+                        <input type="number" class="form-input" id="offCycleSeverity" placeholder="Severity Threshold" value="0.5" step="0.1" min="0" max="1" style="width: 180px;">
+                        <button class="btn btn-primary" onclick="triggerOffCycleAnalysis()">🔍 Analyze Now</button>
+                        <button class="btn btn-secondary" onclick="viewOODALogs()">📋 View OODA Logs</button>
+                    </div>
+                </div>
+
+                <!-- Performance metrics and charts will be loaded by JavaScript -->
+            </div>
+
+            <!-- Maintenance Section -->
+            <div class="content-section" id="maintenance">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Maintenance Management</h2>
+                        <p class="section-subtitle">OODA-generated maintenance plans and work order tracking</p>
+                    </div>
+                </div>
+
+                <!-- Maintenance Plan Status -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value" id="pendingPlans">3</div>
+                        <div class="metric-label">Pending Approvals</div>
+                        <div class="metric-change">2 high priority</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="activePlans">5</div>
+                        <div class="metric-label">Active Work Orders</div>
+                        <div class="metric-change">2 in progress</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="completedPlans">12</div>
+                        <div class="metric-label">Completed This Month</div>
+                        <div class="metric-change">+3 from last month</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value" id="avoidedEAR">$24,680</div>
+                        <div class="metric-label">Avoided EAR</div>
+                        <div class="metric-change">This month</div>
+                    </div>
+                </div>
+
+                <!-- Maintenance Plans Grid -->
+                <div class="maintenance-grid" id="maintenanceGrid">
+                    <!-- Maintenance cards will be populated by JavaScript -->
+                </div>
+            </div>
+
+            <!-- Analytics Section -->
+            <div class="content-section" id="analytics">
+                <div class="section-header">
+                    <div>
+                        <h2 class="section-title">Analytics Dashboard</h2>
+                        <p class="section-subtitle">Comprehensive solar site performance, OODA effectiveness, and financial impact analysis</p>
+                    </div>
+                </div>
+
+                <!-- OODA Effectiveness Metrics -->
+                <div class="metrics-grid">
+                    <div class="metric-card">
+                        <div class="metric-value">94.2%</div>
+                        <div class="metric-label">OODA Decision Accuracy</div>
+                        <div class="metric-change">+2.1% vs target (95%)</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">156h</div>
+                        <div class="metric-label">Avg Time to Resolution</div>
+                        <div class="metric-change">-24h vs last month</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">$47,230</div>
+                        <div class="metric-label">Total Avoided EAR</div>
+                        <div class="metric-change">Last 30 days</div>
+                    </div>
+                    <div class="metric-card">
+                        <div class="metric-value">8.3%</div>
+                        <div class="metric-label">False Positive Rate</div>
+                        <div class="metric-change">-1.7% vs target (10%)</div>
+                    </div>
+                </div>
+
+                <!-- Charts will be loaded by JavaScript -->
+            </div>
+        </main>
+    </div>
+
+    <!-- Maintenance Plan Details Modal -->
+    <div class="modal" id="maintenancePlanModal">
+        <div class="modal-content" style="max-width: 800px;">
+            <div class="modal-header">
+                <h3 class="modal-title" id="planModalTitle">Maintenance Plan Details</h3>
+                <button class="modal-close" onclick="closeMaintenancePlanModal()">×</button>
+            </div>
+            <div class="modal-body" id="planModalBody">
+                <!-- Plan details will be populated by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-success" id="approvePlanBtn">✓ Approve Plan</button>
+                <button class="btn btn-danger" id="rejectPlanBtn">✗ Reject Plan</button>
+                <button class="btn btn-secondary" onclick="closeMaintenancePlanModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Site Details Modal -->
+    <div class="modal" id="siteDetailsModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Site Details</h3>
+                <button class="modal-close" onclick="closeSiteDetailsModal()">×</button>
+            </div>
+            <div class="modal-body" id="siteDetailsBody">
+                <!-- Site details will be populated by JavaScript -->
+            </div>
+            <div class="modal-footer">
+                <button class="btn btn-secondary" onclick="closeSiteDetailsModal()">Close</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Add New Site Modal -->
+    <div class="modal" id="addSiteModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3 class="modal-title">Add New Solar Site</h3>
+                <button class="modal-close" onclick="closeAddSiteModal()">×</button>
+            </div>
+            <form id="addSiteForm">
+                <div class="modal-body">
+                    <div class="form-group">
+                        <label class="form-label">Site Name</label>
+                        <input type="text" class="form-input" id="siteName" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Site Type</label>
+                        <select class="form-select" id="siteType" required>
+                            <option value="">Select Type</option>
+                            <option value="Commercial">Commercial</option>
+                            <option value="Industrial">Industrial</option>
+                            <option value="Residential">Residential</option>
+                            <option value="Utility Scale">Utility Scale</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Address</label>
+                        <input type="text" class="form-input" id="siteLocation" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Total Capacity (kW)</label>
+                        <input type="number" class="form-input" id="siteCapacity" step="0.01" required>
+                    </div>
+                    <div class="form-group">
+                        <label class="form-label">Number of Inverters</label>
+                        <input type="number" class="form-input" id="inverterCount" required>
+                    </div>
+                </div>
+                <div class="modal-footer">
+                    <button type="button" class="btn btn-secondary" onclick="closeAddSiteModal()">Cancel</button>
+                    <button type="submit" class="btn btn-primary">Add Site</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- JavaScript will be in separate file -->
+    <script src="admin-gpu-panel.js"></script>
+</body>
+</html>
+```
+
+## admin-gpu-panel.js
+
+```javascript
+// Authentication and Core Functions
+function checkAuth() {
+    const isAuthenticated = sessionStorage.getItem('authenticated') === 'true';
+    if (!isAuthenticated) {
+        window.location.href = 'index.html';
+        return false;
+    }
+    return true;
+}
+
+function logout() {
+    sessionStorage.removeItem('authenticated');
+    window.location.href = 'index.html';
+}
+
+// Check authentication on page load
+if (!checkAuth()) {
+    // Redirect will happen in checkAuth function
+}
+
+// Global State Management
+let oodaState = {
+    currentPhase: 'observe',
+    lastCycleTime: new Date(Date.now() - 2 * 60 * 1000), // 2 minutes ago
+    nextCycleTime: new Date(Date.now() + 8 * 60 * 1000), // 8 minutes from now
+    pendingApprovals: [],
+    activityStream: []
+};
+
+let siteData = {
+    'cummins-midrand': {
+        name: 'Cummins Midrand',
+        type: 'Commercial',
+        capacity: 821.88,
+        location: 'Corners Bridal Veil Road',
+        inverters: 9,
+        currentOutput: 641.1,
+        efficiency: 78,
+        utilization: 78,
+        temperature: 52,
+        status: 'active'
+    },
+    'fnb-willowbridge': {
+        name: 'FNB Willowbridge',
+        type: 'Commercial',
+        capacity: 51.98,
+        location: '61 Carl Cronje Drive',
+        inverters: 2,
+        currentOutput: 33.8,
+        efficiency: 65,
+        utilization: 65,
+        temperature: 48,
+        status: 'active'
+    }
+};
+
+let maintenancePlans = [
+    {
+        id: 'plan-001',
+        title: 'Cummins Midrand - Inverter Maintenance',
+        site: 'cummins-midrand',
+        priority: 'High',
+        ear: 2340,
+        timeHorizon: 72,
+        affectedAssets: ['INV-003', 'INV-007'],
+        status: 'pending',
+        generatedAt: new Date(Date.now() - 5 * 60 * 1000),
+        description: 'Critical inverter overtemperature detected. Immediate maintenance required to prevent system failure.',
+        estimatedDuration: '4 hours',
+        requiredParts: ['Thermal interface material', 'Air filters', 'Coolant'],
+        scheduledDate: null,
+        assignedTechnician: null
+    },
+    {
+        id: 'plan-002',
+        title: 'FNB Willowbridge - Panel Cleaning',
+        site: 'fnb-willowbridge',
+        priority: 'Medium',
+        ear: 580,
+        timeHorizon: 48,
+        affectedAssets: ['All panels'],
+        status: 'pending',
+        generatedAt: new Date(Date.now() - 15 * 60 * 1000),
+        description: 'Performance degradation detected due to dust accumulation. Panel cleaning recommended.',
+        estimatedDuration: '2 hours',
+        requiredParts: ['Cleaning solution', 'Microfiber cloths'],
+        scheduledDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
+        assignedTechnician: null
+    },
+    {
+        id: 'plan-003',
+        title: 'System-wide Performance Analysis',
+        site: 'all',
+        priority: 'High',
+        ear: 4120,
+        timeHorizon: 168,
+        affectedAssets: ['Multiple inverters'],
+        status: 'pending',
+        generatedAt: new Date(Date.now() - 10 * 60 * 1000),
+        description: 'Significant deviation from energy production forecasts detected across multiple sites.',
+        estimatedDuration: '6 hours',
+        requiredParts: ['Diagnostic equipment', 'Replacement components'],
+        scheduledDate: null,
+        assignedTechnician: null
+    }
+];
+
+// WebSocket connection for real-time updates (simulated)
+let oodaWebSocket = null;
+
+function initializeWebSocket() {
+    // Simulate WebSocket connection for OODA updates
+    console.log('Initializing OODA WebSocket connection...');
+    
+    // Simulate periodic updates
+    setInterval(() => {
+        simulateOODAUpdate();
+    }, 30000); // Every 30 seconds
+}
+
+function simulateOODAUpdate() {
+    const updateTypes = ['fault_detected', 'analysis_completed', 'plan_generated', 'cycle_completed'];
+    const randomUpdate = updateTypes[Math.floor(Math.random() * updateTypes.length)];
+    
+    handleOODAUpdate(randomUpdate);
+}
+
+function handleOODAUpdate(updateType) {
+    switch (updateType) {
+        case 'fault_detected':
+            addActivityStreamItem('observe', 'New Fault Detected', 'Temperature anomaly detected at Cummins Midrand INV-005');
+            break;
+        case 'analysis_completed':
+            addActivityStreamItem('orient', 'Risk Analysis Completed', 'EAR calculation updated: $3,240 potential losses identified');
+            break;
+        case 'plan_generated':
+            addActivityStreamItem('decide', 'Maintenance Plan Generated', 'New maintenance plan awaiting approval');
+            updatePendingApprovalsCount();
+            break;
+        case 'cycle_completed':
+            updateOODAPhaseStatus();
+            break;
+    }
+    
+    // Update dashboard metrics
+    updateDashboardMetrics();
+}
+
+// Navigation Functions
+function switchSection(sectionId) {
+    // Hide all sections
+    document.querySelectorAll('.content-section').forEach(section => {
+        section.classList.remove('active');
+    });
+    
+    // Remove active class from all nav buttons
+    document.querySelectorAll('.nav-button').forEach(button => {
+        button.classList.remove('active');
+    });
+    
+    // Show selected section
+    document.getElementById(sectionId).classList.add('active');
+    
+    // Add active class to corresponding nav button
+    document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
+    
+    // Load section-specific content
+    loadSectionContent(sectionId);
+}
+
+function loadSectionContent(sectionId) {
+    switch(sectionId) {
+        case 'dashboard':
+            loadDashboard();
+            break;
+        case 'inventory':
+            loadInventory();
+            break;
+        case 'allocation':
+            loadAllocation();
+            break;
+        case 'performance':
+            loadPerformance();
+            break;
+        case 'maintenance':
+            loadMaintenance();
+            break;
+        case 'analytics':
+            loadAnalytics();
+            break;
+    }
+}
+
+// Dashboard Functions
+function loadDashboard() {
+    updateDashboardMetrics();
+    updateOODAPhaseStatus();
+    updatePendingApprovalsList();
+    updateActivityStream();
+    updateSiteMetrics();
+}
+
+function updateDashboardMetrics() {
+    const totalInverters = Object.values(siteData).reduce((sum, site) => sum + site.inverters, 0);
+    const activeInverters = Object.values(siteData).filter(site => site.status === 'active').reduce((sum, site) => sum + site.inverters, 0);
+    const avgUtilization = Math.round(Object.values(siteData).reduce((sum, site) => sum + site.utilization, 0) / Object.values(siteData).length);
+    const pendingCount = maintenancePlans.filter(plan => plan.status === 'pending').length;
+
+    document.getElementById('totalInverters').textContent = totalInverters;
+    document.getElementById('activeInverters').textContent = activeInverters;
+    document.getElementById('avgUtilization').textContent = avgUtilization + '%';
+    document.getElementById('pendingApprovals').textContent = pendingCount;
+}
+
+function updateOODAPhaseStatus() {
+    // Update OODA phase indicators
+    const phases = document.querySelectorAll('.ooda-phase');
+    phases.forEach(phase => {
+        phase.classList.remove('active', 'completed', 'pending');
+    });
+    
+    // Simulate OODA cycle progression
+    const currentTime = new Date();
+    if (currentTime - oodaState.lastCycleTime < 5 * 60 * 1000) { // Within 5 minutes of last cycle
+        phases[0].classList.add('completed'); // Observe
+        phases[1].classList.add('completed'); // Orient
+        phases[2].classList.add('completed'); // Decide
+        phases[3].classList.add('pending');   // Act (waiting for approval)
+    } else {
+        phases[0].classList.add('active');    // Currently observing
+    }
+}
+
+function updatePendingApprovalsList() {
+    const pendingPlans = maintenancePlans.filter(plan => plan.status === 'pending');
+    const listContainer = document.getElementById('pendingApprovalsList');
+    
+    if (pendingPlans.length === 0) {
+        listContainer.innerHTML = '<div class="approval-item"><div class="approval-info"><div class="approval-title">No pending approvals</div><div class="approval-details">All maintenance plans are up to date</div></div></div>';
+        return;
+    }
+
+    listContainer.innerHTML = pendingPlans.map(plan => `
+        <div class="approval-item">
+            <div class="approval-info">
+                <div class="approval-title">${plan.title}</div>
+                <div class="approval-details">EAR: $${plan.ear.toLocaleString()} over ${plan.timeHorizon}h | Priority: ${plan.priority} | Affected: ${plan.affectedAssets.join(', ')}</div>
+            </div>
+            <div class="approval-actions">
+                <button class="btn btn-success" onclick="approveMaintenancePlan('${plan.id}')">✓ Approve</button>
+                <button class="btn btn-secondary" onclick="viewMaintenancePlan('${plan.id}')">View Details</button>
+                <button class="btn btn-danger" onclick="rejectMaintenancePlan('${plan.id}')">✗ Reject</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+function updateActivityStream() {
+    const activities = [
+        {
+            type: 'decide',
+            icon: '🎯',
+            title: 'Maintenance Plan Generated',
+            description: 'High-priority maintenance scheduled for Cummins Midrand INV-003',
+            time: '2 minutes ago'
+        },
+        {
+            type: 'orient',
+            icon: '🧭',
+            title: 'Risk Analysis Completed',
+            description: 'EAR calculation: $7,040 potential losses identified across 2 sites',
+            time: '3 minutes ago'
+        },
+        {
+            type: 'observe',
+            icon: '👁️',
+            title: 'Fault Detection Completed',
+            description: '3 new anomalies detected, 2 require immediate attention',
+            time: '4 minutes ago'
+        },
+        {
+            type: 'act',
+            icon: '⚡',
+            title: 'Work Order Executed',
+            description: 'FNB Willowbridge maintenance completed successfully',
+            time: '2 hours ago'
+        }
+    ];
+
+    const streamContainer = document.getElementById('oodaActivityStream');
+    streamContainer.innerHTML = activities.map(activity => `
+        <div class="activity-item">
+            <div class="activity-icon ${activity.type}">${activity.icon}</div>
+            <div class="activity-content">
+                <div class="activity-title">${activity.title}</div>
+                <div class="activity-description">${activity.description}</div>
+                <div class="activity-time">${activity.time}</div>
+            </div>
+        </div>
+    `).join('');
+}
+
+function addActivityStreamItem(type, title, description) {
+    const streamContainer = document.getElementById('oodaActivityStream');
+    const icons = { observe: '👁️', orient: '🧭', decide: '🎯', act: '⚡' };
+    
+    const newItem = document.createElement('div');
+    newItem.className = 'activity-item';
+    newItem.innerHTML = `
+        <div class="activity-icon ${type}">${icons[type]}</div>
+        <div class="activity-content">
+            <div class="activity-title">${title}</div>
+            <div class="activity-description">${description}</div>
+            <div class="activity-time">Just now</div>
+        </div>
+    `;
+    
+    streamContainer.insertBefore(newItem, streamContainer.firstChild);
+    
+    // Remove items beyond 10
+    while (streamContainer.children.length > 10) {
+        streamContainer.removeChild(streamContainer.lastChild);
+    }
+}
+
+function updateSiteMetrics() {
+    document.getElementById('cumminsOutput').textContent = siteData['cummins-midrand'].currentOutput + ' kW';
+    document.getElementById('cumminsEfficiency').textContent = siteData['cummins-midrand'].efficiency + '%';
+    document.getElementById('fnbOutput').textContent = siteData['fnb-willowbridge'].currentOutput + ' kW';
+    document.getElementById('fnbEfficiency').textContent = siteData['fnb-willowbridge'].efficiency + '%';
+}
+
+function updatePendingApprovalsCount() {
+    const pendingCount = maintenancePlans.filter(plan => plan.status === 'pending').length;
+    document.getElementById('pendingApprovals').textContent = pendingCount;
+    
+    // Update metric change text
+    const highPriorityCount = maintenancePlans.filter(plan => plan.status === 'pending' && plan.priority === 'High').length;
+    document.querySelector('#pendingApprovals').nextElementSibling.nextElementSibling.textContent = `${highPriorityCount} high priority`;
+}
+
+// Maintenance Plan Functions
+function approveMaintenancePlan(planId) {
+    const plan = maintenancePlans.find(p => p.id === planId);
+    if (plan) {
+        plan.status = 'approved';
+        plan.approvedAt = new Date();
+        
+        // Add to activity stream
+        addActivityStreamItem('act', 'Maintenance Plan Approved', `${plan.title} approved and scheduled for execution`);
+        
+        // Update UI
+        updatePendingApprovalsList();
+        updatePendingApprovalsCount();
+        updateDashboardMetrics();
+        
+        // Show notification
+        showNotification('Success', `Maintenance plan "${plan.title}" has been approved and will be executed.`);
+        
+        // Simulate work order creation
+        setTimeout(() => {
+            addActivityStreamItem('act', 'Work Order Created', `Work order generated for ${plan.title}`);
+        }, 2000);
+    }
+}
+
+function rejectMaintenancePlan(planId) {
+    const plan = maintenancePlans.find(p => p.id === planId);
+    if (plan && confirm(`Are you sure you want to reject the maintenance plan: ${plan.title}?`)) {
+        plan.status = 'rejected';
+        plan.rejectedAt = new Date();
+        
+        // Add to activity stream
+        addActivityStreamItem('decide', 'Maintenance Plan Rejected', `${plan.title} rejected - OODA will generate alternative plan`);
+        
+        // Update UI
+        updatePendingApprovalsList();
+        updatePendingApprovalsCount();
+        updateDashboardMetrics();
+        
+        // Show notification
+        showNotification('Plan Rejected', `Maintenance plan "${plan.title}" has been rejected. OODA will generate alternative recommendations.`);
+    }
+}
+
+function viewMaintenancePlan(planId) {
+    const plan = maintenancePlans.find(p => p.id === planId);
+    if (!plan) return;
+    
+    document.getElementById('planModalTitle').textContent = plan.title;
+    
+    const modalBody = document.getElementById('planModalBody');
+    modalBody.innerHTML = `
+        <div class="form-group">
+            <label class="form-label">Site</label>
+            <div>${siteData[plan.site]?.name || 'Multiple Sites'}</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Priority</label>
+            <div class="priority-${plan.priority.toLowerCase()}">${plan.priority}</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Energy at Risk (EAR)</label>
+            <div>$${plan.ear.toLocaleString()} over ${plan.timeHorizon} hours</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Affected Assets</label>
+            <div>${plan.affectedAssets.join(', ')}</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Description</label>
+            <div>${plan.description}</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Estimated Duration</label>
+            <div>${plan.estimatedDuration}</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Required Parts</label>
+            <div>${plan.requiredParts.join(', ')}</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Generated At</label>
+            <div>${plan.generatedAt.toLocaleString()}</div>
+        </div>
+        ${plan.scheduledDate ? `
+        <div class="form-group">
+            <label class="form-label">Scheduled Date</label>
+            <div>${plan.scheduledDate.toLocaleString()}</div>
+        </div>
+        ` : ''}
+    `;
+    
+    // Update modal buttons
+    document.getElementById('approvePlanBtn').onclick = () => {
+        approveMaintenancePlan(planId);
+        closeMaintenancePlanModal();
+    };
+    
+    document.getElementById('rejectPlanBtn').onclick = () => {
+        rejectMaintenancePlan(planId);
+        closeMaintenancePlanModal();
+    };
+    
+    document.getElementById('maintenancePlanModal').style.display = 'flex';
+}
+
+function closeMaintenancePlanModal() {
+    document.getElementById('maintenancePlanModal').style.display = 'none';
+}
+
+// Performance Functions
+function loadPerformance() {
+    console.log('Loading Performance section...');
+    // Performance monitoring functionality
+}
+
+function triggerOffCycleAnalysis() {
+    const asset = document.getElementById('offCycleAsset').value;
+    const severity = document.getElementById('offCycleSeverity').value;
+    
+    // Show loading state
+    const btn = event.target;
+    const originalText = btn.textContent;
+    btn.textContent = '🔄 Analyzing...';
+    btn.disabled = true;
+    
+    // Simulate OODA analysis
+    setTimeout(() => {
+        // Add to activity stream
+        addActivityStreamItem('observe', 'Off-Cycle Analysis Initiated', `Manual OODA analysis triggered for ${asset === 'all' ? 'all sites' : siteData[asset]?.name}`);
+        
+        // Simulate analysis completion
+        setTimeout(() => {
+            addActivityStreamItem('orient', 'Off-Cycle Analysis Completed', 'Analysis identified 2 new maintenance opportunities');
+            
+            // Simulate new maintenance plan generation
+            setTimeout(() => {
+                const newPlan = {
+                    id: 'plan-' + Date.now(),
+                    title: `${asset === 'all' ? 'Multi-Site' : siteData[asset]?.name} - Off-Cycle Analysis`,
+                    site: asset,
+                    priority: 'Medium',
+                    ear: Math.round(Math.random() * 2000) + 500,
+                    timeHorizon: 48,
+                    affectedAssets: ['TBD'],
+                    status: 'pending',
+                    generatedAt: new Date(),
+                    description: 'Off-cycle analysis detected optimization opportunities.',
+                    estimatedDuration: '3 hours',
+                    requiredParts: ['TBD'],
+                    scheduledDate: null,
+                    assignedTechnician: null
+                };
+                
+                maintenancePlans.unshift(newPlan);
+                addActivityStreamItem('decide', 'New Maintenance Plan Generated', 'Off-cycle analysis generated new maintenance recommendation');
+                updatePendingApprovalsList();
+                updatePendingApprovalsCount();
+                
+            }, 2000);
+        }, 3000);
+        
+        // Reset button
+        btn.textContent = originalText;
+        btn.disabled = false;
+        
+        showNotification('Analysis Complete', `Off-cycle OODA analysis completed for ${asset === 'all' ? 'all sites' : siteData[asset]?.name}`);
+        
+    }, 5000);
+}
+
+function viewOODALogs() {
+    alert('OODA Logs would show detailed audit trail of all automated decisions and their reasoning.\n\nThis feature would display:\n- Fault detection events\n- Risk analysis calculations\n- Decision parameters\n- Execution results\n- Performance metrics');
+}
+
+// Maintenance Section Functions
+function loadMaintenance() {
+    console.log('Loading Maintenance section...');
+    updateMaintenanceMetrics();
+    displayMaintenancePlans();
+}
+
+function updateMaintenanceMetrics() {
+    const pending = maintenancePlans.filter(p => p.status === 'pending').length;
+    const active = maintenancePlans.filter(p => p.status === 'approved').length;
+    const completed = maintenancePlans.filter(p => p.status === 'completed').length;
+    const avoidedEAR = maintenancePlans.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.ear, 0);
+    
+    if (document.getElementById('pendingPlans')) {
+        document.getElementById('pendingPlans').textContent = pending;
+        document.getElementById('activePlans').textContent = active;
+        document.getElementById('completedPlans').textContent = completed;
+        document.getElementById('avoidedEAR').textContent = '$' + avoidedEAR.toLocaleString();
+    }
+}
+
+function displayMaintenancePlans() {
+    const grid = document.getElementById('maintenanceGrid');
+    if (!grid) return;
+    
+    const allPlans = [...maintenancePlans].sort((a, b) => {
+        // Sort by status priority: pending, approved, completed
+        const statusOrder = { pending: 0, approved: 1, completed: 2 };
+        return statusOrder[a.status] - statusOrder[b.status];
+    });
+    
+    grid.innerHTML = allPlans.map(plan => `
+        <div class="maintenance-card ${plan.status}">
+            <div class="maintenance-header">
+                <div class="maintenance-title">${plan.title}</div>
+                <div class="maintenance-status ${plan.status}">${plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}</div>
+            </div>
+            <div class="maintenance-details">
+                <div class="detail-row">
+                    <span class="detail-label">Priority:</span>
+                    <span class="detail-value priority-${plan.priority.toLowerCase()}">${plan.priority}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">EAR:</span>
+                    <span class="detail-value">$${plan.ear.toLocaleString()}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Duration:</span>
+                    <span class="detail-value">${plan.estimatedDuration}</span>
+                </div>
+                <div class="detail-row">
+                    <span class="detail-label">Generated:</span>
+                    <span class="detail-value">${plan.generatedAt.toLocaleDateString()}</span>
+                </div>
+            </div>
+            <div class="maintenance-actions">
+                ${plan.status === 'pending' ? `
+                    <button class="btn btn-success" onclick="approveMaintenancePlan('${plan.id}')">✓ Approve</button>
+                    <button class="btn btn-danger" onclick="rejectMaintenancePlan('${plan.id}')">✗ Reject</button>
+                ` : ''}
+                <button class="btn btn-secondary" onclick="viewMaintenancePlan('${plan.id}')">View Details</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Inventory Functions
+function loadInventory() {
+    console.log('Loading Inventory section...');
+    displayInventorySites();
+}
+
+function displayInventorySites() {
+    const grid = document.getElementById('inventoryGrid');
+    if (!grid) return;
+    
+    grid.innerHTML = Object.entries(siteData).map(([id, site]) => `
+        <div class="site-card">
+            <div class="site-header">
+                <div class="site-name">${site.name}</div>
+                <div class="site-status ${site.status}">${site.status.charAt(0).toUpperCase() + site.status.slice(1)}</div>
+            </div>
+            <div class="site-metrics">
+                <div class="site-metric">
+                    <span class="site-metric-label">Type:</span>
+                    <span class="site-metric-value">${site.type}</span>
+                </div>
+                <div class="site-metric">
+                    <span class="site-metric-label">Capacity:</span>
+                    <span class="site-metric-value">${site.capacity} kW</span>
+                </div>
+                <div class="site-metric">
+                    <span class="site-metric-label">Inverters:</span>
+                    <span class="site-metric-value">${site.inverters} units</span>
+                </div>
+                <div class="site-metric">
+                    <span class="site-metric-label">Location:</span>
+                    <span class="site-metric-value">${site.location}</span>
+                </div>
+                <div class="site-metric">
+                    <span class="site-metric-label">Current Output:</span>
+                    <span class="site-metric-value">${site.currentOutput} kW</span>
+                </div>
+                <div class="site-metric">
+                    <span class="site-metric-label">Efficiency:</span>
+                    <span class="site-metric-value">${site.efficiency}%</span>
+                </div>
+            </div>
+            <div class="site-actions">
+                <button class="btn btn-primary" onclick="viewSiteDetails('${id}')">View Details</button>
+                <button class="btn btn-secondary" onclick="manageSite('${id}')">Manage</button>
+            </div>
+        </div>
+    `).join('');
+}
+
+// Allocation Functions
+function loadAllocation() {
+    console.log('Loading Resource Allocation section...');
+    // Capacity management functionality
+}
+
+// Analytics Functions
+function loadAnalytics() {
+    console.log('Loading Analytics section...');
+    // Analytics functionality
+}
+
+// Site Management Functions
+function viewSiteDetails(siteId) {
+    const site = siteData[siteId];
+    if (!site) return;
+    
+    const modalBody = document.getElementById('siteDetailsBody');
+    modalBody.innerHTML = `
+        <div class="form-group">
+            <label class="form-label">Site Name</label>
+            <div>${site.name}</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Type</label>
+            <div>${site.type}</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Location</label>
+            <div>${site.location}</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Capacity</label>
+            <div>${site.capacity} kW</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Inverters</label>
+            <div>${site.inverters} units</div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Current Performance</label>
+            <div>
+                <strong>Output:</strong> ${site.currentOutput} kW<br>
+                <strong>Efficiency:</strong> ${site.efficiency}%<br>
+                <strong>Utilization:</strong> ${site.utilization}%<br>
+                <strong>Temperature:</strong> ${site.temperature}°C
+            </div>
+        </div>
+        <div class="form-group">
+            <label class="form-label">Status</label>
+            <div class="status-${site.status}">${site.status.charAt(0).toUpperCase() + site.status.slice(1)}</div>
+        </div>
+    `;
+    
+    document.getElementById('siteDetailsModal').style.display = 'flex';
+}
+
+function manageSite(siteId) {
+    const site = siteData[siteId];
+    if (!site) return;
+    
+    alert(`Site Management for ${site.name}\n\nManagement options:\n- Schedule maintenance\n- Update configuration\n- View maintenance history\n- Generate reports\n\nFull management interface coming soon...`);
+}
+
+function closeSiteDetailsModal() {
+    document.getElementById('siteDetailsModal').style.display = 'none';
+}
+
+// Add Site Functions
+function openAddSiteModal() {
+    document.getElementById('addSiteModal').style.display = 'flex';
+}
+
+function closeAddSiteModal() {
+    document.getElementById('addSiteModal').style.display = 'none';
+}
+
+// Utility Functions
+function showNotification(title, message, type = 'success') {
+    const notification = document.createElement('div');
+    notification.className = 'alert-notification';
+    notification.innerHTML = `
+        <div class="notification-title">${title}</div>
+        <div class="notification-message">${message}</div>
+    `;
+    
+    // Set border color based on type
+    const colors = {
+        success: 'var(--status-green)',
+        warning: 'var(--status-yellow)',
+        error: 'var(--status-red)',
+        info: 'var(--primary-blue)'
+    };
+    notification.style.borderLeftColor = colors[type] || colors.success;
+    
+    document.body.appendChild(notification);
+    
+    // Auto-remove after 5 seconds
+    setTimeout(() => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    }, 5000);
+    
+    // Allow manual dismissal
+    notification.addEventListener('click', () => {
+        if (notification.parentNode) {
+            notification.parentNode.removeChild(notification);
+        }
+    });
+}
+
+// Initialize Application
+document.addEventListener('DOMContentLoaded', function() {
+    // Add click handlers to nav buttons
+    document.querySelectorAll('.nav-button').forEach(button => {
+        button.addEventListener('click', function() {
+            const sectionId = this.getAttribute('data-section');
+            switchSection(sectionId);
+        });
+    });
+    
+    // Handle add site form submission
+    const addSiteForm = document.getElementById('addSiteForm');
+    if (addSiteForm) {
+        addSiteForm.addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const newSiteId = 'site-' + Date.now();
+            const newSite = {
+                name: document.getElementById('siteName').value,
+                type: document.getElementById('siteType').value,
+                capacity: parseFloat(document.getElementById('siteCapacity').value),
+                location: document.getElementById('siteLocation').value,
+                inverters: parseInt(document.getElementById('inverterCount').value),
+                currentOutput: 0,
+                efficiency: 0,
+                utilization: 0,
+                temperature: 25,
+                status: 'active'
+            };
+            
+            siteData[newSiteId] = newSite;
+            
+            closeAddSiteModal();
+            loadInventory();
+            updateDashboardMetrics();
+            updateSiteMetrics();
+            
+            showNotification('Site Added', `${newSite.name} has been added to inventory successfully.`);
+        });
+    }
+    
+    // Close modals when clicking outside
+    document.querySelectorAll('.modal').forEach(modal => {
+        modal.addEventListener('click', function(e) {
+            if (e.target === this) {
+                this.style.display = 'none';
+            }
+        });
+    });
+    
+    // Initialize with dashboard
+    switchSection('dashboard');
+    
+    // Initialize WebSocket connection
+    initializeWebSocket();
+    
+    // Start periodic updates
+    setInterval(() => {
+        updateDashboardMetrics();
+        updateSiteMetrics();
+    }, 10000); // Every 10 seconds
+    
+    console.log('Ona Energy Management System initialized successfully');
+});
+```
+
+This implementation provides:
+
+1. **Real-time OODA workflow monitoring** with phase status indicators
+2. **Pending approval management** with detailed maintenance plan reviews
+3. **Push notification simulation** for OODA events
+4. **Activity stream** showing recent OODA decisions and actions
+5. **Off-cycle analysis triggers** for manual OODA execution
+6. **Comprehensive maintenance plan details** with EAR calculations and work order tracking
+7. **Site management integration** with OODA-generated recommendations
+8. **Responsive design** that works across devices
+
+The system now properly reflects the automated OODA loop with human approval gates, showing how operations teams would interact with the continuous decision-making system.

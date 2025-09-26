@@ -18,6 +18,50 @@
             sessionStorage.removeItem('authenticated');
             window.location.href = 'index.html';
         }
+
+        // OODA State Management
+        let oodaState = {
+            currentPhase: 'observe',
+            lastCycleTime: new Date(Date.now() - 2 * 60 * 1000), // 2 minutes ago
+            nextCycleTime: new Date(Date.now() + 8 * 60 * 1000), // 8 minutes from now
+            pendingApprovals: [],
+            activityStream: []
+        };
+
+        let maintenancePlans = [
+            {
+                id: 'plan-001',
+                title: 'Cummins Midrand - Inverter Maintenance',
+                site: 'cummins-midrand',
+                priority: 'High',
+                ear: 2340,
+                timeHorizon: 72,
+                affectedAssets: ['INV-003', 'INV-007'],
+                status: 'pending',
+                generatedAt: new Date(Date.now() - 5 * 60 * 1000),
+                description: 'Critical inverter overtemperature detected. Immediate maintenance required to prevent system failure.',
+                estimatedDuration: '4 hours',
+                requiredParts: ['Thermal interface material', 'Air filters', 'Coolant'],
+                scheduledDate: null,
+                assignedTechnician: null
+            },
+            {
+                id: 'plan-002',
+                title: 'FNB Willowbridge - Panel Cleaning',
+                site: 'fnb-willowbridge',
+                priority: 'Medium',
+                ear: 580,
+                timeHorizon: 48,
+                affectedAssets: ['All panels'],
+                status: 'pending',
+                generatedAt: new Date(Date.now() - 15 * 60 * 1000),
+                description: 'Performance degradation detected due to dust accumulation. Panel cleaning recommended.',
+                estimatedDuration: '2 hours',
+                requiredParts: ['Cleaning solution', 'Microfiber cloths'],
+                scheduledDate: new Date(Date.now() + 24 * 60 * 60 * 1000),
+                assignedTechnician: null
+            }
+        ];
         
         function closeJobModal() {
             document.getElementById('jobModal').style.display = 'none';
@@ -28,6 +72,296 @@
             // This function would refresh the inventory display
             // For now, it's a placeholder since we're using static HTML
             console.log('Inventory cards refreshed');
+        }
+
+        // OODA Functions
+        function updateOODAPhaseStatus() {
+            // Update OODA phase indicators
+            const phases = document.querySelectorAll('.ooda-phase');
+            phases.forEach(phase => {
+                phase.classList.remove('active', 'completed', 'pending');
+            });
+            
+            // Simulate OODA cycle progression
+            const currentTime = new Date();
+            if (currentTime - oodaState.lastCycleTime < 5 * 60 * 1000) { // Within 5 minutes of last cycle
+                phases[0].classList.add('completed'); // Observe
+                phases[1].classList.add('completed'); // Orient
+                phases[2].classList.add('completed'); // Decide
+                phases[3].classList.add('pending');   // Act (waiting for approval)
+            } else {
+                phases[0].classList.add('active');    // Currently observing
+            }
+        }
+
+        function updatePendingApprovalsList() {
+            const pendingPlans = maintenancePlans.filter(plan => plan.status === 'pending');
+            const listContainer = document.getElementById('pendingApprovalsList');
+            
+            if (!listContainer) return;
+            
+            if (pendingPlans.length === 0) {
+                listContainer.innerHTML = '<div class="approval-item"><div class="approval-info"><div class="approval-title">No pending approvals</div><div class="approval-details">All maintenance plans are up to date</div></div></div>';
+                return;
+            }
+
+            listContainer.innerHTML = pendingPlans.map(plan => `
+                <div class="approval-item">
+                    <div class="approval-info">
+                        <div class="approval-title">${plan.title}</div>
+                        <div class="approval-details">EAR: $${plan.ear.toLocaleString()} over ${plan.timeHorizon}h | Priority: ${plan.priority} | Affected: ${plan.affectedAssets.join(', ')}</div>
+                    </div>
+                    <div class="approval-actions">
+                        <button class="btn btn-success" onclick="approveMaintenancePlan('${plan.id}')">✓ Approve</button>
+                        <button class="btn btn-secondary" onclick="viewMaintenancePlan('${plan.id}')">View Details</button>
+                        <button class="btn btn-danger" onclick="rejectMaintenancePlan('${plan.id}')">✗ Reject</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        function addActivityStreamItem(type, title, description) {
+            const streamContainer = document.getElementById('oodaActivityStream');
+            if (!streamContainer) return;
+            
+            const icons = { observe: '👁️', orient: '🧭', decide: '🎯', act: '⚡' };
+            
+            const newItem = document.createElement('div');
+            newItem.className = 'activity-item';
+            newItem.innerHTML = `
+                <div class="activity-icon ${type}">${icons[type]}</div>
+                <div class="activity-content">
+                    <div class="activity-title">${title}</div>
+                    <div class="activity-description">${description}</div>
+                    <div class="activity-time">Just now</div>
+                </div>
+            `;
+            
+            streamContainer.insertBefore(newItem, streamContainer.firstChild);
+            
+            // Remove items beyond 10
+            while (streamContainer.children.length > 10) {
+                streamContainer.removeChild(streamContainer.lastChild);
+            }
+        }
+
+        function approveMaintenancePlan(planId) {
+            const plan = maintenancePlans.find(p => p.id === planId);
+            if (plan) {
+                plan.status = 'approved';
+                plan.approvedAt = new Date();
+                
+                // Add to activity stream
+                addActivityStreamItem('act', 'Maintenance Plan Approved', `${plan.title} approved and scheduled for execution`);
+                
+                // Update UI
+                updatePendingApprovalsList();
+                updateMaintenanceMetrics();
+                displayMaintenancePlans();
+                
+                // Show notification
+                showNotification('Success', `Maintenance plan "${plan.title}" has been approved and will be executed.`);
+                
+                // Simulate work order creation
+                setTimeout(() => {
+                    addActivityStreamItem('act', 'Work Order Created', `Work order generated for ${plan.title}`);
+                }, 2000);
+            }
+        }
+
+        function rejectMaintenancePlan(planId) {
+            const plan = maintenancePlans.find(p => p.id === planId);
+            if (plan && confirm(`Are you sure you want to reject the maintenance plan: ${plan.title}?`)) {
+                plan.status = 'rejected';
+                plan.rejectedAt = new Date();
+                
+                // Add to activity stream
+                addActivityStreamItem('decide', 'Maintenance Plan Rejected', `${plan.title} rejected - OODA will generate alternative plan`);
+                
+                // Update UI
+                updatePendingApprovalsList();
+                updateMaintenanceMetrics();
+                displayMaintenancePlans();
+                
+                // Show notification
+                showNotification('Plan Rejected', `Maintenance plan "${plan.title}" has been rejected. OODA will generate alternative recommendations.`);
+            }
+        }
+
+        function viewMaintenancePlan(planId) {
+            const plan = maintenancePlans.find(p => p.id === planId);
+            if (!plan) return;
+            
+            alert(`Maintenance Plan Details:\n\nTitle: ${plan.title}\nSite: ${plan.site}\nPriority: ${plan.priority}\nEAR: $${plan.ear.toLocaleString()} over ${plan.timeHorizon}h\nAffected Assets: ${plan.affectedAssets.join(', ')}\nDescription: ${plan.description}\nEstimated Duration: ${plan.estimatedDuration}\nRequired Parts: ${plan.requiredParts.join(', ')}\nGenerated: ${plan.generatedAt.toLocaleString()}`);
+        }
+
+        function showNotification(title, message, type = 'success') {
+            // Simple notification - could be enhanced with a proper notification system
+            console.log(`[${type.toUpperCase()}] ${title}: ${message}`);
+        }
+
+        // OODA Maintenance Management Functions
+        function updateMaintenanceMetrics() {
+            const pending = maintenancePlans.filter(p => p.status === 'pending').length;
+            const active = maintenancePlans.filter(p => p.status === 'approved').length;
+            const completed = maintenancePlans.filter(p => p.status === 'completed').length;
+            const avoidedEAR = maintenancePlans.filter(p => p.status === 'completed').reduce((sum, p) => sum + p.ear, 0);
+            
+            if (document.getElementById('pendingPlans')) {
+                document.getElementById('pendingPlans').textContent = pending;
+                document.getElementById('activePlans').textContent = active;
+                document.getElementById('completedPlans').textContent = completed;
+                document.getElementById('avoidedEAR').textContent = '$' + avoidedEAR.toLocaleString();
+            }
+        }
+
+        function displayMaintenancePlans() {
+            const grid = document.getElementById('maintenancePlansGrid');
+            if (!grid) return;
+            
+            const allPlans = [...maintenancePlans].sort((a, b) => {
+                // Sort by status priority: pending, approved, completed
+                const statusOrder = { pending: 0, approved: 1, completed: 2 };
+                return statusOrder[a.status] - statusOrder[b.status];
+            });
+            
+            grid.innerHTML = allPlans.map(plan => `
+                <div class="maintenance-plan-card ${plan.status}">
+                    <div class="maintenance-plan-header">
+                        <div class="maintenance-plan-title">${plan.title}</div>
+                        <div class="maintenance-plan-status ${plan.status}">${plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}</div>
+                    </div>
+                    <div class="maintenance-plan-details">
+                        <div class="maintenance-plan-detail-row">
+                            <span class="maintenance-plan-detail-label">Priority:</span>
+                            <span class="maintenance-plan-detail-value priority-${plan.priority.toLowerCase()}">${plan.priority}</span>
+                        </div>
+                        <div class="maintenance-plan-detail-row">
+                            <span class="maintenance-plan-detail-label">EAR:</span>
+                            <span class="maintenance-plan-detail-value">$${plan.ear.toLocaleString()}</span>
+                        </div>
+                        <div class="maintenance-plan-detail-row">
+                            <span class="maintenance-plan-detail-label">Duration:</span>
+                            <span class="maintenance-plan-detail-value">${plan.estimatedDuration}</span>
+                        </div>
+                        <div class="maintenance-plan-detail-row">
+                            <span class="maintenance-plan-detail-label">Generated:</span>
+                            <span class="maintenance-plan-detail-value">${plan.generatedAt.toLocaleDateString()}</span>
+                        </div>
+                    </div>
+                    <div class="maintenance-plan-actions">
+                        ${plan.status === 'pending' ? `
+                            <button class="btn btn-success" onclick="approveMaintenancePlan('${plan.id}')">✓ Approve</button>
+                            <button class="btn btn-danger" onclick="rejectMaintenancePlan('${plan.id}')">✗ Reject</button>
+                        ` : ''}
+                        <button class="btn btn-secondary" onclick="viewMaintenancePlan('${plan.id}')">View Details</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+
+        // Off-cycle OODA Analysis Functions
+        function triggerOffCycleAnalysis() {
+            const asset = document.getElementById('offCycleAsset').value;
+            const severity = document.getElementById('offCycleSeverity').value;
+            
+            // Show loading state
+            const btn = event.target;
+            const originalText = btn.textContent;
+            btn.textContent = '🔄 Analyzing...';
+            btn.disabled = true;
+            
+            // Simulate OODA analysis
+            setTimeout(() => {
+                // Add to activity stream
+                addActivityStreamItem('observe', 'Off-Cycle Analysis Initiated', `Manual OODA analysis triggered for ${asset === 'all' ? 'all sites' : asset}`);
+                
+                // Simulate analysis completion
+                setTimeout(() => {
+                    addActivityStreamItem('orient', 'Off-Cycle Analysis Completed', 'Analysis identified 2 new maintenance opportunities');
+                    
+                    // Simulate new maintenance plan generation
+                    setTimeout(() => {
+                        const newPlan = {
+                            id: 'plan-' + Date.now(),
+                            title: `${asset === 'all' ? 'Multi-Site' : asset} - Off-Cycle Analysis`,
+                            site: asset,
+                            priority: 'Medium',
+                            ear: Math.round(Math.random() * 2000) + 500,
+                            timeHorizon: 48,
+                            affectedAssets: ['TBD'],
+                            status: 'pending',
+                            generatedAt: new Date(),
+                            description: 'Off-cycle analysis detected optimization opportunities.',
+                            estimatedDuration: '3 hours',
+                            requiredParts: ['TBD'],
+                            scheduledDate: null,
+                            assignedTechnician: null
+                        };
+                        
+                        maintenancePlans.unshift(newPlan);
+                        addActivityStreamItem('decide', 'New Maintenance Plan Generated', 'Off-cycle analysis generated new maintenance recommendation');
+                        updatePendingApprovalsList();
+                        updateMaintenanceMetrics();
+                        displayMaintenancePlans();
+                        
+                    }, 2000);
+                }, 3000);
+                
+                // Reset button
+                btn.textContent = originalText;
+                btn.disabled = false;
+                
+                showNotification('Analysis Complete', `Off-cycle OODA analysis completed for ${asset === 'all' ? 'all sites' : asset}`);
+                
+            }, 5000);
+        }
+
+        function viewOODALogs() {
+            alert('OODA Logs would show detailed audit trail of all automated decisions and their reasoning.\n\nThis feature would display:\n- Fault detection events\n- Risk analysis calculations\n- Decision parameters\n- Execution results\n- Performance metrics');
+        }
+
+        // WebSocket Simulation for Real-time OODA Updates
+        let oodaWebSocket = null;
+
+        function initializeWebSocket() {
+            // Simulate WebSocket connection for OODA updates
+            console.log('Initializing OODA WebSocket connection...');
+            
+            // Simulate periodic updates
+            setInterval(() => {
+                simulateOODAUpdate();
+            }, 30000); // Every 30 seconds
+        }
+
+        function simulateOODAUpdate() {
+            const updateTypes = ['fault_detected', 'analysis_completed', 'plan_generated', 'cycle_completed'];
+            const randomUpdate = updateTypes[Math.floor(Math.random() * updateTypes.length)];
+            
+            handleOODAUpdate(randomUpdate);
+        }
+
+        function handleOODAUpdate(updateType) {
+            switch (updateType) {
+                case 'fault_detected':
+                    addActivityStreamItem('observe', 'New Fault Detected', 'Temperature anomaly detected at Cummins Midrand INV-005');
+                    break;
+                case 'analysis_completed':
+                    addActivityStreamItem('orient', 'Risk Analysis Completed', 'EAR calculation updated: $3,240 potential losses identified');
+                    break;
+                case 'plan_generated':
+                    addActivityStreamItem('decide', 'Maintenance Plan Generated', 'New maintenance plan awaiting approval');
+                    updatePendingApprovalsList();
+                    updateMaintenanceMetrics();
+                    displayMaintenancePlans();
+                    break;
+                case 'cycle_completed':
+                    updateOODAPhaseStatus();
+                    break;
+            }
+            
+            // Update dashboard metrics
+            updateDashboardMetrics();
         }
         
         // Site inventory management functions
@@ -712,6 +1046,10 @@
                 // Solar sites are now static HTML, no need to populate dynamically
                 console.log('Dashboard loaded with solar sites');
             }
+            
+            // Initialize OODA widgets
+            updateOODAPhaseStatus();
+            updatePendingApprovalsList();
         }
 
         // Load other sections (placeholder implementations)
@@ -2415,6 +2753,11 @@
         ];
 
         function loadMaintenance() {
+            // Initialize OODA maintenance section
+            updateMaintenanceMetrics();
+            displayMaintenancePlans();
+            
+            // Load existing maintenance sections
             loadMaintenanceTasks();
             loadFirmwareManagement();
             loadMaintenanceHistory();
@@ -3325,6 +3668,9 @@
             
             // Initialize with dashboard
             switchSection('dashboard');
+            
+            // Initialize OODA WebSocket simulation
+            initializeWebSocket();
             
             // Animate metrics on load
             animateMetrics();
