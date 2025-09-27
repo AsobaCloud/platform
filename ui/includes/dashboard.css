@@ -12,13 +12,27 @@
 }
 
 .dashboard-nav {
-    width: 200px;
+    width: 280px;
     background-color: var(--primary-black);
     padding: 20px;
     display: flex;
     flex-direction: column;
     gap: 10px;
     min-height: calc(100vh - 70px);
+}
+
+/* Shared Navigation Classes for Consistency */
+.gpu-nav,
+.server-nav {
+    width: 280px;
+    min-width: 280px;
+    max-width: 280px;
+    background-color: var(--primary-black);
+    padding: 20px;
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    flex-shrink: 0;
 }
 
 .nav-button {
@@ -32,6 +46,11 @@
     border-radius: 4px;
     cursor: pointer;
     transition: background-color 0.3s ease;
+    width: 100%;
+    box-sizing: border-box;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
 }
 
 .nav-button:hover {
@@ -41,6 +60,26 @@
 .nav-button.active {
     background-color: var(--primary-blue);
     border-color: var(--primary-blue);
+}
+
+/* Shared Navigation Section Styles */
+.nav-section {
+    margin-bottom: 30px;
+}
+
+.nav-section-title {
+    color: var(--white);
+    font-size: 14px;
+    font-weight: 600;
+    margin-bottom: 15px;
+    opacity: 0.8;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+}
+
+.nav-icon {
+    margin-right: 10px;
+    font-size: 18px;
 }
 
 .dashboard-main-content {

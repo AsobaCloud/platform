@@ -16,28 +16,7 @@
             min-height: calc(100vh - 70px);
         }
 
-        .gpu-nav {
-            width: 280px;
-            background-color: var(--primary-black);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            gap: 10px;
-        }
-
-        .nav-section {
-            margin-bottom: 30px;
-        }
-
-        .nav-section-title {
-            color: var(--white);
-            font-size: 14px;
-            font-weight: 600;
-            margin-bottom: 15px;
-            opacity: 0.8;
-            text-transform: uppercase;
-            letter-spacing: 0.5px;
-        }
+        /* Navigation styles now handled by dashboard.css */
 
         .nav-button {
             background-color: #2b2b2b;
@@ -2869,29 +2848,33 @@
                         <span class="nav-icon">🖥️</span>
                         Inventory
                     </button>
-                    <button class="nav-button" data-section="allocation">
-                        <span class="nav-icon">⚡</span>
-                        Resource Allocation
+                    <button class="nav-button" data-section="performance">
+                        <span class="nav-icon">📈</span>
+                        Performance
                     </button>
                 </div>
                 
                 <div class="nav-section">
-                    <div class="nav-section-title">Monitoring</div>
-                    <button class="nav-button" data-section="performance">
-                        <span class="nav-icon">📈</span>
-                        Performance
+                    <div class="nav-section-title">Operations</div>
+                    <button class="nav-button" data-section="allocation">
+                        <span class="nav-icon">⚡</span>
+                        Resource Allocation
                     </button>
                     <button class="nav-button" data-section="maintenance">
                         <span class="nav-icon">🔧</span>
                         Maintenance
                     </button>
-                    <button class="nav-button" data-section="analytics">
-                        <span class="nav-icon">📊</span>
-                        Analytics
-                    </button>
                     <button class="nav-button" data-section="bom-builder">
                         <span class="nav-icon">📋</span>
                         BOM Builder
+                    </button>
+                </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">Analytics</div>
+                    <button class="nav-button" data-section="analytics">
+                        <span class="nav-icon">📊</span>
+                        Analytics
                     </button>
                 </div>
             </nav>
