@@ -19,6 +19,71 @@
             window.location.href = 'index.html';
         }
 
+        // Universal Modal System Functions
+        function showInfoModal(title, message) {
+            showModal(title, message, 'info', [{ text: 'OK', type: 'primary', action: 'close' }]);
+        }
+
+        function showSuccessModal(title, message) {
+            showModal(title, message, 'success', [{ text: 'OK', type: 'success', action: 'close' }]);
+        }
+
+        function showErrorModal(title, message) {
+            showModal(title, message, 'error', [{ text: 'OK', type: 'danger', action: 'close' }]);
+        }
+
+        function showWarningModal(title, message) {
+            showModal(title, message, 'warning', [{ text: 'OK', type: 'warning', action: 'close' }]);
+        }
+
+        function showConfirmModal(title, message, onConfirm, onCancel = null) {
+            showModal(title, message, 'confirm', [
+                { text: 'Cancel', type: 'secondary', action: 'cancel' },
+                { text: 'Confirm', type: 'danger', action: 'confirm' }
+            ], onConfirm, onCancel);
+        }
+
+        function showModal(title, message, type = 'info', buttons = [], onConfirm = null, onCancel = null) {
+            const modal = document.getElementById('universalModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const modalFooter = document.getElementById('modalFooter');
+
+            // Set title and message
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+
+            // Set modal type class
+            modal.className = `modal-overlay modal-${type}`;
+
+            // Clear existing buttons
+            modalFooter.innerHTML = '';
+
+            // Add buttons
+            buttons.forEach(button => {
+                const btn = document.createElement('button');
+                btn.className = `modal-btn modal-btn-${button.type}`;
+                btn.textContent = button.text;
+                btn.onclick = () => {
+                    if (button.action === 'confirm' && onConfirm) {
+                        onConfirm();
+                    } else if (button.action === 'cancel' && onCancel) {
+                        onCancel();
+                    }
+                    closeUniversalModal();
+                };
+                modalFooter.appendChild(btn);
+            });
+
+            // Show modal
+            modal.classList.add('active');
+        }
+
+        function closeUniversalModal() {
+            const modal = document.getElementById('universalModal');
+            modal.classList.remove('active');
+        }
+
         // OODA State Management
         let oodaState = {
             currentPhase: 'observe',
@@ -336,85 +401,7 @@
             showInfoModal('OODA Logs', 'OODA Logs would show detailed audit trail of all automated decisions and their reasoning.\n\nThis feature would display:\n- Fault detection events\n- Risk analysis calculations\n- Decision parameters\n- Execution results\n- Performance metrics');
         }
 
-        // Universal Modal System Functions
-        function showInfoModal(title, message) {
-            showModal(title, message, 'info', [{ text: 'OK', type: 'primary', action: 'close' }]);
-        }
-
-        function showSuccessModal(title, message) {
-            showModal(title, message, 'success', [{ text: 'OK', type: 'success', action: 'close' }]);
-        }
-
-        function showErrorModal(title, message) {
-            showModal(title, message, 'error', [{ text: 'OK', type: 'danger', action: 'close' }]);
-        }
-
-        function showWarningModal(title, message) {
-            showModal(title, message, 'warning', [{ text: 'OK', type: 'warning', action: 'close' }]);
-        }
-
-        function showConfirmModal(title, message, onConfirm, onCancel = null) {
-            showModal(title, message, 'confirm', [
-                { text: 'Cancel', type: 'secondary', action: 'cancel' },
-                { text: 'Confirm', type: 'danger', action: 'confirm' }
-            ], onConfirm, onCancel);
-        }
-
-        function showModal(title, message, type = 'info', buttons = [], onConfirm = null, onCancel = null) {
-            const modal = document.getElementById('universalModal');
-            const modalTitle = document.getElementById('modalTitle');
-            const modalMessage = document.getElementById('modalMessage');
-            const modalFooter = document.getElementById('modalFooter');
-
-            // Set title and message
-            modalTitle.textContent = title;
-            modalMessage.textContent = message;
-
-            // Set modal type class
-            modal.className = `modal-overlay modal-${type}`;
-
-            // Clear existing buttons
-            modalFooter.innerHTML = '';
-
-            // Add buttons
-            buttons.forEach(button => {
-                const btn = document.createElement('button');
-                btn.className = `modal-btn modal-btn-${button.type}`;
-                btn.textContent = button.text;
-                btn.onclick = () => {
-                    if (button.action === 'confirm' && onConfirm) {
-                        onConfirm();
-                    } else if (button.action === 'cancel' && onCancel) {
-                        onCancel();
-                    }
-                    closeUniversalModal();
-                };
-                modalFooter.appendChild(btn);
-            });
-
-            // Show modal
-            modal.classList.add('active');
-        }
-
-        function closeUniversalModal() {
-            const modal = document.getElementById('universalModal');
-            modal.classList.remove('active');
-        }
-
-        // Close modal when clicking overlay
-        document.addEventListener('click', function(e) {
-            const modal = document.getElementById('universalModal');
-            if (e.target === modal) {
-                closeUniversalModal();
-            }
-        });
-
-        // Close modal with Escape key
-        document.addEventListener('keydown', function(e) {
-            if (e.key === 'Escape') {
-                closeUniversalModal();
-            }
-        });
+        // Modal event listeners moved to DOMContentLoaded
 
         // BOM Builder Functions
         let currentBOM = [];
@@ -818,7 +805,7 @@
             }
             
             // Update dashboard metrics
-            updateDashboardMetrics();
+            loadDashboard();
         }
         
         // Site inventory management functions
@@ -4134,6 +4121,22 @@
             
             // Animate metrics on load
             animateMetrics();
+
+            // Modal event listeners
+            // Close modal when clicking overlay
+            document.addEventListener('click', function(e) {
+                const modal = document.getElementById('universalModal');
+                if (e.target === modal) {
+                    closeUniversalModal();
+                }
+            });
+
+            // Close modal with Escape key
+            document.addEventListener('keydown', function(e) {
+                if (e.key === 'Escape') {
+                    closeUniversalModal();
+                }
+            });
         });
 
         // Animate metrics

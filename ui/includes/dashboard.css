@@ -194,7 +194,7 @@
 }
 
 .modal-btn-primary:hover {
-    background-color: var(--secondary-blue);
+    background-color: var(--accent-blue);
 }
 
 .modal-btn-secondary {
