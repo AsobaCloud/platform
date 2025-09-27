@@ -148,43 +148,55 @@
         function approveMaintenancePlan(planId) {
             const plan = maintenancePlans.find(p => p.id === planId);
             if (plan) {
-                plan.status = 'approved';
-                plan.approvedAt = new Date();
-                
-                // Add to activity stream
-                addActivityStreamItem('act', 'Maintenance Plan Approved', `${plan.title} approved and scheduled for execution`);
-                
-                // Update UI
-                updatePendingApprovalsList();
-                updateMaintenanceMetrics();
-                displayMaintenancePlans();
-                
-                // Show notification
-                showNotification('Success', `Maintenance plan "${plan.title}" has been approved and will be executed.`);
-                
-                // Simulate work order creation
-                setTimeout(() => {
-                    addActivityStreamItem('act', 'Work Order Created', `Work order generated for ${plan.title}`);
-                }, 2000);
+                showConfirmModal(
+                    'Approve Maintenance Plan',
+                    `Are you sure you want to approve this maintenance plan?\n\nPlan: ${plan.title}\nSite: ${plan.site}\nPriority: ${plan.priority}\nEAR: $${plan.ear.toLocaleString()} over ${plan.timeHorizon}h\nAffected Assets: ${plan.affectedAssets.join(', ')}`,
+                    () => {
+                        plan.status = 'approved';
+                        plan.approvedAt = new Date();
+                        
+                        // Add to activity stream
+                        addActivityStreamItem('act', 'Maintenance Plan Approved', `${plan.title} approved and scheduled for execution`);
+                        
+                        // Update UI
+                        updatePendingApprovalsList();
+                        updateMaintenanceMetrics();
+                        displayMaintenancePlans();
+                        
+                        // Show success modal
+                        showSuccessModal('Plan Approved', `Maintenance plan "${plan.title}" has been approved and will be executed.`);
+                        
+                        // Simulate work order creation
+                        setTimeout(() => {
+                            addActivityStreamItem('act', 'Work Order Created', `Work order generated for ${plan.title}`);
+                        }, 2000);
+                    }
+                );
             }
         }
 
         function rejectMaintenancePlan(planId) {
             const plan = maintenancePlans.find(p => p.id === planId);
-            if (plan && confirm(`Are you sure you want to reject the maintenance plan: ${plan.title}?`)) {
-                plan.status = 'rejected';
-                plan.rejectedAt = new Date();
-                
-                // Add to activity stream
-                addActivityStreamItem('decide', 'Maintenance Plan Rejected', `${plan.title} rejected - OODA will generate alternative plan`);
-                
-                // Update UI
-                updatePendingApprovalsList();
-                updateMaintenanceMetrics();
-                displayMaintenancePlans();
-                
-                // Show notification
-                showNotification('Plan Rejected', `Maintenance plan "${plan.title}" has been rejected. OODA will generate alternative recommendations.`);
+            if (plan) {
+                showConfirmModal(
+                    'Reject Maintenance Plan',
+                    `Are you sure you want to reject this maintenance plan?\n\nPlan: ${plan.title}\nSite: ${plan.site}\nPriority: ${plan.priority}\nEAR: $${plan.ear.toLocaleString()} over ${plan.timeHorizon}h\n\nThis action cannot be undone. OODA will generate alternative recommendations.`,
+                    () => {
+                        plan.status = 'rejected';
+                        plan.rejectedAt = new Date();
+                        
+                        // Add to activity stream
+                        addActivityStreamItem('decide', 'Maintenance Plan Rejected', `${plan.title} rejected - OODA will generate alternative plan`);
+                        
+                        // Update UI
+                        updatePendingApprovalsList();
+                        updateMaintenanceMetrics();
+                        displayMaintenancePlans();
+                        
+                        // Show warning modal
+                        showWarningModal('Plan Rejected', `Maintenance plan "${plan.title}" has been rejected. OODA will generate alternative recommendations.`);
+                    }
+                );
             }
         }
 
@@ -192,7 +204,10 @@
             const plan = maintenancePlans.find(p => p.id === planId);
             if (!plan) return;
             
-            alert(`Maintenance Plan Details:\n\nTitle: ${plan.title}\nSite: ${plan.site}\nPriority: ${plan.priority}\nEAR: $${plan.ear.toLocaleString()} over ${plan.timeHorizon}h\nAffected Assets: ${plan.affectedAssets.join(', ')}\nDescription: ${plan.description}\nEstimated Duration: ${plan.estimatedDuration}\nRequired Parts: ${plan.requiredParts.join(', ')}\nGenerated: ${plan.generatedAt.toLocaleString()}`);
+            showInfoModal(
+                'Maintenance Plan Details',
+                `Title: ${plan.title}\nSite: ${plan.site}\nPriority: ${plan.priority}\nEAR: $${plan.ear.toLocaleString()} over ${plan.timeHorizon}h\nAffected Assets: ${plan.affectedAssets.join(', ')}\nDescription: ${plan.description}\nEstimated Duration: ${plan.estimatedDuration}\nRequired Parts: ${plan.requiredParts.join(', ')}\nGenerated: ${plan.generatedAt.toLocaleString()}`
+            );
         }
 
         function showNotification(title, message, type = 'success') {
@@ -318,8 +333,88 @@
         }
 
         function viewOODALogs() {
-            alert('OODA Logs would show detailed audit trail of all automated decisions and their reasoning.\n\nThis feature would display:\n- Fault detection events\n- Risk analysis calculations\n- Decision parameters\n- Execution results\n- Performance metrics');
+            showInfoModal('OODA Logs', 'OODA Logs would show detailed audit trail of all automated decisions and their reasoning.\n\nThis feature would display:\n- Fault detection events\n- Risk analysis calculations\n- Decision parameters\n- Execution results\n- Performance metrics');
         }
+
+        // Universal Modal System Functions
+        function showInfoModal(title, message) {
+            showModal(title, message, 'info', [{ text: 'OK', type: 'primary', action: 'close' }]);
+        }
+
+        function showSuccessModal(title, message) {
+            showModal(title, message, 'success', [{ text: 'OK', type: 'success', action: 'close' }]);
+        }
+
+        function showErrorModal(title, message) {
+            showModal(title, message, 'error', [{ text: 'OK', type: 'danger', action: 'close' }]);
+        }
+
+        function showWarningModal(title, message) {
+            showModal(title, message, 'warning', [{ text: 'OK', type: 'warning', action: 'close' }]);
+        }
+
+        function showConfirmModal(title, message, onConfirm, onCancel = null) {
+            showModal(title, message, 'confirm', [
+                { text: 'Cancel', type: 'secondary', action: 'cancel' },
+                { text: 'Confirm', type: 'danger', action: 'confirm' }
+            ], onConfirm, onCancel);
+        }
+
+        function showModal(title, message, type = 'info', buttons = [], onConfirm = null, onCancel = null) {
+            const modal = document.getElementById('universalModal');
+            const modalTitle = document.getElementById('modalTitle');
+            const modalMessage = document.getElementById('modalMessage');
+            const modalFooter = document.getElementById('modalFooter');
+
+            // Set title and message
+            modalTitle.textContent = title;
+            modalMessage.textContent = message;
+
+            // Set modal type class
+            modal.className = `modal-overlay modal-${type}`;
+
+            // Clear existing buttons
+            modalFooter.innerHTML = '';
+
+            // Add buttons
+            buttons.forEach(button => {
+                const btn = document.createElement('button');
+                btn.className = `modal-btn modal-btn-${button.type}`;
+                btn.textContent = button.text;
+                btn.onclick = () => {
+                    if (button.action === 'confirm' && onConfirm) {
+                        onConfirm();
+                    } else if (button.action === 'cancel' && onCancel) {
+                        onCancel();
+                    }
+                    closeUniversalModal();
+                };
+                modalFooter.appendChild(btn);
+            });
+
+            // Show modal
+            modal.classList.add('active');
+        }
+
+        function closeUniversalModal() {
+            const modal = document.getElementById('universalModal');
+            modal.classList.remove('active');
+        }
+
+        // Close modal when clicking overlay
+        document.addEventListener('click', function(e) {
+            const modal = document.getElementById('universalModal');
+            if (e.target === modal) {
+                closeUniversalModal();
+            }
+        });
+
+        // Close modal with Escape key
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'Escape') {
+                closeUniversalModal();
+            }
+        });
 
         // BOM Builder Functions
         let currentBOM = [];
@@ -616,7 +711,7 @@
 
         function exportBOM() {
             if (currentBOM.length === 0) {
-                alert('No components in BOM to export.');
+                showWarningModal('No Components', 'No components in BOM to export.');
                 return;
             }
 
@@ -650,33 +745,37 @@
             document.body.removeChild(a);
             URL.revokeObjectURL(url);
 
-            alert(`BOM exported successfully!\n\nComponents: ${currentBOM.length}\nTotal Cost: $${(bomData.items.reduce((sum, item) => sum + (item.price_usd * item.qty), 0)).toFixed(2)}`);
+            showSuccessModal('BOM Exported', `BOM exported successfully!\n\nComponents: ${currentBOM.length}\nTotal Cost: $${(bomData.items.reduce((sum, item) => sum + (item.price_usd * item.qty), 0)).toFixed(2)}`);
         }
 
         function clearBOM() {
             if (currentBOM.length === 0) {
-                alert('BOM is already empty.');
+                showInfoModal('BOM Empty', 'BOM is already empty.');
                 return;
             }
 
-            if (confirm(`Are you sure you want to clear all ${currentBOM.length} components from the BOM?`)) {
-                currentBOM = [];
-                updateBOMDisplay();
-                updateEARCalculation();
-                updateBOMMetrics();
-                alert('BOM cleared successfully.');
-            }
+            showConfirmModal(
+                'Clear BOM',
+                `Are you sure you want to clear all ${currentBOM.length} components from the BOM?\n\nThis action cannot be undone.`,
+                () => {
+                    currentBOM = [];
+                    updateBOMDisplay();
+                    updateEARCalculation();
+                    updateBOMMetrics();
+                    showSuccessModal('BOM Cleared', 'BOM cleared successfully.');
+                }
+            );
         }
 
         function saveBOM() {
             if (currentBOM.length === 0) {
-                alert('No components in BOM to save.');
+                showWarningModal('No Components', 'No components in BOM to save.');
                 return;
             }
 
             // In a real implementation, this would save to the backend
             // For now, we'll just show a success message
-            alert(`BOM saved successfully!\n\nComponents: ${currentBOM.length}\nTotal Cost: $${(currentBOM.reduce((sum, item) => sum + (item.price_usd * item.qty), 0)).toFixed(2)}\n\nThis would be saved to the OODA backend system.`);
+            showSuccessModal('BOM Saved', `BOM saved successfully!\n\nComponents: ${currentBOM.length}\nTotal Cost: $${(currentBOM.reduce((sum, item) => sum + (item.price_usd * item.qty), 0)).toFixed(2)}\n\nThis would be saved to the OODA backend system.`);
         }
 
         // WebSocket Simulation for Real-time OODA Updates
