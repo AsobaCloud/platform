@@ -2860,6 +2860,10 @@
                         <span class="nav-icon">⚡</span>
                         Resource Allocation
                     </button>
+                    <button class="nav-button" data-section="issues">
+                        <span class="nav-icon">⚠️</span>
+                        Component Issues
+                    </button>
                     <button class="nav-button" data-section="maintenance">
                         <span class="nav-icon">🔧</span>
                         Maintenance
@@ -3759,11 +3763,85 @@
                     </div>
                 </div>
 
+                <!-- Component Issues Section -->
+                <div class="content-section" id="issues">
+                    <div class="section-header">
+                        <h1 class="section-title">Component Issues</h1>
+                        <p class="section-subtitle">Monitor component health and failure probabilities across time windows</p>
+                    </div>
+                    
+                    <div class="issues-overview">
+                        <div class="issues-metrics">
+                            <div class="metric-card">
+                                <div class="metric-value" id="totalIssues">12</div>
+                                <div class="metric-label">Total Issues</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value" id="criticalIssues">3</div>
+                                <div class="metric-label">Critical</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value" id="highRiskIssues">5</div>
+                                <div class="metric-label">High Risk</div>
+                            </div>
+                            <div class="metric-card">
+                                <div class="metric-value" id="totalEAR">$12,450</div>
+                                <div class="metric-label">Total EAR</div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <div class="issues-table-section">
+                        <div class="table-header">
+                            <h3>Component Issues List</h3>
+                            <div class="table-controls">
+                                <button class="chart-btn active" onclick="filterIssuesTable('all')">All Issues</button>
+                                <button class="chart-btn" onclick="filterIssuesTable('critical')">Critical Only</button>
+                                <button class="chart-btn" onclick="filterIssuesTable('site')">By Site</button>
+                            </div>
+                        </div>
+                        
+                        <div class="analytics-table-container">
+                            <table class="analytics-table" id="issuesTable">
+                                <thead>
+                                    <tr>
+                                        <th>Component</th>
+                                        <th>Site</th>
+                                        <th>Issue Type</th>
+                                        <th>Failure Probability</th>
+                                        <th>EAR Impact</th>
+                                        <th>Time Window</th>
+                                        <th>Status</th>
+                                        <th>Actions</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="issuesTableBody">
+                                    <!-- Issues will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+                </div>
+
                 <!-- BOM Builder Section -->
                 <div class="content-section" id="bom-builder">
                     <div class="section-header">
                         <h1 class="section-title">BOM Builder</h1>
                         <p class="section-subtitle">Manual Bill of Materials creation with EAR-based component selection</p>
+                    </div>
+                    
+                    <!-- Step 1: Issue Selection -->
+                    <div class="bom-issue-selection">
+                        <div class="form-group">
+                            <label class="form-label">Step 1: Select Issue to Address</label>
+                            <select id="selectedIssue" class="form-select issue-selector" onchange="updateBOMForIssue()">
+                                <option value="">-- Select an Issue --</option>
+                                <!-- Options will be populated by JavaScript -->
+                            </select>
+                        </div>
+                        <div id="selectedIssueDetails" class="issue-details" style="display: none;">
+                            <!-- Issue details will be populated here -->
+                        </div>
                     </div>
 
                     <!-- BOM Project Overview -->
@@ -3778,6 +3856,16 @@
                                 <span class="metric-value" id="maxLeadTime">0 days</span>
                                 <span class="metric-label">Max Lead Time</span>
                                 <span class="metric-change">Longest component delivery</span>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-value" id="targetInstallDateDisplay">Not Set</span>
+                                <span class="metric-label">Target Install Date</span>
+                                <span class="metric-change">Planned installation date</span>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-value" id="earliestOrderDate">Not Set</span>
+                                <span class="metric-label">Earliest Order Date</span>
+                                <span class="metric-change">When to start ordering</span>
                             </div>
                             <div class="metric-card">
                                 <span class="metric-value" id="totalEarImpact">$0</span>
@@ -3860,12 +3948,52 @@
                                 </div>
                             </div>
 
-                            <!-- BOM Actions -->
-                            <div class="bom-actions">
-                                <button class="btn btn-primary" onclick="exportBOM()">📄 Export BOM</button>
-                                <button class="btn btn-secondary" onclick="clearBOM()">🗑️ Clear BOM</button>
-                                <button class="btn btn-success" onclick="saveBOM()">💾 Save BOM</button>
+                        </div>
+                    </div>
+
+                    <!-- Step 3: Install Date Selection -->
+                    <div class="bom-install-date-section" style="display: none;">
+                        <div class="form-group">
+                            <label class="form-label">Step 3: Select Target Install Date</label>
+                            <div class="install-date-info">
+                                <p class="earliest-date-info">Earliest viable install date: <span id="earliestViableDate">Calculating...</span></p>
+                                <input type="date" id="targetInstallDate" class="form-select" onchange="updateOrderSchedule()">
                             </div>
+                        </div>
+                        <div id="orderSchedule" class="order-schedule" style="display: none;">
+                            <!-- Order schedule will be populated here -->
+                        </div>
+                    </div>
+
+                    <!-- Step 4: Cost & Timeline Review -->
+                    <div class="bom-review-section" style="display: none;">
+                        <h3>Step 4: Review Cost & Timeline</h3>
+                        <div class="review-summary">
+                            <div class="review-item">
+                                <span class="review-label">Total Material Cost:</span>
+                                <span class="review-value" id="reviewMaterialCost">$0</span>
+                            </div>
+                            <div class="review-item">
+                                <span class="review-label">Total EAR Impact:</span>
+                                <span class="review-value" id="reviewEarImpact">$0</span>
+                            </div>
+                            <div class="review-item">
+                                <span class="review-label">Target Install Date:</span>
+                                <span class="review-value" id="reviewInstallDate">Not Set</span>
+                            </div>
+                            <div class="review-item">
+                                <span class="review-label">Components Required:</span>
+                                <span class="review-value" id="reviewComponentCount">0</span>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Step 5: Final Actions -->
+                    <div class="bom-final-actions" style="display: none;">
+                        <div class="bom-actions">
+                            <button class="btn btn-primary" onclick="exportBOM()">📄 Export Maintenance Plan</button>
+                            <button class="btn btn-secondary" onclick="clearBOM()">🗑️ Clear BOM</button>
+                            <button class="btn btn-success" onclick="saveBOM()">✅ Create Maintenance Plan</button>
                         </div>
                     </div>
                 </div>
@@ -3885,6 +4013,57 @@
             </div>
             <div class="modal-footer" id="modalFooter">
                 <button class="modal-btn modal-btn-primary" onclick="closeUniversalModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Maintenance Plan Details Modal -->
+    <div id="maintenancePlanDetailsModal" class="maintenance-modal">
+        <div class="maintenance-modal-content">
+            <div class="maintenance-modal-header">
+                <h3 class="maintenance-modal-title">Maintenance Plan Details</h3>
+                <button class="maintenance-modal-close" onclick="closeMaintenancePlanDetailsModal()">&times;</button>
+            </div>
+            <div class="maintenance-modal-body">
+                <div class="form-group">
+                    <label class="form-label">Plan Title:</label>
+                    <div class="form-value" id="planDetailTitle">-</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Site:</label>
+                    <div class="form-value" id="planDetailSite">-</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Priority:</label>
+                    <div class="form-value" id="planDetailPriority">-</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">EAR Impact:</label>
+                    <div class="form-value" id="planDetailEar">-</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Affected Assets:</label>
+                    <div class="form-value" id="planDetailAssets">-</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Description:</label>
+                    <div class="form-value" id="planDetailDescription">-</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Estimated Duration:</label>
+                    <div class="form-value" id="planDetailDuration">-</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Required Parts:</label>
+                    <div class="form-value" id="planDetailParts">-</div>
+                </div>
+                <div class="form-group">
+                    <label class="form-label">Generated:</label>
+                    <div class="form-value" id="planDetailGenerated">-</div>
+                </div>
+            </div>
+            <div class="maintenance-modal-footer">
+                <button class="btn btn-primary" onclick="closeMaintenancePlanDetailsModal()">Close</button>
             </div>
         </div>
     </div>

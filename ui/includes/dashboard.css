@@ -733,3 +733,262 @@
 .modal-action-button.secondary-action:hover {
     background-color: var(--border-grey);
 }
+
+/* Issues Section Styles */
+.issues-overview {
+    margin-bottom: 30px;
+}
+
+.issues-metrics {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 20px;
+    margin-bottom: 20px;
+}
+
+.issues-table-section {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.bom-issue-selection {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 20px;
+    margin-bottom: 20px;
+    border: 1px solid var(--border-color);
+}
+
+.issue-details {
+    background: var(--secondary-bg);
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 15px;
+    border-left: 4px solid var(--accent-blue);
+}
+
+.form-select {
+    width: 100%;
+    padding: 10px;
+    border: 1px solid var(--border-color);
+    border-radius: 4px;
+    background: var(--card-bg);
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.form-select:focus {
+    outline: none;
+    border-color: var(--accent-blue);
+    box-shadow: 0 0 0 2px rgba(59, 130, 246, 0.1);
+}
+
+/* Status Badges */
+.status-badge {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 12px;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.status-critical {
+    background-color: #fee2e2;
+    color: #dc2626;
+}
+
+.status-high-risk {
+    background-color: #fef3c7;
+    color: #d97706;
+}
+
+.status-medium-risk {
+    background-color: #dbeafe;
+    color: #2563eb;
+}
+
+.status-low-risk {
+    background-color: #dcfce7;
+    color: #16a34a;
+}
+
+/* Failure Probability Display */
+.failure-probability {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+}
+
+.failure-probability span {
+    font-size: 11px;
+    padding: 2px 4px;
+    border-radius: 3px;
+    background-color: #f3f4f6;
+    color: #374151;
+}
+
+.prob-24h {
+    background-color: #fef3c7 !important;
+    color: #d97706 !important;
+}
+
+.prob-7d {
+    background-color: #fde68a !important;
+    color: #b45309 !important;
+}
+
+.prob-30d {
+    background-color: #fbbf24 !important;
+    color: #92400e !important;
+}
+
+/* Order Schedule Styles */
+.order-schedule {
+    background: var(--secondary-bg);
+    border-radius: 6px;
+    padding: 15px;
+    margin-top: 15px;
+    border-left: 4px solid var(--status-green);
+}
+
+.order-schedule h4 {
+    margin: 0 0 10px 0;
+    color: var(--text-primary);
+    font-size: 14px;
+}
+
+.order-schedule-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 8px 0;
+    border-bottom: 1px solid var(--border-color);
+}
+
+.order-schedule-item:last-child {
+    border-bottom: none;
+}
+
+.order-schedule-item .component-name {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.order-schedule-item .order-date {
+    color: var(--text-secondary);
+    font-size: 12px;
+}
+
+.order-schedule-item .lead-time {
+    color: var(--text-light);
+    font-size: 11px;
+}
+
+/* BOM Item Order Date Display */
+.bom-item-order-info {
+    display: flex;
+    flex-direction: column;
+    gap: 4px;
+    margin-top: 8px;
+    padding: 8px;
+    background: var(--neutral-light);
+    border-radius: 4px;
+    font-size: 12px;
+}
+
+.bom-item-order-date {
+    color: var(--text-secondary);
+}
+
+.bom-item-lead-time {
+    color: var(--text-light);
+}
+
+/* Issue Selector Emphasis */
+.issue-selector {
+    border: 2px solid var(--accent-blue) !important;
+    background-color: var(--card-bg);
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+}
+
+.issue-selector:focus {
+    border-color: var(--primary-blue) !important;
+    box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.2);
+}
+
+/* BOM Install Date Section */
+.bom-install-date-section {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    border: 1px solid var(--border-color);
+}
+
+.install-date-info {
+    margin-top: 10px;
+}
+
+.earliest-date-info {
+    margin-bottom: 15px;
+    padding: 10px;
+    background: var(--neutral-light);
+    border-radius: 6px;
+    border-left: 4px solid var(--status-green);
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+/* BOM Review Section */
+.bom-review-section {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    border: 1px solid var(--border-color);
+}
+
+.review-summary {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
+    gap: 15px;
+    margin-top: 15px;
+}
+
+.review-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px;
+    background: var(--neutral-light);
+    border-radius: 6px;
+    border-left: 4px solid var(--accent-blue);
+}
+
+.review-label {
+    font-weight: 600;
+    color: var(--text-primary);
+}
+
+.review-value {
+    font-weight: 700;
+    color: var(--text-dark);
+    font-size: 1.1em;
+}
+
+/* BOM Final Actions */
+.bom-final-actions {
+    background: var(--card-bg);
+    border-radius: 8px;
+    padding: 20px;
+    margin: 20px 0;
+    border: 1px solid var(--border-color);
+    text-align: center;
+}
+
+.bom-final-actions .bom-actions {
+    justify-content: center;
+    gap: 20px;
+}

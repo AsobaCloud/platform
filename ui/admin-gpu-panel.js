@@ -49,6 +49,11 @@
             const modalMessage = document.getElementById('modalMessage');
             const modalFooter = document.getElementById('modalFooter');
 
+            if (!modal) {
+                console.error('Modal element not found!');
+                return;
+            }
+
             // Set title and message
             modalTitle.textContent = title;
             modalMessage.textContent = message;
@@ -83,6 +88,7 @@
             const modal = document.getElementById('universalModal');
             modal.classList.remove('active');
         }
+
 
         // OODA State Management
         let oodaState = {
@@ -269,10 +275,23 @@
             const plan = maintenancePlans.find(p => p.id === planId);
             if (!plan) return;
             
-            showInfoModal(
-                'Maintenance Plan Details',
-                `Title: ${plan.title}\nSite: ${plan.site}\nPriority: ${plan.priority}\nEAR: $${plan.ear.toLocaleString()} over ${plan.timeHorizon}h\nAffected Assets: ${plan.affectedAssets.join(', ')}\nDescription: ${plan.description}\nEstimated Duration: ${plan.estimatedDuration}\nRequired Parts: ${plan.requiredParts.join(', ')}\nGenerated: ${plan.generatedAt.toLocaleString()}`
-            );
+            // Populate the modal with plan data
+            document.getElementById('planDetailTitle').textContent = plan.title;
+            document.getElementById('planDetailSite').textContent = plan.site;
+            document.getElementById('planDetailPriority').textContent = plan.priority;
+            document.getElementById('planDetailEar').textContent = `$${plan.ear.toLocaleString()} over ${plan.timeHorizon}h`;
+            document.getElementById('planDetailAssets').textContent = plan.affectedAssets.join(', ');
+            document.getElementById('planDetailDescription').textContent = plan.description;
+            document.getElementById('planDetailDuration').textContent = plan.estimatedDuration;
+            document.getElementById('planDetailParts').textContent = plan.requiredParts.join(', ');
+            document.getElementById('planDetailGenerated').textContent = plan.generatedAt.toLocaleString();
+            
+            // Show the modal
+            document.getElementById('maintenancePlanDetailsModal').style.display = 'flex';
+        }
+
+        function closeMaintenancePlanDetailsModal() {
+            document.getElementById('maintenancePlanDetailsModal').style.display = 'none';
         }
 
         function showNotification(title, message, type = 'success') {
@@ -403,8 +422,65 @@
 
         // Modal event listeners moved to DOMContentLoaded
 
+        // Component Issues Data
+        let componentIssues = [
+            {
+                id: 'issue-001',
+                component: 'INV-003',
+                site: 'Cummins Midrand',
+                issueType: 'Temperature Sensor Fault',
+                failureProbability: { '24h': 0.15, '7d': 0.35, '30d': 0.65, '90d': 0.85 },
+                earImpact: 2340,
+                timeWindow: '72h',
+                status: 'Critical',
+                description: 'Temperature sensor readings inconsistent, may cause inverter shutdown',
+                affectedAssets: ['INV-003'],
+                priority: 'High'
+            },
+            {
+                id: 'issue-002',
+                component: 'INV-007',
+                site: 'Cummins Midrand',
+                issueType: 'DC Input Voltage Drop',
+                failureProbability: { '24h': 0.08, '7d': 0.22, '30d': 0.45, '90d': 0.70 },
+                earImpact: 1890,
+                timeWindow: '48h',
+                status: 'High Risk',
+                description: 'DC input voltage below optimal range, affecting efficiency',
+                affectedAssets: ['INV-007'],
+                priority: 'Medium'
+            },
+            {
+                id: 'issue-003',
+                component: 'OPT-015',
+                site: 'FNB Willowbridge',
+                issueType: 'Communication Loss',
+                failureProbability: { '24h': 0.05, '7d': 0.18, '30d': 0.40, '90d': 0.60 },
+                earImpact: 450,
+                timeWindow: '24h',
+                status: 'Medium Risk',
+                description: 'Optimizer communication intermittent, monitoring affected',
+                affectedAssets: ['OPT-015'],
+                priority: 'Medium'
+            },
+            {
+                id: 'issue-004',
+                component: 'METER-001',
+                site: 'Cummins Midrand',
+                issueType: 'Calibration Drift',
+                failureProbability: { '24h': 0.02, '7d': 0.12, '30d': 0.30, '90d': 0.55 },
+                earImpact: 1200,
+                timeWindow: '168h',
+                status: 'Low Risk',
+                description: 'Energy meter showing 2% deviation from expected readings',
+                affectedAssets: ['METER-001'],
+                priority: 'Low'
+            }
+        ];
+
         // BOM Builder Functions
         let currentBOM = [];
+        let selectedIssueId = null;
         let skuCatalog = [
             {
                 sku: "SG20KTL-FAN-STD",
@@ -496,12 +572,336 @@
             }
         ];
 
+        function loadIssues() {
+            updateIssuesMetrics();
+            populateIssuesTable();
+            setupIssuesControls();
+        }
+
+        function updateIssuesMetrics() {
+            const totalIssues = componentIssues.length;
+            const criticalIssues = componentIssues.filter(issue => issue.status === 'Critical').length;
+            const highRiskIssues = componentIssues.filter(issue => issue.status === 'High Risk').length;
+            const totalEAR = componentIssues.reduce((sum, issue) => sum + issue.earImpact, 0);
+
+            document.getElementById('totalIssues').textContent = totalIssues;
+            document.getElementById('criticalIssues').textContent = criticalIssues;
+            document.getElementById('highRiskIssues').textContent = highRiskIssues;
+            document.getElementById('totalEAR').textContent = `$${totalEAR.toLocaleString()}`;
+        }
+
+        function populateIssuesTable() {
+            const tbody = document.getElementById('issuesTableBody');
+            if (!tbody) return;
+
+            tbody.innerHTML = componentIssues.map(issue => `
+                <tr>
+                    <td>${issue.component}</td>
+                    <td>${issue.site}</td>
+                    <td>${issue.issueType}</td>
+                    <td>
+                        <div class="failure-probability">
+                            <span class="prob-24h">24h: ${(issue.failureProbability['24h'] * 100).toFixed(1)}%</span>
+                            <span class="prob-7d">7d: ${(issue.failureProbability['7d'] * 100).toFixed(1)}%</span>
+                            <span class="prob-30d">30d: ${(issue.failureProbability['30d'] * 100).toFixed(1)}%</span>
+                        </div>
+                    </td>
+                    <td>$${issue.earImpact.toLocaleString()}</td>
+                    <td>${issue.timeWindow}</td>
+                    <td><span class="status-badge status-${issue.status.toLowerCase().replace(' ', '-')}">${issue.status}</span></td>
+                    <td>
+                        <button class="btn btn-primary" onclick="selectIssueForBOM('${issue.id}')">Select for BOM</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function setupIssuesControls() {
+            // Setup filter buttons
+            const filterButtons = document.querySelectorAll('.issues-table-section .chart-btn');
+            filterButtons.forEach(btn => {
+                btn.addEventListener('click', (e) => {
+                    // Remove active class from all buttons
+                    filterButtons.forEach(b => b.classList.remove('active'));
+                    // Add active class to clicked button
+                    e.target.classList.add('active');
+                    
+                    // Apply filter
+                    const filter = e.target.textContent.toLowerCase();
+                    filterIssuesTable(filter);
+                });
+            });
+        }
+
+        function filterIssuesTable(filter) {
+            let filteredIssues = componentIssues;
+            
+            switch(filter) {
+                case 'critical only':
+                    filteredIssues = componentIssues.filter(issue => issue.status === 'Critical');
+                    break;
+                case 'by site':
+                    // Group by site - could implement site-specific filtering
+                    break;
+                default:
+                    filteredIssues = componentIssues;
+            }
+            
+            const tbody = document.getElementById('issuesTableBody');
+            if (!tbody) return;
+
+            tbody.innerHTML = filteredIssues.map(issue => `
+                <tr>
+                    <td>${issue.component}</td>
+                    <td>${issue.site}</td>
+                    <td>${issue.issueType}</td>
+                    <td>
+                        <div class="failure-probability">
+                            <span class="prob-24h">24h: ${(issue.failureProbability['24h'] * 100).toFixed(1)}%</span>
+                            <span class="prob-7d">7d: ${(issue.failureProbability['7d'] * 100).toFixed(1)}%</span>
+                            <span class="prob-30d">30d: ${(issue.failureProbability['30d'] * 100).toFixed(1)}%</span>
+                        </div>
+                    </td>
+                    <td>$${issue.earImpact.toLocaleString()}</td>
+                    <td>${issue.timeWindow}</td>
+                    <td><span class="status-badge status-${issue.status.toLowerCase().replace(' ', '-')}">${issue.status}</span></td>
+                    <td>
+                        <button class="btn btn-primary" onclick="selectIssueForBOM('${issue.id}')">Select for BOM</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function selectIssueForBOM(issueId) {
+            selectedIssueId = issueId;
+            updateIssueSelection();
+            updateBOMForIssue();
+            
+            // Switch to BOM Builder section
+            loadSectionContent('bom-builder');
+            
+            showInfoModal('Issue Selected', 'Issue selected for BOM creation. You can now add components to address this issue.');
+        }
+
+        function updateIssueSelection() {
+            const select = document.getElementById('selectedIssue');
+            if (!select) return;
+
+            select.innerHTML = '<option value="">-- Select an Issue --</option>' +
+                componentIssues.map(issue => 
+                    `<option value="${issue.id}" ${issue.id === selectedIssueId ? 'selected' : ''}>${issue.component} - ${issue.issueType} (${issue.site})</option>`
+                ).join('');
+        }
+
+        function updateBOMForIssue() {
+            const issueDetails = document.getElementById('selectedIssueDetails');
+            if (!issueDetails) return;
+
+            if (!selectedIssueId) {
+                issueDetails.style.display = 'none';
+                hideInstallDateSection();
+                hideReviewSection();
+                hideFinalActions();
+                return;
+            }
+
+            const issue = componentIssues.find(i => i.id === selectedIssueId);
+            if (!issue) return;
+
+            issueDetails.innerHTML = `
+                <h4>Selected Issue Details</h4>
+                <div class="issue-info">
+                    <p><strong>Component:</strong> ${issue.component}</p>
+                    <p><strong>Site:</strong> ${issue.site}</p>
+                    <p><strong>Issue Type:</strong> ${issue.issueType}</p>
+                    <p><strong>Status:</strong> ${issue.status}</p>
+                    <p><strong>EAR Impact:</strong> $${issue.earImpact.toLocaleString()}</p>
+                    <p><strong>Time Window:</strong> ${issue.timeWindow}</p>
+                    <p><strong>Description:</strong> ${issue.description}</p>
+                </div>
+            `;
+            issueDetails.style.display = 'block';
+            
+            // Show install date section if components are added
+            if (currentBOM.length > 0) {
+                showInstallDateSection();
+                updateEarliestViableDate();
+            }
+        }
+
+        function updateOrderSchedule() {
+            const orderSchedule = document.getElementById('orderSchedule');
+            const targetInstallDate = document.getElementById('targetInstallDate');
+            
+            if (!orderSchedule || !targetInstallDate) return;
+
+            if (!targetInstallDate.value || currentBOM.length === 0) {
+                orderSchedule.style.display = 'none';
+                return;
+            }
+
+            const installDate = new Date(targetInstallDate.value);
+            const scheduleItems = [];
+
+            currentBOM.forEach(item => {
+                const orderDate = new Date(installDate);
+                orderDate.setDate(orderDate.getDate() - item.lead_time_days);
+                
+                scheduleItems.push({
+                    component: item.sku,
+                    orderDate: orderDate.toLocaleDateString(),
+                    leadTime: item.lead_time_days
+                });
+            });
+
+            // Sort by order date (earliest first)
+            scheduleItems.sort((a, b) => new Date(a.orderDate) - new Date(b.orderDate));
+
+            orderSchedule.innerHTML = `
+                <h4>Order Schedule</h4>
+                <div class="schedule-items">
+                    ${scheduleItems.map(item => `
+                        <div class="order-schedule-item">
+                            <span class="component-name">${item.component}</span>
+                            <div>
+                                <span class="order-date">Order by: ${item.orderDate}</span>
+                                <span class="lead-time">(${item.leadTime} days lead time)</span>
+                            </div>
+                        </div>
+                    `).join('')}
+                </div>
+            `;
+            orderSchedule.style.display = 'block';
+
+            // Update metrics
+            updateInstallDateMetrics();
+            
+            // Show review section and final actions when install date is set
+            if (targetInstallDate.value && selectedIssueId) {
+                showReviewSection();
+                showFinalActions();
+            } else {
+                hideReviewSection();
+                hideFinalActions();
+            }
+        }
+
+        function updateInstallDateMetrics() {
+            const targetInstallDate = document.getElementById('targetInstallDate');
+            const targetInstallDateDisplay = document.getElementById('targetInstallDateDisplay');
+            const earliestOrderDateDisplay = document.getElementById('earliestOrderDate');
+
+            if (!targetInstallDate || !targetInstallDateDisplay || !earliestOrderDateDisplay) return;
+
+            if (targetInstallDate.value) {
+                const installDate = new Date(targetInstallDate.value);
+                targetInstallDateDisplay.textContent = installDate.toLocaleDateString();
+
+                if (currentBOM.length > 0) {
+                    const maxLeadTime = Math.max(...currentBOM.map(item => item.lead_time_days));
+                    const earliestOrderDate = new Date(installDate);
+                    earliestOrderDate.setDate(earliestOrderDate.getDate() - maxLeadTime);
+                    earliestOrderDateDisplay.textContent = earliestOrderDate.toLocaleDateString();
+                } else {
+                    earliestOrderDateDisplay.textContent = 'Not Set';
+                }
+            } else {
+                targetInstallDateDisplay.textContent = 'Not Set';
+                earliestOrderDateDisplay.textContent = 'Not Set';
+            }
+        }
+
+        function updateEarliestViableDate() {
+            const earliestViableDate = document.getElementById('earliestViableDate');
+            if (!earliestViableDate || currentBOM.length === 0) return;
+
+            const maxLeadTime = Math.max(...currentBOM.map(item => item.lead_time_days));
+            const earliestDate = new Date();
+            earliestDate.setDate(earliestDate.getDate() + maxLeadTime);
+            
+            earliestViableDate.textContent = earliestDate.toLocaleDateString();
+            
+            // Set the min attribute on the date input
+            const targetInstallDate = document.getElementById('targetInstallDate');
+            if (targetInstallDate) {
+                targetInstallDate.min = earliestDate.toISOString().split('T')[0];
+            }
+        }
+
+        function showInstallDateSection() {
+            const section = document.querySelector('.bom-install-date-section');
+            if (section) {
+                section.style.display = 'block';
+                updateEarliestViableDate();
+            }
+        }
+
+        function hideInstallDateSection() {
+            const section = document.querySelector('.bom-install-date-section');
+            if (section) {
+                section.style.display = 'none';
+            }
+        }
+
+        function showReviewSection() {
+            const section = document.querySelector('.bom-review-section');
+            if (section) {
+                section.style.display = 'block';
+                updateReviewSummary();
+            }
+        }
+
+        function hideReviewSection() {
+            const section = document.querySelector('.bom-review-section');
+            if (section) {
+                section.style.display = 'none';
+            }
+        }
+
+        function showFinalActions() {
+            const section = document.querySelector('.bom-final-actions');
+            if (section) {
+                section.style.display = 'block';
+            }
+        }
+
+        function hideFinalActions() {
+            const section = document.querySelector('.bom-final-actions');
+            if (section) {
+                section.style.display = 'none';
+            }
+        }
+
+        function updateReviewSummary() {
+            const materialCost = currentBOM.reduce((sum, item) => sum + (item.price_usd * item.qty), 0);
+            const siteEarRate = parseFloat(document.getElementById('siteEarRate')?.value) || 120;
+            const maxLeadTime = currentBOM.length > 0 ? Math.max(...currentBOM.map(item => item.lead_time_days)) : 0;
+            const earImpact = siteEarRate * maxLeadTime;
+            
+            const targetInstallDate = document.getElementById('targetInstallDate');
+            const installDateText = targetInstallDate && targetInstallDate.value ? 
+                new Date(targetInstallDate.value).toLocaleDateString() : 'Not Set';
+
+            document.getElementById('reviewMaterialCost').textContent = `$${materialCost.toFixed(2)}`;
+            document.getElementById('reviewEarImpact').textContent = `$${earImpact.toFixed(2)}`;
+            document.getElementById('reviewInstallDate').textContent = installDateText;
+            document.getElementById('reviewComponentCount').textContent = currentBOM.length;
+        }
+
         function loadBOMBuilder() {
             console.log('Loading BOM Builder section...');
             populateCatalog();
             updateBOMDisplay();
             updateEARCalculation();
             setupCatalogFilters();
+            updateIssueSelection();
+            updateBOMForIssue();
+            updateInstallDateMetrics();
+            
+            // Hide all sections initially
+            hideInstallDateSection();
+            hideReviewSection();
+            hideFinalActions();
         }
 
         function populateCatalog() {
@@ -611,6 +1011,13 @@
             updateBOMDisplay();
             updateEARCalculation();
             updateBOMMetrics();
+            updateOrderSchedule();
+            
+            // Show install date section if issue is selected
+            if (selectedIssueId && currentBOM.length > 0) {
+                showInstallDateSection();
+                updateEarliestViableDate();
+            }
         }
 
         function removeFromBOM(sku) {
@@ -618,6 +1025,16 @@
             updateBOMDisplay();
             updateEARCalculation();
             updateBOMMetrics();
+            updateOrderSchedule();
+            
+            // Hide sections if no components left
+            if (currentBOM.length === 0) {
+                hideInstallDateSection();
+                hideReviewSection();
+                hideFinalActions();
+            } else if (selectedIssueId) {
+                updateEarliestViableDate();
+            }
         }
 
         function updateBOMQuantity(sku, newQty) {
@@ -627,6 +1044,7 @@
                 updateBOMDisplay();
                 updateEARCalculation();
                 updateBOMMetrics();
+                updateOrderSchedule();
             }
         }
 
@@ -646,6 +1064,21 @@
                         <div class="bom-item-details">
                             ${item.oem} ${item.model} - ${item.description}<br>
                             <small>$${item.price_usd} × ${item.qty} = $${(item.price_usd * item.qty).toFixed(2)}</small>
+                            ${(() => {
+                                const targetInstallDate = document.getElementById('targetInstallDate');
+                                if (targetInstallDate && targetInstallDate.value) {
+                                    const installDate = new Date(targetInstallDate.value);
+                                    const orderDate = new Date(installDate);
+                                    orderDate.setDate(orderDate.getDate() - item.lead_time_days);
+                                    return `
+                                        <div class="bom-item-order-info">
+                                            <div class="bom-item-order-date">Order by: ${orderDate.toLocaleDateString()}</div>
+                                            <div class="bom-item-lead-time">Lead time: ${item.lead_time_days} days</div>
+                                        </div>
+                                    `;
+                                }
+                                return '';
+                            })()}
                         </div>
                     </div>
                     <div class="bom-item-controls">
@@ -760,9 +1193,81 @@
                 return;
             }
 
-            // In a real implementation, this would save to the backend
-            // For now, we'll just show a success message
-            showSuccessModal('BOM Saved', `BOM saved successfully!\n\nComponents: ${currentBOM.length}\nTotal Cost: $${(currentBOM.reduce((sum, item) => sum + (item.price_usd * item.qty), 0)).toFixed(2)}\n\nThis would be saved to the OODA backend system.`);
+            if (!selectedIssueId) {
+                showWarningModal('No Issue Selected', 'Please select an issue to address before saving the BOM.');
+                return;
+            }
+
+            const targetInstallDate = document.getElementById('targetInstallDate');
+            if (!targetInstallDate || !targetInstallDate.value) {
+                showWarningModal('No Install Date', 'Please set a target install date before saving the BOM.');
+                return;
+            }
+
+            const selectedIssue = componentIssues.find(issue => issue.id === selectedIssueId);
+            if (!selectedIssue) {
+                showErrorModal('Issue Not Found', 'Selected issue no longer exists.');
+                return;
+            }
+
+            // Create maintenance plan from BOM and issue
+            const installDate = new Date(targetInstallDate.value);
+            const maxLeadTime = Math.max(...currentBOM.map(item => item.lead_time_days));
+            const earliestOrderDate = new Date(installDate);
+            earliestOrderDate.setDate(earliestOrderDate.getDate() - maxLeadTime);
+
+            const maintenancePlan = {
+                id: 'plan-' + Date.now(),
+                title: `Maintenance Plan for ${selectedIssue.component}`,
+                site: selectedIssue.site,
+                priority: selectedIssue.priority,
+                ear: selectedIssue.earImpact,
+                timeHorizon: selectedIssue.timeWindow,
+                affectedAssets: selectedIssue.affectedAssets,
+                description: `Manual maintenance plan created for ${selectedIssue.issueType}`,
+                estimatedDuration: `${maxLeadTime} days`,
+                requiredParts: currentBOM.map(item => `${item.sku} (${item.qty}x)`),
+                generatedAt: new Date(),
+                bomComponents: currentBOM,
+                issueId: selectedIssueId,
+                targetInstallDate: installDate.toISOString(),
+                earliestOrderDate: earliestOrderDate.toISOString(),
+                orderSchedule: currentBOM.map(item => {
+                    const orderDate = new Date(installDate);
+                    orderDate.setDate(orderDate.getDate() - item.lead_time_days);
+                    return {
+                        sku: item.sku,
+                        orderDate: orderDate.toISOString(),
+                        leadTime: item.lead_time_days
+                    };
+                })
+            };
+
+            // Add to maintenance plans
+            maintenancePlans.push(maintenancePlan);
+
+            // Update pending approvals
+            updatePendingApprovalsList();
+
+            showSuccessModal('Maintenance Plan Created', 
+                `Maintenance plan created successfully!\n\n` +
+                `Issue: ${selectedIssue.component} - ${selectedIssue.issueType}\n` +
+                `Site: ${selectedIssue.site}\n` +
+                `Components: ${currentBOM.length}\n` +
+                `Total Cost: $${(currentBOM.reduce((sum, item) => sum + (item.price_usd * item.qty), 0)).toFixed(2)}\n` +
+                `EAR Impact: $${selectedIssue.earImpact.toLocaleString()}\n` +
+                `Target Install Date: ${installDate.toLocaleDateString()}\n` +
+                `Earliest Order Date: ${earliestOrderDate.toLocaleDateString()}\n\n` +
+                `The plan has been added to pending approvals for review.`
+            );
+
+            // Clear BOM and reset selection
+            currentBOM = [];
+            selectedIssueId = null;
+            updateBOMDisplay();
+            updateEARCalculation();
+            updateBOMMetrics();
+            updateIssueSelection();
         }
 
         // WebSocket Simulation for Real-time OODA Updates
@@ -1417,6 +1922,9 @@
                     break;
                 case 'performance':
                     loadPerformance();
+                    break;
+                case 'issues':
+                    loadIssues();
                     break;
                 case 'maintenance':
                     loadMaintenance();
