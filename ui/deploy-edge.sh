@@ -91,6 +91,37 @@ rm -rf "$TEMP_DIR"
 
 echo "✅ Deploy successful!"
 echo ""
+
+# After successful S3 deployment, commit and push to git
+echo "📝 Committing changes to git..."
+cd ..  # Navigate to project root (platform/)
+
+if git rev-parse --git-dir > /dev/null 2>&1; then
+    # Capture what files changed
+    CHANGED_FILES=$(git diff --name-only)
+    if [[ -n "$CHANGED_FILES" ]]; then
+        # Generate commit message based on changed files
+        if echo "$CHANGED_FILES" | grep -q "ui/"; then
+            COMMIT_MSG="Update UI: $(echo "$CHANGED_FILES" | tr '\n' ' ')"
+        elif echo "$CHANGED_FILES" | grep -q "scripts/"; then
+            COMMIT_MSG="Update scripts: $(echo "$CHANGED_FILES" | tr '\n' ' ')"
+        else
+            COMMIT_MSG="Update platform: $(echo "$CHANGED_FILES" | tr '\n' ' ')"
+        fi
+        
+        git add .
+        git commit -m "$COMMIT_MSG"
+        git push
+        echo "✅ Git commit and push successful!"
+    else
+        echo "ℹ️  No changes to commit"
+    fi
+else
+    echo "⚠️  Not in a git repository, skipping git operations"
+fi
+
+echo ""
+echo ""
 echo "🌐 Your applications are now available at:"
 echo "   http://$BUCKET_NAME.s3-website-$REGION.amazonaws.com"
 echo ""
