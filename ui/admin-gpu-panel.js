@@ -394,6 +394,7 @@
                         updatePendingApprovalsList();
                         updateMaintenanceMetrics();
                         displayMaintenancePlans();
+                        updateDashboardActivePlans();
                         
                         // Show success modal
                         showSuccessModal('Plan Approved', `Maintenance plan "${plan.title}" has been approved and will be executed.`);
@@ -469,6 +470,7 @@
                         // Update UI
                         updateManualMaintenanceMetrics();
                         displayManualMaintenancePlans();
+                        updateDashboardActivePlans();
                         
                         showSuccessModal('Plan Approved', `${plan.title} has been approved and is ready for execution.`);
                     }
@@ -2254,9 +2256,54 @@
                 console.log('Dashboard loaded with solar sites');
             }
             
+            // Update capacity factor using existing Performance Monitoring calculation
+            updateDashboardCapacityFactor();
+            
+            // Update active plans using existing Maintenance & Updates calculation
+            updateDashboardActivePlans();
+            
             // Initialize OODA widgets
             updateOODAPhaseStatus();
             updatePendingApprovalsList();
+        }
+
+        // Update dashboard capacity factor using existing Performance Monitoring calculation
+        function updateDashboardCapacityFactor() {
+            // Get cached data for both solar sites
+            const cummins = getCachedSiteData('cummins-midrand');
+            const fnb = getCachedSiteData('fnb-willowbridge');
+            
+            if (cummins && fnb) {
+                // Calculate weighted averages based on site capacity (same logic as Performance Monitoring)
+                const totalCapacity = cummins.capacity + fnb.capacity;
+                const cumminsWeight = cummins.capacity / totalCapacity;
+                const fnbWeight = fnb.capacity / totalCapacity;
+                
+                // Calculate weighted average capacity factor
+                const avgCapacityFactor = Math.round((cummins.capacityFactor * cumminsWeight) + (fnb.capacityFactor * fnbWeight));
+                
+                // Update dashboard capacity factor element
+                const capacityFactorElement = document.getElementById('avgUtilization');
+                if (capacityFactorElement) {
+                    capacityFactorElement.textContent = avgCapacityFactor + '%';
+                }
+            }
+        }
+
+        // Update dashboard active plans using existing Maintenance & Updates calculation
+        function updateDashboardActivePlans() {
+            // Reuse existing maintenance metrics calculation logic
+            const activeOODAPlans = maintenancePlans.filter(p => p.status === 'approved').length;
+            const activeManualPlans = manualMaintenancePlans.filter(p => p.status === 'approved').length;
+            
+            // Total active plans = active OODA plans + active manual plans
+            const totalActivePlans = activeOODAPlans + activeManualPlans;
+            
+            // Update dashboard active plans element
+            const activePlansElement = document.getElementById('activePlans');
+            if (activePlansElement) {
+                activePlansElement.textContent = totalActivePlans;
+            }
         }
 
         // Load other sections (placeholder implementations)
