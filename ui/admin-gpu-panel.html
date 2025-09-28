@@ -2458,9 +2458,7 @@
         }
 
         .maintenance-plans-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr));
-            gap: 1.5rem;
+            /* Remove grid layout to match scheduled-maintenance-section */
         }
 
         .maintenance-plan-card {
@@ -2924,39 +2922,6 @@
                         </div>
                     </div>
 
-                    <!-- OODA Workflow Status -->
-                    <div class="ooda-workflow">
-                        <div class="workflow-header">
-                            <h3>🔄 OODA Loop Status</h3>
-                            <div class="workflow-status">
-                                <span class="workflow-phase completed">Last Cycle: 2 min ago</span>
-                                <span class="workflow-phase active">Next Cycle: 8 min</span>
-                            </div>
-                        </div>
-                        
-                        <div class="ooda-phases">
-                            <div class="ooda-phase completed">
-                                <span class="phase-icon">👁️</span>
-                                <div class="phase-label">Observe</div>
-                                <div class="phase-time">Completed 2 min ago</div>
-                            </div>
-                            <div class="ooda-phase completed">
-                                <span class="phase-icon">🧭</span>
-                                <div class="phase-label">Orient</div>
-                                <div class="phase-time">Completed 2 min ago</div>
-                            </div>
-                            <div class="ooda-phase completed">
-                                <span class="phase-icon">🎯</span>
-                                <div class="phase-label">Decide</div>
-                                <div class="phase-time">Completed 1 min ago</div>
-                            </div>
-                            <div class="ooda-phase pending">
-                                <span class="phase-icon">⚡</span>
-                                <div class="phase-label">Act</div>
-                                <div class="phase-time">Awaiting approval</div>
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Pending Approvals -->
                     <div class="pending-approvals">
@@ -3227,27 +3192,6 @@
                         </div>
                     </div>
 
-                    <!-- Maintenance Scheduling -->
-                    <div class="chart-container" style="margin-bottom: 30px;">
-                        <div class="chart-header">
-                            <h3 class="chart-title">Maintenance Scheduling</h3>
-                            <button class="btn btn-primary" onclick="openScheduleMaintenanceModal()">📅 Schedule Maintenance</button>
-                        </div>
-                        
-                        <!-- Scheduled Maintenance List -->
-                        <div class="scheduled-maintenance-section">
-                            <div class="maintenance-filters">
-                                <button class="chart-btn active" onclick="filterScheduledMaintenance('all')">All</button>
-                                <button class="chart-btn" onclick="filterScheduledMaintenance('upcoming')">Upcoming</button>
-                                <button class="chart-btn" onclick="filterScheduledMaintenance('overdue')">Overdue</button>
-                                <button class="chart-btn" onclick="filterScheduledMaintenance('site')">By Site</button>
-                            </div>
-                            
-                            <div id="scheduledMaintenanceList">
-                                <!-- Scheduled maintenance items will be populated by JavaScript -->
-                            </div>
-                        </div>
-                    </div>
 
                     <!-- Site Expansion Planning -->
                     <div class="chart-container">
@@ -3442,6 +3386,28 @@
                         
                         <div class="maintenance-plans-grid" id="maintenancePlansGrid">
                             <!-- OODA maintenance plans will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Maintenance Scheduling -->
+                    <div class="ooda-maintenance-section">
+                        <h3>📅 Maintenance Scheduling</h3>
+                        <div class="chart-header" style="margin-bottom: 20px;">
+                            <button class="btn btn-primary" onclick="openScheduleMaintenanceModal()">📅 Schedule Maintenance</button>
+                        </div>
+                        
+                        <!-- Scheduled Maintenance List -->
+                        <div class="scheduled-maintenance-section">
+                            <div class="maintenance-filters">
+                                <button class="chart-btn active" onclick="filterScheduledMaintenance('all')">All</button>
+                                <button class="chart-btn" onclick="filterScheduledMaintenance('upcoming')">Upcoming</button>
+                                <button class="chart-btn" onclick="filterScheduledMaintenance('overdue')">Overdue</button>
+                                <button class="chart-btn" onclick="filterScheduledMaintenance('site')">By Site</button>
+                            </div>
+                            
+                            <div id="scheduledMaintenanceList">
+                                <!-- Scheduled maintenance items will be populated by JavaScript -->
+                            </div>
                         </div>
                     </div>
 

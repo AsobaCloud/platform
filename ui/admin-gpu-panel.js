@@ -426,8 +426,8 @@
         }
 
         function displayMaintenancePlans() {
-            const grid = document.getElementById('maintenancePlansGrid');
-            if (!grid) return;
+            const container = document.getElementById('maintenancePlansGrid');
+            if (!container) return;
             
             const allPlans = [...maintenancePlans].sort((a, b) => {
                 // Sort by status priority: pending, approved, completed
@@ -435,39 +435,42 @@
                 return statusOrder[a.status] - statusOrder[b.status];
             });
             
-            grid.innerHTML = allPlans.map(plan => `
-                <div class="maintenance-plan-card ${plan.status}">
-                    <div class="maintenance-plan-header">
-                        <div class="maintenance-plan-title">${plan.title}</div>
-                        <div class="maintenance-plan-status ${plan.status}">${plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}</div>
+            container.innerHTML = '';
+            
+            allPlans.forEach(plan => {
+                const maintenanceItem = document.createElement('div');
+                maintenanceItem.className = 'scheduled-maintenance-item';
+                
+                const priorityClass = `priority-${plan.priority.toLowerCase()}`;
+                const statusClass = plan.status;
+                
+                maintenanceItem.innerHTML = `
+                    <div class="maintenance-item-header">
+                        <div class="maintenance-title">
+                            <span class="maintenance-type">${plan.title}</span>
+                            <span class="maintenance-site">${plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}</span>
+                        </div>
+                        <div class="maintenance-actions">
+                            ${plan.status === 'pending' ? `
+                                <button class="btn btn-sm btn-success" onclick="approveMaintenancePlan('${plan.id}')">✓ Approve</button>
+                                <button class="btn btn-sm btn-danger" onclick="rejectMaintenancePlan('${plan.id}')">✗ Reject</button>
+                            ` : ''}
+                            <button class="btn btn-sm btn-secondary" onclick="viewMaintenancePlan('${plan.id}')">View Details</button>
+                        </div>
                     </div>
-                    <div class="maintenance-plan-details">
-                        <div class="maintenance-plan-detail-row">
-                            <span class="maintenance-plan-detail-label">Priority:</span>
-                            <span class="maintenance-plan-detail-value priority-${plan.priority.toLowerCase()}">${plan.priority}</span>
+                    <div class="maintenance-item-details">
+                        <div class="maintenance-info">
+                            <span class="maintenance-date ${statusClass}">${plan.generatedAt.toLocaleDateString()}</span>
+                            <span class="maintenance-frequency">${plan.estimatedDuration}</span>
+                            <span class="maintenance-duration">$${plan.ear.toLocaleString()}</span>
+                            <span class="maintenance-priority ${priorityClass}">${plan.priority}</span>
                         </div>
-                        <div class="maintenance-plan-detail-row">
-                            <span class="maintenance-plan-detail-label">EAR:</span>
-                            <span class="maintenance-plan-detail-value">$${plan.ear.toLocaleString()}</span>
-                        </div>
-                        <div class="maintenance-plan-detail-row">
-                            <span class="maintenance-plan-detail-label">Duration:</span>
-                            <span class="maintenance-plan-detail-value">${plan.estimatedDuration}</span>
-                        </div>
-                        <div class="maintenance-plan-detail-row">
-                            <span class="maintenance-plan-detail-label">Generated:</span>
-                            <span class="maintenance-plan-detail-value">${plan.generatedAt.toLocaleDateString()}</span>
-                        </div>
+                        <div class="maintenance-description">OODA Generated Maintenance Plan</div>
                     </div>
-                    <div class="maintenance-plan-actions">
-                        ${plan.status === 'pending' ? `
-                            <button class="btn btn-success" onclick="approveMaintenancePlan('${plan.id}')">✓ Approve</button>
-                            <button class="btn btn-danger" onclick="rejectMaintenancePlan('${plan.id}')">✗ Reject</button>
-                        ` : ''}
-                        <button class="btn btn-secondary" onclick="viewMaintenancePlan('${plan.id}')">View Details</button>
-                    </div>
-                </div>
-            `).join('');
+                `;
+                
+                container.appendChild(maintenanceItem);
+            });
         }
 
         // Off-cycle OODA Analysis Functions
@@ -3973,6 +3976,9 @@
             // Initialize OODA maintenance section
             updateMaintenanceMetrics();
             displayMaintenancePlans();
+            
+            // Load maintenance scheduling
+            loadScheduledMaintenance();
             
             // Load existing maintenance sections
             loadMaintenanceTasks();
