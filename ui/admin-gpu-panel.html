@@ -3389,9 +3389,40 @@
                         </div>
                     </div>
 
-                    <!-- Maintenance Scheduling -->
+                    <!-- Manual Maintenance Plans -->
                     <div class="ooda-maintenance-section">
-                        <h3>📅 Maintenance Scheduling</h3>
+                        <h3>🔧 Manual Maintenance Plans</h3>
+                        <div class="maintenance-metrics">
+                            <div class="metric-card">
+                                <span class="metric-value" id="manualPendingPlans">1</span>
+                                <span class="metric-label">Pending Plans</span>
+                                <span class="metric-change">From BOM Builder</span>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-value" id="manualActivePlans">1</span>
+                                <span class="metric-label">Active Plans</span>
+                                <span class="metric-change">Ready for execution</span>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-value" id="manualTotalValue">$2,270</span>
+                                <span class="metric-label">Total Plan Value</span>
+                                <span class="metric-change">Parts & labor</span>
+                            </div>
+                            <div class="metric-card">
+                                <span class="metric-value" id="manualComponents">8</span>
+                                <span class="metric-label">Components</span>
+                                <span class="metric-change">Across all plans</span>
+                            </div>
+                        </div>
+                        
+                        <div class="maintenance-plans-grid" id="manualMaintenancePlansGrid">
+                            <!-- Manual maintenance plans will be populated by JavaScript -->
+                        </div>
+                    </div>
+
+                    <!-- Regular Maintenance -->
+                    <div class="ooda-maintenance-section">
+                        <h3>📅 Regular Maintenance</h3>
                         <div class="chart-header" style="margin-bottom: 20px;">
                             <button class="btn btn-primary" onclick="openScheduleMaintenanceModal()">📅 Schedule Maintenance</button>
                         </div>
@@ -3411,11 +3442,6 @@
                         </div>
                     </div>
 
-                    <!-- Scheduled Maintenance Tasks -->
-                    <div class="maintenance-grid" id="maintenanceGrid">
-                        <!-- Maintenance cards will be populated by JavaScript -->
-                    </div>
-
                     <!-- Firmware Management -->
                     <div class="driver-section">
                         <h3 style="margin-bottom: 20px; color: var(--text-dark);">Inverter Firmware Management</h3>
@@ -3429,13 +3455,6 @@
                         </div>
                     </div>
 
-                    <!-- Hardware Maintenance Log -->
-                    <div class="config-section">
-                        <h3 style="margin-bottom: 20px; color: var(--text-dark);">Maintenance History</h3>
-                        <div id="maintenanceHistory">
-                            <!-- Maintenance history will be populated by JavaScript -->
-                        </div>
-                    </div>
                 </div>
 
                 <!-- Settings Section -->

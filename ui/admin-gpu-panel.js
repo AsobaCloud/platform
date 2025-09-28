@@ -244,6 +244,56 @@
                 assignedTechnician: null
             }
         ];
+
+        // Manual Maintenance Plans (created via BOM Builder)
+        let manualMaintenancePlans = [
+            {
+                id: 'manual-001',
+                title: 'Cummins Midrand - Inverter Replacement',
+                site: 'cummins-midrand',
+                issue_id: 'issue-003',
+                priority: 'High',
+                ear: 1850,
+                timeHorizon: 48,
+                affectedAssets: ['INV-005'],
+                status: 'pending',
+                generatedAt: new Date(Date.now() - 2 * 60 * 60 * 1000), // 2 hours ago
+                description: 'Manual maintenance plan created via BOM Builder for inverter replacement',
+                estimatedDuration: '6 hours',
+                requiredParts: ['SMA Sunny Boy 5.0', 'DC Disconnect Switch', 'AC Disconnect Switch'],
+                scheduledDate: null,
+                bomComponents: [
+                    { sku: 'SMA-SB-5.0', qty: 1, description: 'SMA Sunny Boy 5.0 Inverter' },
+                    { sku: 'DC-DISC-600V', qty: 1, description: 'DC Disconnect Switch 600V' },
+                    { sku: 'AC-DISC-240V', qty: 1, description: 'AC Disconnect Switch 240V' }
+                ],
+                targetInstallDate: new Date(Date.now() + 7 * 24 * 60 * 60 * 1000).toISOString(), // 7 days from now
+                createdBy: 'BOM Builder'
+            },
+            {
+                id: 'manual-002',
+                title: 'FNB Willowbridge - Panel Cleaning Equipment',
+                site: 'fnb-willowbridge',
+                issue_id: 'issue-007',
+                priority: 'Medium',
+                ear: 420,
+                timeHorizon: 24,
+                affectedAssets: ['PANEL-001', 'PANEL-002', 'PANEL-003'],
+                status: 'approved',
+                generatedAt: new Date(Date.now() - 1 * 60 * 60 * 1000), // 1 hour ago
+                description: 'Manual maintenance plan for panel cleaning equipment replacement',
+                estimatedDuration: '3 hours',
+                requiredParts: ['Cleaning Kit', 'Water Pump', 'Soft Brushes'],
+                scheduledDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(), // 3 days from now
+                bomComponents: [
+                    { sku: 'CLEAN-KIT-PRO', qty: 1, description: 'Professional Solar Panel Cleaning Kit' },
+                    { sku: 'WATER-PUMP-12V', qty: 1, description: '12V Water Pump' },
+                    { sku: 'BRUSH-SOFT-6IN', qty: 3, description: '6-inch Soft Cleaning Brushes' }
+                ],
+                targetInstallDate: new Date(Date.now() + 3 * 24 * 60 * 60 * 1000).toISOString(),
+                createdBy: 'BOM Builder'
+            }
+        ];
         
         function closeJobModal() {
             document.getElementById('jobModal').style.display = 'none';
@@ -405,6 +455,77 @@
             document.getElementById('maintenancePlanDetailsModal').style.display = 'none';
         }
 
+        // Manual Maintenance Plan Functions
+        function approveManualMaintenancePlan(planId) {
+            const plan = manualMaintenancePlans.find(p => p.id === planId);
+            if (plan) {
+                showConfirmModal(
+                    'Approve Manual Maintenance Plan',
+                    `Are you sure you want to approve this manual maintenance plan?\n\nPlan: ${plan.title}\nSite: ${plan.site}\nPriority: ${plan.priority}\nEAR: $${plan.ear.toLocaleString()} over ${plan.timeHorizon}h\nComponents: ${plan.bomComponents ? plan.bomComponents.length : 0} items`,
+                    () => {
+                        plan.status = 'approved';
+                        plan.approvedAt = new Date();
+                        
+                        // Update UI
+                        updateManualMaintenanceMetrics();
+                        displayManualMaintenancePlans();
+                        
+                        showSuccessModal('Plan Approved', `${plan.title} has been approved and is ready for execution.`);
+                    }
+                );
+            }
+        }
+
+        function rejectManualMaintenancePlan(planId) {
+            const plan = manualMaintenancePlans.find(p => p.id === planId);
+            if (plan) {
+                showConfirmModal(
+                    'Reject Manual Maintenance Plan',
+                    `Are you sure you want to reject this manual maintenance plan?\n\nPlan: ${plan.title}\nSite: ${plan.site}\nPriority: ${plan.priority}\nEAR: $${plan.ear.toLocaleString()} over ${plan.timeHorizon}h\n\nThis action cannot be undone.`,
+                    () => {
+                        plan.status = 'rejected';
+                        plan.rejectedAt = new Date();
+                        
+                        // Update UI
+                        updateManualMaintenanceMetrics();
+                        displayManualMaintenancePlans();
+                        
+                        showSuccessModal('Plan Rejected', `${plan.title} has been rejected.`);
+                    }
+                );
+            }
+        }
+
+        function viewManualMaintenancePlan(planId) {
+            const plan = manualMaintenancePlans.find(p => p.id === planId);
+            if (!plan) return;
+            
+            // Populate the modal with plan data
+            document.getElementById('planDetailTitle').textContent = plan.title;
+            document.getElementById('planDetailSite').textContent = plan.site;
+            document.getElementById('planDetailPriority').textContent = plan.priority;
+            document.getElementById('planDetailEar').textContent = `$${plan.ear.toLocaleString()} over ${plan.timeHorizon}h`;
+            document.getElementById('planDetailAssets').textContent = plan.affectedAssets.join(', ');
+            document.getElementById('planDetailDescription').textContent = plan.description;
+            document.getElementById('planDetailDuration').textContent = plan.estimatedDuration;
+            document.getElementById('planDetailParts').textContent = plan.requiredParts.join(', ');
+            document.getElementById('planDetailGenerated').textContent = plan.generatedAt.toLocaleString();
+            
+            // Show the modal
+            document.getElementById('maintenancePlanDetailsModal').style.display = 'flex';
+        }
+
+        function viewBOMDetails(planId) {
+            const plan = manualMaintenancePlans.find(p => p.id === planId);
+            if (!plan || !plan.bomComponents) return;
+            
+            const bomDetails = plan.bomComponents.map(component => 
+                `${component.sku}: ${component.qty}x ${component.description}`
+            ).join('\n');
+            
+            showInfoModal('BOM Details', `Bill of Materials for ${plan.title}:\n\n${bomDetails}`);
+        }
+
         function showNotification(title, message, type = 'success') {
             // Simple notification - could be enhanced with a proper notification system
             console.log(`[${type.toUpperCase()}] ${title}: ${message}`);
@@ -422,6 +543,21 @@
                 document.getElementById('activePlans').textContent = active;
                 document.getElementById('completedPlans').textContent = completed;
                 document.getElementById('avoidedEAR').textContent = '$' + avoidedEAR.toLocaleString();
+            }
+        }
+
+        // Manual Maintenance Management Functions
+        function updateManualMaintenanceMetrics() {
+            const pending = manualMaintenancePlans.filter(p => p.status === 'pending').length;
+            const active = manualMaintenancePlans.filter(p => p.status === 'approved').length;
+            const totalValue = manualMaintenancePlans.reduce((sum, p) => sum + p.ear, 0);
+            const totalComponents = manualMaintenancePlans.reduce((sum, p) => sum + (p.bomComponents ? p.bomComponents.length : 0), 0);
+            
+            if (document.getElementById('manualPendingPlans')) {
+                document.getElementById('manualPendingPlans').textContent = pending;
+                document.getElementById('manualActivePlans').textContent = active;
+                document.getElementById('manualTotalValue').textContent = '$' + totalValue.toLocaleString();
+                document.getElementById('manualComponents').textContent = totalComponents;
             }
         }
 
@@ -466,6 +602,55 @@
                             <span class="maintenance-priority ${priorityClass}">${plan.priority}</span>
                         </div>
                         <div class="maintenance-description">OODA Generated Maintenance Plan</div>
+                    </div>
+                `;
+                
+                container.appendChild(maintenanceItem);
+            });
+        }
+
+        function displayManualMaintenancePlans() {
+            const container = document.getElementById('manualMaintenancePlansGrid');
+            if (!container) return;
+            
+            const allPlans = [...manualMaintenancePlans].sort((a, b) => {
+                // Sort by status priority: pending, approved, completed
+                const statusOrder = { pending: 0, approved: 1, completed: 2 };
+                return statusOrder[a.status] - statusOrder[b.status];
+            });
+            
+            container.innerHTML = '';
+            
+            allPlans.forEach(plan => {
+                const maintenanceItem = document.createElement('div');
+                maintenanceItem.className = 'scheduled-maintenance-item';
+                
+                const priorityClass = `priority-${plan.priority.toLowerCase()}`;
+                const statusClass = plan.status;
+                
+                maintenanceItem.innerHTML = `
+                    <div class="maintenance-item-header">
+                        <div class="maintenance-title">
+                            <span class="maintenance-type">${plan.title}</span>
+                            <span class="maintenance-site">${plan.status.charAt(0).toUpperCase() + plan.status.slice(1)}</span>
+                        </div>
+                        <div class="maintenance-actions">
+                            ${plan.status === 'pending' ? `
+                                <button class="btn btn-sm btn-success" onclick="approveManualMaintenancePlan('${plan.id}')">✓ Approve</button>
+                                <button class="btn btn-sm btn-danger" onclick="rejectManualMaintenancePlan('${plan.id}')">✗ Reject</button>
+                            ` : ''}
+                            <button class="btn btn-sm btn-secondary" onclick="viewManualMaintenancePlan('${plan.id}')">View Details</button>
+                            <button class="btn btn-sm btn-primary" onclick="viewBOMDetails('${plan.id}')">View BOM</button>
+                        </div>
+                    </div>
+                    <div class="maintenance-item-details">
+                        <div class="maintenance-info">
+                            <span class="maintenance-date ${statusClass}">${plan.generatedAt.toLocaleDateString()}</span>
+                            <span class="maintenance-frequency">${plan.estimatedDuration}</span>
+                            <span class="maintenance-duration">$${plan.ear.toLocaleString()}</span>
+                            <span class="maintenance-priority ${priorityClass}">${plan.priority}</span>
+                        </div>
+                        <div class="maintenance-description">Manual Maintenance Plan - ${plan.createdBy}</div>
                     </div>
                 `;
                 
@@ -1306,11 +1491,12 @@
                 })
             };
 
-            // Add to maintenance plans
-            maintenancePlans.push(maintenancePlan);
+            // Add to manual maintenance plans
+            manualMaintenancePlans.push(maintenancePlan);
 
-            // Update pending approvals
-            updatePendingApprovalsList();
+            // Update manual maintenance metrics
+            updateManualMaintenanceMetrics();
+            displayManualMaintenancePlans();
 
             showSuccessModal('Maintenance Plan Created', 
                 `Maintenance plan created successfully!\n\n` +
@@ -3977,13 +4163,15 @@
             updateMaintenanceMetrics();
             displayMaintenancePlans();
             
+            // Initialize Manual maintenance section
+            updateManualMaintenanceMetrics();
+            displayManualMaintenancePlans();
+            
             // Load maintenance scheduling
             loadScheduledMaintenance();
             
-            // Load existing maintenance sections
-            loadMaintenanceTasks();
+            // Load firmware management
             loadFirmwareManagement();
-            loadMaintenanceHistory();
         }
 
         // Load maintenance tasks
