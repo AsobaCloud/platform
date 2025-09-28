@@ -19,6 +19,115 @@
             window.location.href = 'index.html';
         }
 
+        // BOM Builder Global Variables
+        let currentBOM = [];
+        let selectedIssueId = null;
+
+        function clearBOM() {
+            console.log('clearBOM function called');
+            console.log('currentBOM length:', currentBOM.length);
+            
+            if (currentBOM.length === 0) {
+                console.log('BOM is empty, showing info modal');
+                showInfoModal('BOM Empty', 'BOM is already empty.');
+                return;
+            }
+
+            console.log('Showing confirm modal');
+            showConfirmModal(
+                'Clear BOM',
+                `Are you sure you want to clear all ${currentBOM.length} components from the BOM?\n\nThis action cannot be undone.`,
+                () => {
+                    console.log('User confirmed clear BOM');
+                    currentBOM = [];
+                    updateBOMDisplay();
+                    updateEARCalculation();
+                    updateBOMMetrics();
+                    updateOrderSchedule();
+                    updateEarliestViableDate();
+                    
+                    // Clear the install date input
+                    const targetInstallDate = document.getElementById('targetInstallDate');
+                    if (targetInstallDate) {
+                        targetInstallDate.value = '';
+                    }
+                    
+                    showSuccessModal('BOM Cleared', 'BOM cleared successfully.');
+                }
+            );
+        }
+
+
+        function updateEARCalculation() {
+            const siteEarRate = parseFloat(document.getElementById('siteEarRate')?.value) || 120;
+            
+            let totalMaterialCost = 0;
+            let maxLeadTime = 0;
+            let totalDowntimeCost = 0;
+
+            currentBOM.forEach(item => {
+                totalMaterialCost += item.price_usd * item.qty;
+                // Only non-labor items contribute to lead time and downtime cost
+                if (item.type !== 'labor') {
+                    maxLeadTime = Math.max(maxLeadTime, item.lead_time_days);
+                }
+            });
+
+            totalDowntimeCost = siteEarRate * maxLeadTime;
+
+            // Update display
+            const materialCostEl = document.getElementById('materialCost');
+            const downtimeCostEl = document.getElementById('downtimeCost');
+            const totalCostEl = document.getElementById('totalCost');
+
+            if (materialCostEl) materialCostEl.textContent = `$${totalMaterialCost.toFixed(2)}`;
+            if (downtimeCostEl) downtimeCostEl.textContent = `$${totalDowntimeCost.toFixed(2)}`;
+            if (totalCostEl) totalCostEl.textContent = `$${(totalMaterialCost + totalDowntimeCost).toFixed(2)}`;
+        }
+
+        function updateBOMMetrics() {
+            // This function is called by other BOM functions
+            // Metrics are updated in updateEARCalculation()
+        }
+
+
+        function updateEarliestViableDate() {
+            const earliestViableDate = document.getElementById('earliestViableDate');
+            if (!earliestViableDate) return;
+
+            if (currentBOM.length === 0) {
+                earliestViableDate.textContent = 'Add components to calculate';
+                // Clear min attribute when no components
+                const targetInstallDate = document.getElementById('targetInstallDate');
+                if (targetInstallDate) {
+                    targetInstallDate.min = '';
+                }
+                return;
+            }
+
+            const maxLeadTime = Math.max(...currentBOM.map(item => item.lead_time_days));
+            const earliestDate = new Date();
+            earliestDate.setDate(earliestDate.getDate() + maxLeadTime + 1); // +1 day after lead time
+            
+            earliestViableDate.textContent = earliestDate.toLocaleDateString();
+            
+            // Set the min attribute on the date input
+            const targetInstallDate = document.getElementById('targetInstallDate');
+            if (targetInstallDate) {
+                targetInstallDate.min = earliestDate.toISOString().split('T')[0];
+                
+                // If current date is before minimum, clear it
+                if (targetInstallDate.value) {
+                    const currentDate = new Date(targetInstallDate.value);
+                    if (currentDate < earliestDate) {
+                        targetInstallDate.value = '';
+                        showWarningModal('Date Reset', 
+                            `Install date has been reset because it was before the earliest possible date of ${earliestDate.toLocaleDateString()}.`);
+                    }
+                }
+            }
+        }
+
         // Universal Modal System Functions
         function showInfoModal(title, message) {
             showModal(title, message, 'info', [{ text: 'OK', type: 'primary', action: 'close' }]);
@@ -104,6 +213,7 @@
                 id: 'plan-001',
                 title: 'Cummins Midrand - Inverter Maintenance',
                 site: 'cummins-midrand',
+                issue_id: 'issue-001',
                 priority: 'High',
                 ear: 2340,
                 timeHorizon: 72,
@@ -120,6 +230,7 @@
                 id: 'plan-002',
                 title: 'FNB Willowbridge - Panel Cleaning',
                 site: 'fnb-willowbridge',
+                issue_id: 'issue-002',
                 priority: 'Medium',
                 ear: 580,
                 timeHorizon: 48,
@@ -479,8 +590,6 @@
         ];
 
         // BOM Builder Functions
-        let currentBOM = [];
-        let selectedIssueId = null;
         let skuCatalog = [
             {
                 sku: "SG20KTL-FAN-STD",
@@ -569,6 +678,17 @@
                 lead_time_days: 15,
                 compatible_assets: ["SUN2000-series"],
                 attributes: {"voltage": "1200V", "current": "40A"}
+            },
+            {
+                sku: "LABOR-TECHNICIAN-DAY",
+                oem: "Internal",
+                model: "Field Service",
+                description: "Certified solar technician - daily rate",
+                type: "labor",
+                price_usd: 450.0,
+                lead_time_days: 0,
+                compatible_assets: ["All sites"],
+                attributes: {"rate_type": "daily", "certification": "Solar+", "travel_included": true}
             }
         ];
 
@@ -687,8 +807,18 @@
             const select = document.getElementById('selectedIssue');
             if (!select) return;
 
+            // Filter out issues that already have maintenance plans
+            const availableIssues = componentIssues.filter(issue => {
+                // Check if this issue already has a maintenance plan
+                const hasPlan = maintenancePlans.some(plan => 
+                    plan.issue_id === issue.id || 
+                    (plan.site === issue.site && plan.title.toLowerCase().includes(issue.component.toLowerCase()))
+                );
+                return !hasPlan;
+            });
+
             select.innerHTML = '<option value="">-- Select an Issue --</option>' +
-                componentIssues.map(issue => 
+                availableIssues.map(issue => 
                     `<option value="${issue.id}" ${issue.id === selectedIssueId ? 'selected' : ''}>${issue.component} - ${issue.issueType} (${issue.site})</option>`
                 ).join('');
         }
@@ -722,9 +852,9 @@
             `;
             issueDetails.style.display = 'block';
             
-            // Show install date section if components are added
+            // Show install date section when issue is selected
+            showInstallDateSection();
             if (currentBOM.length > 0) {
-                showInstallDateSection();
                 updateEarliestViableDate();
             }
         }
@@ -808,23 +938,6 @@
             } else {
                 targetInstallDateDisplay.textContent = 'Not Set';
                 earliestOrderDateDisplay.textContent = 'Not Set';
-            }
-        }
-
-        function updateEarliestViableDate() {
-            const earliestViableDate = document.getElementById('earliestViableDate');
-            if (!earliestViableDate || currentBOM.length === 0) return;
-
-            const maxLeadTime = Math.max(...currentBOM.map(item => item.lead_time_days));
-            const earliestDate = new Date();
-            earliestDate.setDate(earliestDate.getDate() + maxLeadTime);
-            
-            earliestViableDate.textContent = earliestDate.toLocaleDateString();
-            
-            // Set the min attribute on the date input
-            const targetInstallDate = document.getElementById('targetInstallDate');
-            if (targetInstallDate) {
-                targetInstallDate.min = earliestDate.toISOString().split('T')[0];
             }
         }
 
@@ -1013,11 +1126,8 @@
             updateBOMMetrics();
             updateOrderSchedule();
             
-            // Show install date section if issue is selected
-            if (selectedIssueId && currentBOM.length > 0) {
-                showInstallDateSection();
-                updateEarliestViableDate();
-            }
+            // Update earliest viable date whenever components are added
+            updateEarliestViableDate();
         }
 
         function removeFromBOM(sku) {
@@ -1027,14 +1137,8 @@
             updateBOMMetrics();
             updateOrderSchedule();
             
-            // Hide sections if no components left
-            if (currentBOM.length === 0) {
-                hideInstallDateSection();
-                hideReviewSection();
-                hideFinalActions();
-            } else if (selectedIssueId) {
-                updateEarliestViableDate();
-            }
+            // Update earliest viable date whenever components are removed
+            updateEarliestViableDate();
         }
 
         function updateBOMQuantity(sku, newQty) {
@@ -1090,44 +1194,6 @@
             `).join('');
         }
 
-        function updateEARCalculation() {
-            const siteEarRate = parseFloat(document.getElementById('siteEarRate')?.value) || 120;
-            
-            let totalMaterialCost = 0;
-            let maxLeadTime = 0;
-            let totalDowntimeCost = 0;
-
-            currentBOM.forEach(item => {
-                const itemCost = item.price_usd * item.qty;
-                const downtimeCost = siteEarRate * item.lead_time_days * item.qty;
-                
-                totalMaterialCost += itemCost;
-                totalDowntimeCost += downtimeCost;
-                maxLeadTime = Math.max(maxLeadTime, item.lead_time_days);
-
-                // Update selection metrics
-                item.selection_metrics.ear_usd_day = siteEarRate;
-                item.selection_metrics.total_cost_ear = itemCost + downtimeCost;
-            });
-
-            const totalCost = totalMaterialCost + totalDowntimeCost;
-
-            // Update EAR display
-            document.getElementById('materialCost').textContent = `$${totalMaterialCost.toFixed(2)}`;
-            document.getElementById('downtimeCost').textContent = `$${totalDowntimeCost.toFixed(2)}`;
-            document.getElementById('totalCost').textContent = `$${totalCost.toFixed(2)}`;
-
-            // Update metrics
-            document.getElementById('totalBomCost').textContent = `$${totalMaterialCost.toFixed(2)}`;
-            document.getElementById('maxLeadTime').textContent = `${maxLeadTime} days`;
-            document.getElementById('totalEarImpact').textContent = `$${totalDowntimeCost.toFixed(2)}`;
-            document.getElementById('bomItemCount').textContent = currentBOM.length;
-        }
-
-        function updateBOMMetrics() {
-            // This function is called by other BOM functions
-            // Metrics are updated in updateEARCalculation()
-        }
 
         function exportBOM() {
             if (currentBOM.length === 0) {
@@ -1168,24 +1234,6 @@
             showSuccessModal('BOM Exported', `BOM exported successfully!\n\nComponents: ${currentBOM.length}\nTotal Cost: $${(bomData.items.reduce((sum, item) => sum + (item.price_usd * item.qty), 0)).toFixed(2)}`);
         }
 
-        function clearBOM() {
-            if (currentBOM.length === 0) {
-                showInfoModal('BOM Empty', 'BOM is already empty.');
-                return;
-            }
-
-            showConfirmModal(
-                'Clear BOM',
-                `Are you sure you want to clear all ${currentBOM.length} components from the BOM?\n\nThis action cannot be undone.`,
-                () => {
-                    currentBOM = [];
-                    updateBOMDisplay();
-                    updateEARCalculation();
-                    updateBOMMetrics();
-                    showSuccessModal('BOM Cleared', 'BOM cleared successfully.');
-                }
-            );
-        }
 
         function saveBOM() {
             if (currentBOM.length === 0) {
@@ -1204,6 +1252,18 @@
                 return;
             }
 
+            // Validate install date is at least one day after longest lead time
+            const maxLeadTime = Math.max(...currentBOM.map(item => item.lead_time_days));
+            const earliestPossibleDate = new Date();
+            earliestPossibleDate.setDate(earliestPossibleDate.getDate() + maxLeadTime + 1); // +1 day after lead time
+            
+            const selectedInstallDate = new Date(targetInstallDate.value);
+            if (selectedInstallDate < earliestPossibleDate) {
+                showWarningModal('Install Date Too Early', 
+                    `Install date must be at least ${earliestPossibleDate.toLocaleDateString()} (one day after longest lead time of ${maxLeadTime} days).`);
+                return;
+            }
+
             const selectedIssue = componentIssues.find(issue => issue.id === selectedIssueId);
             if (!selectedIssue) {
                 showErrorModal('Issue Not Found', 'Selected issue no longer exists.');
@@ -1212,7 +1272,6 @@
 
             // Create maintenance plan from BOM and issue
             const installDate = new Date(targetInstallDate.value);
-            const maxLeadTime = Math.max(...currentBOM.map(item => item.lead_time_days));
             const earliestOrderDate = new Date(installDate);
             earliestOrderDate.setDate(earliestOrderDate.getDate() - maxLeadTime);
 
@@ -1220,6 +1279,7 @@
                 id: 'plan-' + Date.now(),
                 title: `Maintenance Plan for ${selectedIssue.component}`,
                 site: selectedIssue.site,
+                issue_id: selectedIssue.id,
                 priority: selectedIssue.priority,
                 ear: selectedIssue.earImpact,
                 timeHorizon: selectedIssue.timeWindow,
@@ -2406,57 +2466,256 @@
             });
         }
 
-        // Load maintenance scheduling
+        // Global scheduled maintenance data
+        let scheduledMaintenance = [
+            {
+                id: 'sched-001',
+                type: 'panel-cleaning',
+                site: 'cummins-midrand',
+                frequency: 'quarterly',
+                scheduledDate: '2024-12-15',
+                priority: 'medium',
+                duration: '4 hours',
+                description: 'Quarterly panel cleaning and performance check',
+                status: 'scheduled',
+                createdDate: '2024-11-01'
+            },
+            {
+                id: 'sched-002',
+                type: 'inverter-inspection',
+                site: 'fnb-willowbridge',
+                frequency: 'monthly',
+                scheduledDate: '2024-12-20',
+                priority: 'low',
+                duration: '2 hours',
+                description: 'Monthly inverter inspection and cleaning',
+                status: 'scheduled',
+                createdDate: '2024-11-15'
+            },
+            {
+                id: 'sched-003',
+                type: 'grid-connection-check',
+                site: 'cummins-midrand',
+                frequency: 'annual',
+                scheduledDate: '2025-01-05',
+                priority: 'high',
+                duration: '6 hours',
+                description: 'Annual grid connection inspection and safety test',
+                status: 'scheduled',
+                createdDate: '2024-10-01'
+            }
+        ];
+
+        // Load scheduled maintenance
         function loadPreemptionStatus() {
-            const preemptionContainer = document.getElementById('preemptionStatus');
-            preemptionContainer.innerHTML = '';
+            loadScheduledMaintenance();
+        }
 
-            // Solar maintenance data
-            const maintenanceEvents = [
-                {
-                    id: 'maint-001',
-                    title: 'Cummins Midrand - Inverter Maintenance',
-                    description: 'Quarterly inverter inspection and cleaning scheduled for Dec 15, 2024',
-                    type: 'scheduled',
-                    priority: 'medium'
-                },
-                {
-                    id: 'maint-002', 
-                    title: 'FNB Willowbridge - Panel Cleaning',
-                    description: 'Monthly panel cleaning and performance check due Dec 20, 2024',
-                    type: 'routine',
-                    priority: 'low'
-                },
-                {
-                    id: 'maint-003',
-                    title: 'Cummins Midrand - Grid Connection Check',
-                    description: 'Annual grid connection inspection and safety test - Jan 5, 2025',
-                    type: 'critical',
-                    priority: 'high'
-                }
-            ];
+        function loadScheduledMaintenance() {
+            const container = document.getElementById('scheduledMaintenanceList');
+            if (!container) return;
 
-            maintenanceEvents.forEach(event => {
-                const preemptionItem = document.createElement('div');
-                preemptionItem.className = 'preemption-item';
+            container.innerHTML = '';
+
+            if (scheduledMaintenance.length === 0) {
+                container.innerHTML = '<div class="empty-state"><p>No scheduled maintenance activities. Click "Schedule Maintenance" to add new activities.</p></div>';
+                return;
+            }
+
+            scheduledMaintenance.forEach(maintenance => {
+                const maintenanceItem = document.createElement('div');
+                maintenanceItem.className = 'scheduled-maintenance-item';
                 
-                const iconClass = `preemption-${event.type}`;
-                const iconText = event.type === 'critical' ? '!' : event.type === 'routine' ? '🧹' : '📅';
+                const scheduledDate = new Date(maintenance.scheduledDate);
+                const today = new Date();
+                const isOverdue = scheduledDate < today && maintenance.status === 'scheduled';
+                const isUpcoming = scheduledDate >= today && scheduledDate <= new Date(today.getTime() + 7 * 24 * 60 * 60 * 1000);
                 
-                preemptionItem.innerHTML = `
-                    <div class="preemption-icon ${iconClass}">${iconText}</div>
-                    <div class="preemption-details">
-                        <div class="preemption-title">${event.title}</div>
-                        <div class="preemption-description">${event.description}</div>
+                const priorityClass = `priority-${maintenance.priority}`;
+                const statusClass = isOverdue ? 'overdue' : (isUpcoming ? 'upcoming' : 'scheduled');
+                
+                maintenanceItem.innerHTML = `
+                    <div class="maintenance-item-header">
+                        <div class="maintenance-title">
+                            <span class="maintenance-type">${getMaintenanceTypeLabel(maintenance.type)}</span>
+                            <span class="maintenance-site">${getSiteName(maintenance.site)}</span>
+                        </div>
+                        <div class="maintenance-actions">
+                            <button class="btn btn-sm btn-secondary" onclick="rescheduleScheduledMaintenance('${maintenance.id}')">📅 Reschedule</button>
+                            <button class="btn btn-sm btn-primary" onclick="moveToMaintenance('${maintenance.id}')">✅ Move to Maintenance</button>
+                            <button class="btn btn-sm btn-danger" onclick="cancelScheduledMaintenance('${maintenance.id}')">❌ Cancel</button>
+                        </div>
                     </div>
-                    <div class="preemption-actions">
-                        <button class="preemption-btn acknowledge" onclick="acknowledgePreemption('${event.id}')">Schedule</button>
-                        <button class="preemption-btn execute" onclick="executePreemption('${event.id}')">Reschedule</button>
+                    <div class="maintenance-item-details">
+                        <div class="maintenance-info">
+                            <span class="maintenance-date ${statusClass}">${scheduledDate.toLocaleDateString()}</span>
+                            <span class="maintenance-frequency">${maintenance.frequency}</span>
+                            <span class="maintenance-duration">${maintenance.duration}</span>
+                            <span class="maintenance-priority ${priorityClass}">${maintenance.priority}</span>
+                        </div>
+                        <div class="maintenance-description">${maintenance.description}</div>
                     </div>
                 `;
                 
-                preemptionContainer.appendChild(preemptionItem);
+                container.appendChild(maintenanceItem);
             });
+        }
+
+        function getMaintenanceTypeLabel(type) {
+            const labels = {
+                'panel-cleaning': 'Panel Cleaning',
+                'inverter-inspection': 'Inverter Inspection',
+                'grid-connection-check': 'Grid Connection Check',
+                'performance-test': 'Performance Test',
+                'safety-inspection': 'Safety Inspection',
+                'preventive-maintenance': 'Preventive Maintenance'
+            };
+            return labels[type] || type;
+        }
+
+        function getSiteName(siteId) {
+            const sites = {
+                'cummins-midrand': 'Cummins Midrand',
+                'fnb-willowbridge': 'FNB Willowbridge'
+            };
+            return sites[siteId] || siteId;
+        }
+
+        // Modal functions for maintenance scheduling
+        function openScheduleMaintenanceModal() {
+            const modal = document.getElementById('scheduleMaintenanceModal');
+            if (modal) {
+                modal.classList.add('active');
+                // Set default date to tomorrow
+                const tomorrow = new Date();
+                tomorrow.setDate(tomorrow.getDate() + 1);
+                document.getElementById('scheduleMaintenanceScheduledDate').value = tomorrow.toISOString().split('T')[0];
+            }
+        }
+
+        function closeScheduleMaintenanceModal() {
+            const modal = document.getElementById('scheduleMaintenanceModal');
+            if (modal) {
+                modal.classList.remove('active');
+                document.getElementById('scheduleMaintenanceForm').reset();
+            }
+        }
+
+        function saveScheduledMaintenance() {
+            const form = document.getElementById('scheduleMaintenanceForm');
+            const formData = new FormData(form);
+            
+            const newMaintenance = {
+                id: 'sched-' + Date.now(),
+                type: document.getElementById('scheduleMaintenanceType').value,
+                site: document.getElementById('scheduleMaintenanceSite').value,
+                frequency: document.getElementById('scheduleMaintenanceFrequency').value,
+                scheduledDate: document.getElementById('scheduleMaintenanceScheduledDate').value,
+                priority: document.getElementById('scheduleMaintenancePriority').value,
+                duration: document.getElementById('scheduleMaintenanceDuration').value,
+                description: document.getElementById('scheduleMaintenanceDescription').value,
+                status: 'scheduled',
+                createdDate: new Date().toISOString().split('T')[0]
+            };
+
+            // Check if this is a reschedule operation
+            const isReschedule = window.isReschedulingMaintenance;
+            if (isReschedule) {
+                // Remove old entry
+                scheduledMaintenance = scheduledMaintenance.filter(m => m.id !== window.isReschedulingMaintenance);
+                window.isReschedulingMaintenance = null;
+            }
+            
+            scheduledMaintenance.push(newMaintenance);
+            loadScheduledMaintenance();
+            closeScheduleMaintenanceModal();
+            
+            const action = isReschedule ? 'Rescheduled' : 'Scheduled';
+            showSuccessModal(`Maintenance ${action}`, 
+                `${getMaintenanceTypeLabel(newMaintenance.type)} has been ${action.toLowerCase()} for ${getSiteName(newMaintenance.site)} on ${new Date(newMaintenance.scheduledDate).toLocaleDateString()}.`);
+        }
+
+        function rescheduleScheduledMaintenance(maintenanceId) {
+            const maintenance = scheduledMaintenance.find(m => m.id === maintenanceId);
+            if (!maintenance) return;
+
+            showConfirmModal('Reschedule Maintenance',
+                `Reschedule ${getMaintenanceTypeLabel(maintenance.type)} for ${getSiteName(maintenance.site)}?`,
+                () => {
+                    // Pre-fill the form with existing data
+                    document.getElementById('scheduleMaintenanceType').value = maintenance.type;
+                    document.getElementById('scheduleMaintenanceSite').value = maintenance.site;
+                    document.getElementById('scheduleMaintenanceFrequency').value = maintenance.frequency;
+                    document.getElementById('scheduleMaintenancePriority').value = maintenance.priority;
+                    document.getElementById('scheduleMaintenanceDuration').value = maintenance.duration;
+                    document.getElementById('scheduleMaintenanceDescription').value = maintenance.description;
+                    
+                    openScheduleMaintenanceModal();
+                    
+                    // Set a flag to indicate this is a reschedule operation
+                    window.isReschedulingMaintenance = maintenanceId;
+                }
+            );
+        }
+
+        function moveToMaintenance(maintenanceId) {
+            const maintenance = scheduledMaintenance.find(m => m.id === maintenanceId);
+            if (!maintenance) return;
+
+            showConfirmModal('Move to Maintenance',
+                `Move ${getMaintenanceTypeLabel(maintenance.type)} for ${getSiteName(maintenance.site)} to the Maintenance page?`,
+                () => {
+                    // Add to maintenance tasks
+                    const newTask = {
+                        id: 'task-' + Date.now(),
+                        title: `${getMaintenanceTypeLabel(maintenance.type)} - ${getSiteName(maintenance.site)}`,
+                        site: maintenance.site,
+                        priority: maintenance.priority,
+                        status: 'pending',
+                        scheduledDate: maintenance.scheduledDate,
+                        estimatedDuration: maintenance.duration,
+                        description: maintenance.description,
+                        type: 'scheduled',
+                        createdFrom: 'capacity-management'
+                    };
+
+                    // Add to maintenance tasks (this would integrate with the existing maintenance system)
+                    maintenanceTasks.push(newTask);
+                    
+                    // Remove from scheduled maintenance
+                    scheduledMaintenance = scheduledMaintenance.filter(m => m.id !== maintenanceId);
+                    loadScheduledMaintenance();
+                    
+                    showSuccessModal('Moved to Maintenance',
+                        `${getMaintenanceTypeLabel(maintenance.type)} has been moved to the Maintenance page and is ready for execution.`);
+                }
+            );
+        }
+
+        function cancelScheduledMaintenance(maintenanceId) {
+            const maintenance = scheduledMaintenance.find(m => m.id === maintenanceId);
+            if (!maintenance) return;
+
+            showConfirmModal('Cancel Maintenance',
+                `Cancel ${getMaintenanceTypeLabel(maintenance.type)} for ${getSiteName(maintenance.site)}? This action cannot be undone.`,
+                () => {
+                    scheduledMaintenance = scheduledMaintenance.filter(m => m.id !== maintenanceId);
+                    loadScheduledMaintenance();
+                    
+                    showSuccessModal('Maintenance Cancelled',
+                        `${getMaintenanceTypeLabel(maintenance.type)} has been cancelled.`);
+                }
+            );
+        }
+
+        function filterScheduledMaintenance(filter) {
+            const buttons = document.querySelectorAll('.maintenance-filters .chart-btn');
+            buttons.forEach(btn => btn.classList.remove('active'));
+            event.target.classList.add('active');
+
+            // This would implement filtering logic
+            // For now, just reload all items
+            loadScheduledMaintenance();
         }
 
         // Load site expansion planning

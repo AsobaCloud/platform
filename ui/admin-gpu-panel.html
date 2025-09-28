@@ -3223,9 +3223,21 @@
                     <div class="chart-container" style="margin-bottom: 30px;">
                         <div class="chart-header">
                             <h3 class="chart-title">Maintenance Scheduling</h3>
+                            <button class="btn btn-primary" onclick="openScheduleMaintenanceModal()">📅 Schedule Maintenance</button>
                         </div>
-                        <div id="preemptionStatus">
-                            <!-- Maintenance status will be populated by JavaScript -->
+                        
+                        <!-- Scheduled Maintenance List -->
+                        <div class="scheduled-maintenance-section">
+                            <div class="maintenance-filters">
+                                <button class="chart-btn active" onclick="filterScheduledMaintenance('all')">All</button>
+                                <button class="chart-btn" onclick="filterScheduledMaintenance('upcoming')">Upcoming</button>
+                                <button class="chart-btn" onclick="filterScheduledMaintenance('overdue')">Overdue</button>
+                                <button class="chart-btn" onclick="filterScheduledMaintenance('site')">By Site</button>
+                            </div>
+                            
+                            <div id="scheduledMaintenanceList">
+                                <!-- Scheduled maintenance items will be populated by JavaScript -->
+                            </div>
                         </div>
                     </div>
 
@@ -3850,7 +3862,7 @@
                             <div class="metric-card">
                                 <span class="metric-value" id="totalBomCost">$0</span>
                                 <span class="metric-label">Total Material Cost</span>
-                                <span class="metric-change">Including all components</span>
+                                <span class="metric-change">All components</span>
                             </div>
                             <div class="metric-card">
                                 <span class="metric-value" id="maxLeadTime">0 days</span>
@@ -3901,6 +3913,7 @@
                                         <option value="fuse">Fuses</option>
                                         <option value="igbt">IGBTs</option>
                                         <option value="capacitor">Capacitors</option>
+                                        <option value="labor">Labor</option>
                                     </select>
                                     <input type="text" id="catalogSearch" class="form-input" placeholder="Search SKU, model, description...">
                                 </div>
@@ -3948,22 +3961,25 @@
                                 </div>
                             </div>
 
+                            <!-- Install Date Input -->
+                            <div class="form-group">
+                                <label class="form-label">Target Install Date:</label>
+                                <div class="install-date-info">
+                                    <p class="earliest-date-info">Earliest possible: <span id="earliestViableDate">Add components to calculate</span></p>
+                                    <input type="date" id="targetInstallDate" class="form-select" onchange="updateOrderSchedule()">
+                                </div>
+                            </div>
+
+                            <!-- BOM Actions -->
+                            <div class="bom-actions">
+                                <button class="btn btn-primary" onclick="exportBOM()">📄 Export BOM</button>
+                                <button class="btn btn-secondary" onclick="clearBOM()">🗑️ Clear BOM</button>
+                                <button class="btn btn-success" onclick="saveBOM()">✅ Create Maintenance Plan</button>
+                            </div>
                         </div>
                     </div>
 
-                    <!-- Step 3: Install Date Selection -->
-                    <div class="bom-install-date-section" style="display: none;">
-                        <div class="form-group">
-                            <label class="form-label">Step 3: Select Target Install Date</label>
-                            <div class="install-date-info">
-                                <p class="earliest-date-info">Earliest viable install date: <span id="earliestViableDate">Calculating...</span></p>
-                                <input type="date" id="targetInstallDate" class="form-select" onchange="updateOrderSchedule()">
-                            </div>
-                        </div>
-                        <div id="orderSchedule" class="order-schedule" style="display: none;">
-                            <!-- Order schedule will be populated here -->
-                        </div>
-                    </div>
+                    <!-- Step 3: Install Date Selection - Removed duplicate section -->
 
                     <!-- Step 4: Cost & Timeline Review -->
                     <div class="bom-review-section" style="display: none;">
@@ -3991,8 +4007,6 @@
                     <!-- Step 5: Final Actions -->
                     <div class="bom-final-actions" style="display: none;">
                         <div class="bom-actions">
-                            <button class="btn btn-primary" onclick="exportBOM()">📄 Export Maintenance Plan</button>
-                            <button class="btn btn-secondary" onclick="clearBOM()">🗑️ Clear BOM</button>
                             <button class="btn btn-success" onclick="saveBOM()">✅ Create Maintenance Plan</button>
                         </div>
                     </div>
@@ -4013,6 +4027,82 @@
             </div>
             <div class="modal-footer" id="modalFooter">
                 <button class="modal-btn modal-btn-primary" onclick="closeUniversalModal()">OK</button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Schedule Maintenance Modal -->
+    <div id="scheduleMaintenanceModal" class="modal-overlay">
+        <div class="modal" style="max-width: 600px;">
+            <div class="modal-header">
+                <h3 class="modal-title">Schedule Regular Maintenance</h3>
+                <button class="modal-close" onclick="closeScheduleMaintenanceModal()">&times;</button>
+            </div>
+            <div class="modal-body">
+                <form id="scheduleMaintenanceForm">
+                    <div class="form-group">
+                        <label class="form-label">Maintenance Type:</label>
+                        <select id="scheduleMaintenanceType" class="form-select" required>
+                            <option value="">-- Select Maintenance Type --</option>
+                            <option value="panel-cleaning">Panel Cleaning</option>
+                            <option value="inverter-inspection">Inverter Inspection</option>
+                            <option value="grid-connection-check">Grid Connection Check</option>
+                            <option value="performance-test">Performance Test</option>
+                            <option value="safety-inspection">Safety Inspection</option>
+                            <option value="preventive-maintenance">Preventive Maintenance</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Site:</label>
+                        <select id="scheduleMaintenanceSite" class="form-select" required>
+                            <option value="">-- Select Site --</option>
+                            <option value="cummins-midrand">Cummins Midrand</option>
+                            <option value="fnb-willowbridge">FNB Willowbridge</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Frequency:</label>
+                        <select id="scheduleMaintenanceFrequency" class="form-select" required>
+                            <option value="">-- Select Frequency --</option>
+                            <option value="monthly">Monthly</option>
+                            <option value="quarterly">Quarterly</option>
+                            <option value="semi-annual">Semi-Annual</option>
+                            <option value="annual">Annual</option>
+                            <option value="one-time">One-Time</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Scheduled Date:</label>
+                        <input type="date" id="scheduleMaintenanceScheduledDate" class="form-select" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Priority:</label>
+                        <select id="scheduleMaintenancePriority" class="form-select" required>
+                            <option value="low">Low</option>
+                            <option value="medium" selected>Medium</option>
+                            <option value="high">High</option>
+                            <option value="critical">Critical</option>
+                        </select>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Estimated Duration:</label>
+                        <input type="text" id="scheduleMaintenanceDuration" class="form-control" placeholder="e.g., 2 hours, 1 day" required>
+                    </div>
+                    
+                    <div class="form-group">
+                        <label class="form-label">Description:</label>
+                        <textarea id="scheduleMaintenanceDescription" class="form-control" rows="3" placeholder="Additional details about this maintenance activity..."></textarea>
+                    </div>
+                </form>
+            </div>
+            <div class="modal-footer">
+                <button class="modal-btn modal-btn-secondary" onclick="closeScheduleMaintenanceModal()">Cancel</button>
+                <button class="modal-btn modal-btn-primary" onclick="saveScheduledMaintenance()">Schedule Maintenance</button>
             </div>
         </div>
     </div>

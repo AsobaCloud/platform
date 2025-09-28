@@ -584,36 +584,157 @@
 .status-red { color: var(--status-red); }
 .status-proposed { color: #3498db; }
 
-/* Modal Styles */
-.modal-overlay {
-    display: none; /* Hidden by default */
-    position: fixed; /* Stay in place */
-    z-index: 1000; /* Sit on top */
-    left: 0;
-    top: 0;
-    width: 100%; /* Full width */
-    height: 100%; /* Full height */
-    overflow: auto; /* Enable scroll if needed */
-    background-color: rgba(0,0,0,0.6); /* Black w/ opacity */
-    align-items: center;
-    justify-content: center;
+/* Modal Styles - Duplicate section removed */
+
+/* Scheduled Maintenance Styles */
+.scheduled-maintenance-section {
+    margin-top: 20px;
 }
 
-.modal-content {
-    background-color: var(--white);
-    margin: auto;
-    padding: 30px;
+.maintenance-filters {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+}
+
+.scheduled-maintenance-item {
+    border: 1px solid var(--border-grey);
     border-radius: 8px;
-    box-shadow: 0 5px 15px rgba(0,0,0,0.3);
-    width: 90%;
-    max-width: 600px;
-    position: relative;
-    animation: fadeIn 0.3s ease-out;
+    margin-bottom: 15px;
+    background: var(--white);
+    overflow: hidden;
+}
+
+.maintenance-item-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 15px 20px;
+    background: var(--background-light);
+    border-bottom: 1px solid var(--border-grey);
+}
+
+.maintenance-title {
+    display: flex;
+    flex-direction: column;
+    gap: 5px;
+}
+
+.maintenance-type {
+    font-weight: 600;
+    color: var(--text-dark);
+    font-size: 1rem;
+}
+
+.maintenance-site {
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.maintenance-actions {
+    display: flex;
+    gap: 8px;
+}
+
+.maintenance-item-details {
+    padding: 15px 20px;
+}
+
+.maintenance-info {
+    display: flex;
+    gap: 15px;
+    margin-bottom: 10px;
+    flex-wrap: wrap;
+}
+
+.maintenance-date {
+    font-weight: 600;
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.9rem;
+}
+
+.maintenance-date.scheduled {
+    background: var(--background-light);
+    color: var(--text-dark);
+}
+
+.maintenance-date.upcoming {
+    background: var(--status-yellow);
+    color: var(--white);
+}
+
+.maintenance-date.overdue {
+    background: var(--status-red);
+    color: var(--white);
+}
+
+.maintenance-frequency,
+.maintenance-duration {
+    color: var(--text-light);
+    font-size: 0.9rem;
+}
+
+.maintenance-priority {
+    padding: 4px 8px;
+    border-radius: 4px;
+    font-size: 0.8rem;
+    font-weight: 600;
+    text-transform: uppercase;
+}
+
+.priority-low {
+    background: var(--status-green);
+    color: var(--white);
+}
+
+.priority-medium {
+    background: var(--status-yellow);
+    color: var(--white);
+}
+
+.priority-high {
+    background: var(--status-red);
+    color: var(--white);
+}
+
+.priority-critical {
+    background: var(--status-red);
+    color: var(--white);
+    animation: pulse 2s infinite;
+}
+
+.maintenance-description {
+    color: var(--text-light);
+    font-size: 0.9rem;
+    line-height: 1.4;
+}
+
+.empty-state {
+    text-align: center;
+    padding: 40px 20px;
+    color: var(--text-light);
+}
+
+.empty-state p {
+    margin: 0;
+    font-size: 1rem;
+}
+
+.btn-sm {
+    padding: 6px 12px;
+    font-size: 0.8rem;
 }
 
 @keyframes fadeIn {
     from { opacity: 0; transform: translateY(-20px); }
     to { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes pulse {
+    0%, 100% { opacity: 1; }
+    50% { opacity: 0.7; }
 }
 
 .close-button {
