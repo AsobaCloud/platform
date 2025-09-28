@@ -2881,6 +2881,14 @@
                         Analytics
                     </button>
                 </div>
+
+                <div class="nav-section">
+                    <div class="nav-section-title">System</div>
+                    <button class="nav-button" data-section="settings">
+                        <span class="nav-icon">⚙️</span>
+                        Settings
+                    </button>
+                </div>
             </nav>
 
             <!-- Main Content Area -->
@@ -3455,40 +3463,86 @@
                         </div>
                     </div>
 
+                    <!-- Hardware Maintenance Log -->
+                    <div class="config-section">
+                        <h3 style="margin-bottom: 20px; color: var(--text-dark);">Maintenance History</h3>
+                        <div id="maintenanceHistory">
+                            <!-- Maintenance history will be populated by JavaScript -->
+                        </div>
+                    </div>
+                </div>
+
+                <!-- Settings Section -->
+                <div class="content-section" id="settings">
+                    <div class="section-header">
+                        <h1 class="section-title">System Settings</h1>
+                        <p class="section-subtitle">Configure system parameters and maintenance settings</p>
+                    </div>
+
                     <!-- System Configuration -->
                     <div class="config-section">
-                        <h3 style="margin-bottom: 20px; color: var(--text-dark);">System Configuration</h3>
+                        <h3 style="margin-bottom: 20px; color: var(--text-dark);">Solar O&M Configuration</h3>
                         <div class="config-form">
                             <div class="config-group">
-                                <label for="powerLimit">GPU Power Limit (%)</label>
-                                <input type="number" id="powerLimit" min="50" max="100" value="100">
-                            </div>
-                            <div class="config-group">
-                                <label for="tempThreshold">Temperature Threshold (°C)</label>
-                                <input type="number" id="tempThreshold" min="60" max="90" value="85">
-                            </div>
-                            <div class="config-group">
-                                <label for="autoMaintenance">Auto Maintenance</label>
-                                <select id="autoMaintenance">
-                                    <option value="enabled" selected>Enabled</option>
-                                    <option value="disabled">Disabled</option>
+                                <label for="inverterMaintenanceFreq">Inverter Maintenance Frequency</label>
+                                <select id="inverterMaintenanceFreq">
+                                    <option value="monthly">Monthly</option>
+                                    <option value="quarterly" selected>Quarterly (3 months)</option>
+                                    <option value="biannual">Biannual (6 months)</option>
+                                    <option value="annual">Annual</option>
                                 </select>
                             </div>
                             <div class="config-group">
-                                <label for="maintenanceWindow">Maintenance Window</label>
-                                <select id="maintenanceWindow">
-                                    <option value="weekend">Weekend (Sat-Sun)</option>
-                                    <option value="nightly">Nightly (2AM-4AM)</option>
-                                    <option value="manual" selected>Manual Only</option>
+                                <label for="panelCleaningFreq">Panel Cleaning Frequency</label>
+                                <select id="panelCleaningFreq">
+                                    <option value="monthly">Monthly</option>
+                                    <option value="quarterly" selected>Quarterly (3 months)</option>
+                                    <option value="biannual">Biannual (6 months)</option>
+                                    <option value="annual">Annual</option>
                                 </select>
+                            </div>
+                            <div class="config-group">
+                                <label for="electricalInspectionFreq">Electrical Inspection Frequency</label>
+                                <select id="electricalInspectionFreq">
+                                    <option value="monthly">Monthly</option>
+                                    <option value="quarterly">Quarterly (3 months)</option>
+                                    <option value="biannual" selected>Biannual (6 months)</option>
+                                    <option value="annual">Annual</option>
+                                </select>
+                            </div>
+                            <div class="config-group">
+                                <label for="performanceMonitoringFreq">Performance Monitoring Frequency</label>
+                                <select id="performanceMonitoringFreq">
+                                    <option value="daily" selected>Daily</option>
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly">Monthly</option>
+                                </select>
+                            </div>
+                            <div class="config-group">
+                                <label for="siteVisitFreq">Physical Site Visit Frequency</label>
+                                <select id="siteVisitFreq">
+                                    <option value="weekly">Weekly</option>
+                                    <option value="monthly" selected>Monthly</option>
+                                    <option value="quarterly">Quarterly (3 months)</option>
+                                    <option value="biannual">Biannual (6 months)</option>
+                                </select>
+                            </div>
+                            <div class="config-group">
+                                <label for="performanceThreshold">Performance Degradation Threshold (%)</label>
+                                <input type="number" id="performanceThreshold" min="5" max="25" value="15" step="1">
                             </div>
                             <div class="config-group">
                                 <label for="alertEmail">Alert Email</label>
                                 <input type="email" id="alertEmail" placeholder="admin@company.com" value="admin@asoba.co">
                             </div>
                             <div class="config-group">
-                                <label for="backupRetention">Backup Retention (days)</label>
-                                <input type="number" id="backupRetention" min="7" max="365" value="30">
+                                <label for="maintenanceWindow">Preferred Maintenance Window</label>
+                                <select id="maintenanceWindow">
+                                    <option value="morning">Morning (8AM-12PM)</option>
+                                    <option value="afternoon">Afternoon (1PM-5PM)</option>
+                                    <option value="weekend" selected>Weekend (Sat-Sun)</option>
+                                    <option value="flexible">Flexible</option>
+                                </select>
                             </div>
                         </div>
                         <div class="config-actions">
@@ -3498,14 +3552,6 @@
                             <button class="config-btn secondary" onclick="resetConfiguration()">
                                 🔄 Reset to Defaults
                             </button>
-                        </div>
-                    </div>
-
-                    <!-- Hardware Maintenance Log -->
-                    <div class="config-section">
-                        <h3 style="margin-bottom: 20px; color: var(--text-dark);">Maintenance History</h3>
-                        <div id="maintenanceHistory">
-                            <!-- Maintenance history will be populated by JavaScript -->
                         </div>
                     </div>
                 </div>

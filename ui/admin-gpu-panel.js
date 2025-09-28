@@ -1995,6 +1995,9 @@
                 case 'bom-builder':
                     loadBOMBuilder();
                     break;
+                case 'settings':
+                    loadSettings();
+                    break;
             }
         }
 
@@ -4180,25 +4183,29 @@
         // Configuration functions
         function saveConfiguration() {
             const config = {
-                powerLimit: document.getElementById('powerLimit').value,
-                tempThreshold: document.getElementById('tempThreshold').value,
-                autoMaintenance: document.getElementById('autoMaintenance').value,
-                maintenanceWindow: document.getElementById('maintenanceWindow').value,
+                inverterMaintenanceFreq: document.getElementById('inverterMaintenanceFreq').value,
+                panelCleaningFreq: document.getElementById('panelCleaningFreq').value,
+                electricalInspectionFreq: document.getElementById('electricalInspectionFreq').value,
+                performanceMonitoringFreq: document.getElementById('performanceMonitoringFreq').value,
+                siteVisitFreq: document.getElementById('siteVisitFreq').value,
+                performanceThreshold: document.getElementById('performanceThreshold').value,
                 alertEmail: document.getElementById('alertEmail').value,
-                backupRetention: document.getElementById('backupRetention').value
+                maintenanceWindow: document.getElementById('maintenanceWindow').value
             };
             
-            alert(`Configuration saved!\n\nPower Limit: ${config.powerLimit}%\nTemperature Threshold: ${config.tempThreshold}°C\nAuto Maintenance: ${config.autoMaintenance}\nMaintenance Window: ${config.maintenanceWindow}\nAlert Email: ${config.alertEmail}\nBackup Retention: ${config.backupRetention} days`);
+            alert(`Solar O&M Configuration saved!\n\nInverter Maintenance: ${config.inverterMaintenanceFreq}\nPanel Cleaning: ${config.panelCleaningFreq}\nElectrical Inspection: ${config.electricalInspectionFreq}\nPerformance Monitoring: ${config.performanceMonitoringFreq}\nSite Visits: ${config.siteVisitFreq}\nPerformance Threshold: ${config.performanceThreshold}%\nAlert Email: ${config.alertEmail}\nMaintenance Window: ${config.maintenanceWindow}`);
         }
 
         function resetConfiguration() {
             if (confirm('Reset all configuration to defaults?')) {
-                document.getElementById('powerLimit').value = 100;
-                document.getElementById('tempThreshold').value = 85;
-                document.getElementById('autoMaintenance').value = 'enabled';
-                document.getElementById('maintenanceWindow').value = 'manual';
+                document.getElementById('inverterMaintenanceFreq').value = 'quarterly';
+                document.getElementById('panelCleaningFreq').value = 'quarterly';
+                document.getElementById('electricalInspectionFreq').value = 'biannual';
+                document.getElementById('performanceMonitoringFreq').value = 'daily';
+                document.getElementById('siteVisitFreq').value = 'monthly';
+                document.getElementById('performanceThreshold').value = 15;
                 document.getElementById('alertEmail').value = 'admin@asoba.co';
-                document.getElementById('backupRetention').value = 30;
+                document.getElementById('maintenanceWindow').value = 'weekend';
                 alert('Configuration reset to defaults!');
             }
         }
@@ -4252,6 +4259,11 @@
                 updateEnergyAtRiskChart('30d');
                 updateCapacityFactorChart('7d');
             }, 500);
+        }
+
+        function loadSettings() {
+            // Settings are already loaded via HTML
+            // This function can be used for any dynamic settings loading
         }
 
         function setupAnalyticsControls() {
