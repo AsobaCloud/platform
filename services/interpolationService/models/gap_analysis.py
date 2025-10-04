@@ -917,6 +917,65 @@ class SolarGapAnalyzer:
         recommendations['method_parameters']['apply_solar_constraints'] = True
         recommendations['reasoning'].append("Apply solar physics constraints (nighttime = 0, etc.)")
         
+        # Add gap-specific recommendations
+        recommendations['gap_specific_recommendations'] = {
+            'short_gaps': 'spline_interpolation' if short_gaps > total_gaps * 0.5 else 'multi_output_regression',
+            'medium_gaps': 'multi_output_regression' if medium_gaps > total_gaps * 0.3 else 'gaussian_process',
+            'long_gaps': 'physics_based_model' if long_gaps > total_gaps * 0.2 else 'multi_output_regression'
+        }
+        
+        # Add detailed configuration for each method
+        recommendations['configuration'] = {
+            'multi_output_regression': {
+                'model_equipment_independently': recommendations['method_parameters'].get('model_equipment_independently', True),
+                'use_equipment_correlation': recommendations['method_parameters'].get('use_equipment_correlation', True),
+                'correlation_features': ['inverter_1', 'inverter_2', 'inverter_3'] if len(analysis.get('columns', {})) >= 3 else [],
+                'shared_features': ['weather_data', 'time_features'],
+                'apply_solar_constraints': True,
+                'solar_constraints': {
+                    'nighttime_zero': True,
+                    'max_power_limits': {'inverter_1': 1500, 'inverter_2': 1500, 'inverter_3': 1500},
+                    'negative_clipping': True,
+                    'max_efficiency': 0.95
+                },
+                'model_parameters': {
+                    'n_estimators': 200,
+                    'max_depth': 6,
+                    'learning_rate': 0.1,
+                    'feature_fraction': 0.9,
+                    'random_state': 42
+                }
+            },
+            'spline_interpolation': {
+                'method': 'cubic',
+                'fill_value': 'extrapolate',
+                'apply_solar_constraints': True,
+                'solar_constraints': {
+                    'nighttime_zero': True,
+                    'negative_clipping': True
+                }
+            },
+            'gaussian_process': {
+                'kernel': 'rbf',
+                'alpha': 1e-6,
+                'apply_solar_constraints': True,
+                'solar_constraints': {
+                    'nighttime_zero': True,
+                    'negative_clipping': True
+                }
+            },
+            'physics_based_model': {
+                'use_solar_position': True,
+                'use_weather_correlation': True,
+                'apply_solar_constraints': True,
+                'solar_constraints': {
+                    'nighttime_zero': True,
+                    'negative_clipping': True,
+                    'max_efficiency': 0.95
+                }
+            }
+        }
+        
         # Add pattern-specific recommendations
         recommendations['pattern_based_recommendations'] = {
             'failure_patterns': patterns.get('failure_types', {}),

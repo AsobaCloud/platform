@@ -22,6 +22,76 @@ from difflib import get_close_matches
 warnings.filterwarnings('ignore')
 
 
+class InterpolationConfig:
+    """Parse and validate gap analysis recommendations"""
+    
+    def __init__(self, gap_analysis: Dict):
+        self.gap_analysis = gap_analysis
+        self.recommendations = gap_analysis.get('recommendations', {})
+        self.config = self.recommendations.get('configuration', {})
+    
+    def get_method_config(self, method_name: str) -> Dict:
+        """Get configuration for specific method"""
+        return self.config.get(method_name, {})
+    
+    def should_model_independently(self, method_name: str) -> bool:
+        """Check if equipment should be modeled independently"""
+        method_config = self.get_method_config(method_name)
+        return method_config.get('model_equipment_independently', False)
+    
+    def should_use_correlation(self, method_name: str) -> bool:
+        """Check if equipment correlation should be used"""
+        method_config = self.get_method_config(method_name)
+        return method_config.get('use_equipment_correlation', False)
+    
+    def get_correlation_features(self, method_name: str) -> List[str]:
+        """Get correlation features to add"""
+        method_config = self.get_method_config(method_name)
+        return method_config.get('correlation_features', [])
+    
+    def get_solar_constraints(self, method_name: str) -> Dict:
+        """Get solar constraint configuration"""
+        method_config = self.get_method_config(method_name)
+        return method_config.get('solar_constraints', {})
+    
+    def get_model_parameters(self, method_name: str) -> Dict:
+        """Get model parameters"""
+        method_config = self.get_method_config(method_name)
+        return method_config.get('model_parameters', {})
+    
+    def get_gap_specific_recommendations(self) -> Dict:
+        """Get gap-specific method recommendations"""
+        return self.recommendations.get('gap_specific_recommendations', {})
+    
+    def validate_configuration(self, method_name: str) -> Dict:
+        """Validate that configuration is complete and consistent"""
+        method_config = self.get_method_config(method_name)
+        validation = {
+            'valid': True,
+            'warnings': [],
+            'errors': []
+        }
+        
+        if not method_config:
+            validation['valid'] = False
+            validation['errors'].append(f"No configuration found for method: {method_name}")
+            return validation
+        
+        # Check for required parameters
+        if method_name == 'multi_output_regression':
+            required_params = ['model_equipment_independently', 'use_equipment_correlation']
+            for param in required_params:
+                if param not in method_config:
+                    validation['warnings'].append(f"Missing parameter: {param}")
+        
+        # Check solar constraints
+        solar_constraints = method_config.get('solar_constraints', {})
+        if not solar_constraints:
+            validation['warnings'].append("No solar constraints specified")
+        
+        return validation
+
+
 class InterpolationMetrics:
     """Calculate interpolation performance metrics"""
     
@@ -502,8 +572,9 @@ class PhysicsBasedInterpolator(BaseInterpolator):
 class MultiOutputRegressionInterpolator(BaseInterpolator):
     """Multi-output regression for correlated equipment"""
     
-    def __init__(self, config: Optional[Dict] = None):
+    def __init__(self, config: Optional[Dict] = None, interpolation_config: Optional[InterpolationConfig] = None):
         super().__init__(config)
+        self.interp_config = interpolation_config
         self.model = None
         self.feature_columns = None
         self.scaler_X = None
@@ -513,7 +584,145 @@ class MultiOutputRegressionInterpolator(BaseInterpolator):
         return "Multi-Output LightGBM Regression"
     
     def fit(self, df: pd.DataFrame, power_columns: List[str], time_column: str, weather_data: Optional[pd.DataFrame] = None) -> 'MultiOutputRegressionInterpolator':
-        """Fit multi-output model"""
+        """Adaptive fitting based on gap analysis recommendations"""
+        
+        # Get method-specific configuration
+        method_config = self.interp_config.get_method_config('multi_output_regression') if self.interp_config else {}
+        
+        # Decision 1: Model independently or together?
+        model_independently = method_config.get('model_equipment_independently', True)
+        use_correlation = method_config.get('use_equipment_correlation', False)
+        
+        if model_independently and use_correlation:
+            # Train separate models but add cross-equipment features
+            self._fit_independent_with_correlation(df, power_columns, time_column, weather_data, method_config)
+        elif model_independently:
+            # Train completely separate models
+            self._fit_independent_models(df, power_columns, time_column, weather_data, method_config)
+        else:
+            # Train single multi-output model
+            self._fit_multi_output_model(df, power_columns, time_column, weather_data, method_config)
+        
+        return self
+    
+    def _fit_independent_with_correlation(self, df: pd.DataFrame, power_columns: List[str], 
+                                        time_column: str, weather_data: Optional[pd.DataFrame], 
+                                        method_config: Dict):
+        """Train independent models with PROPER correlation features (no data leakage)"""
+        
+        # Create base features
+        df_features = self.create_features(df, time_column, weather_data)
+        
+        # Train individual models with proper correlation features
+        self.model = {}
+        model_params = method_config.get('model_parameters', {})
+        correlation_features = method_config.get('correlation_features', power_columns)
+        
+        for target_col in power_columns:
+            print(f"Training model for {target_col}...")
+            
+            # Get rows where target column has data
+            target_complete_mask = df_features[target_col].notna()
+            
+            if target_complete_mask.sum() < 50:
+                print(f"Insufficient data for {target_col}, skipping...")
+                continue
+            
+            # Create correlation features ONLY from other equipment that has data at same time
+            df_with_correlation = df_features.copy()
+            
+            for corr_col in correlation_features:
+                if corr_col != target_col and corr_col in df_features.columns:
+                    
+                    # SAFE CORRELATION FEATURES:
+                    # 1. Historical correlation (only past data, no leakage)
+                    df_with_correlation[f'{corr_col}_hist_1h'] = df_features[corr_col].shift(1).fillna(0)
+                    df_with_correlation[f'{corr_col}_hist_2h'] = df_features[corr_col].shift(2).fillna(0)
+                    df_with_correlation[f'{corr_col}_hist_3h'] = df_features[corr_col].shift(3).fillna(0)
+                    
+                    # 2. Historical rolling statistics (backward-looking only)
+                    df_with_correlation[f'{corr_col}_hist_mean_6h'] = (
+                        df_features[corr_col].shift(1).rolling(window=6, min_periods=1).mean().fillna(0)
+                    )
+                    df_with_correlation[f'{corr_col}_hist_std_6h'] = (
+                        df_features[corr_col].shift(1).rolling(window=6, min_periods=1).std().fillna(0)
+                    )
+                    
+                    # 3. Equipment availability indicator (no leakage)
+                    df_with_correlation[f'{corr_col}_available'] = (~df_features[corr_col].isna()).astype(int)
+                    df_with_correlation[f'{corr_col}_available_lag1'] = df_with_correlation[f'{corr_col}_available'].shift(1).fillna(0)
+            
+            # Select training data (only where target is available)
+            train_mask = target_complete_mask
+            
+            # Compute correlation strength features on training data only
+            correlation_strengths = {}
+            for corr_col in correlation_features:
+                if corr_col != target_col and corr_col in df_features.columns:
+                    # Calculate correlation on training data
+                    train_data = df_features.loc[train_mask, [target_col, corr_col]].dropna()
+                    if len(train_data) > 10:
+                        correlation_strength = abs(train_data[target_col].corr(train_data[corr_col]))
+                        correlation_strengths[corr_col] = correlation_strength
+                        # Add as constant feature
+                        df_with_correlation[f'{corr_col}_correlation_strength'] = correlation_strength
+                    else:
+                        correlation_strengths[corr_col] = 0.0
+                        df_with_correlation[f'{corr_col}_correlation_strength'] = 0.0
+            
+            # Get feature columns (exclude all target power columns to prevent leakage)
+            feature_cols = self._get_safe_feature_columns(df_with_correlation, exclude=power_columns)
+            
+            # Prepare training data
+            X_train = df_with_correlation.loc[train_mask, feature_cols]
+            y_train = df_features.loc[train_mask, target_col]
+            
+            # Remove any remaining NaN values
+            train_clean_mask = ~(X_train.isna().any(axis=1) | y_train.isna())
+            if train_clean_mask.sum() < 50:
+                print(f"Insufficient clean training data for {target_col}, skipping...")
+                continue
+                
+            X_train_clean = X_train.loc[train_clean_mask]
+            y_train_clean = y_train.loc[train_clean_mask]
+            
+            # Scale features
+            scaler = MinMaxScaler()
+            X_train_scaled = scaler.fit_transform(X_train_clean)
+            
+            # Train model
+            lgb_model = lgb.LGBMRegressor(
+                n_estimators=model_params.get('n_estimators', 200),
+                learning_rate=model_params.get('learning_rate', 0.1),
+                max_depth=model_params.get('max_depth', 6),
+                feature_fraction=model_params.get('feature_fraction', 0.9),
+                random_state=model_params.get('random_state', 42),
+                verbose=-1
+            )
+            
+            lgb_model.fit(X_train_scaled, y_train_clean)
+            
+            self.model[target_col] = {
+                'model': lgb_model,
+                'scaler': scaler,
+                'feature_cols': feature_cols,
+                'correlation_strengths': correlation_strengths
+            }
+            
+            print(f"Model for {target_col} trained with {len(feature_cols)} features on {len(y_train_clean)} samples")
+        
+        self.is_fitted = True
+        self.metadata = {
+            'method': 'multi_output_lgb_with_safe_correlation',
+            'models_trained': len(self.model),
+            'correlation_features_used': True,
+            'leakage_prevention': 'historical_features_only'
+        }
+    
+    def _fit_independent_models(self, df: pd.DataFrame, power_columns: List[str], 
+                              time_column: str, weather_data: Optional[pd.DataFrame], 
+                              method_config: Dict):
+        """Train completely separate models (original behavior)"""
         
         # Create features
         df_features = self.create_features(df, time_column, weather_data)
@@ -581,6 +790,101 @@ class MultiOutputRegressionInterpolator(BaseInterpolator):
         
         return self
     
+    def _get_feature_columns(self, df_features: pd.DataFrame, exclude: List[str] = None) -> List[str]:
+        """Get feature columns excluding specified columns"""
+        exclude = exclude or []
+        feature_cols = []
+        
+        for col in df_features.columns:
+            if col not in exclude and col not in ['Time', 'datetime']:
+                # Check if it's a numeric column
+                if pd.api.types.is_numeric_dtype(df_features[col]):
+                    feature_cols.append(col)
+        
+        return feature_cols
+    
+    def _get_safe_feature_columns(self, df_features: pd.DataFrame, exclude: List[str] = None) -> List[str]:
+        """Get feature columns excluding power columns to prevent data leakage"""
+        exclude = exclude or []
+        feature_cols = []
+        
+        for col in df_features.columns:
+            if col not in exclude and col not in ['Time', 'datetime']:
+                # Only include numeric columns that are NOT target power columns
+                if pd.api.types.is_numeric_dtype(df_features[col]):
+                    # Additional safety: exclude any column that looks like a power measurement
+                    if not any(power_col in col for power_col in exclude if isinstance(power_col, str)):
+                        feature_cols.append(col)
+        
+        return feature_cols
+    
+    def _fit_multi_output_model(self, df: pd.DataFrame, power_columns: List[str], 
+                               time_column: str, weather_data: Optional[pd.DataFrame], 
+                               method_config: Dict):
+        """Train single multi-output model"""
+        # Create features
+        df_features = self.create_features(df, time_column, weather_data)
+        
+        # Feature columns (include weather if available)
+        self.feature_columns = ['hour', 'day_of_year', 'month', 'day_of_week', 'is_weekend',
+                               'hour_sin', 'hour_cos', 'day_sin', 'day_cos']
+        
+        # Add weather features if available
+        if weather_data is not None:
+            # Basic weather features
+            basic_weather = ['temperature', 'humidity', 'wind_speed', 'cloud_cover', 'solar_radiation', 'solar_energy', 'uv_index']
+            basic_weather = [col for col in basic_weather if col in df_features.columns]
+            
+            # Derived weather features
+            derived_weather = ['temp_effect', 'cloud_effect', 'wind_cooling', 'panel_temp', 'temp_efficiency',
+                             'effective_irradiance', 'solar_intensity', 'solar_potential', 'weather_change',
+                             'weather_lag_1h', 'weather_lag_2h', 'weather_solar_ratio', 'season', 'is_summer', 'is_winter',
+                             'temp_seasonal', 'temp_winter']
+            derived_weather = [col for col in derived_weather if col in df_features.columns]
+            
+            # Rolling weather statistics
+            rolling_weather = []
+            for base_col in ['temperature', 'humidity', 'wind_speed', 'cloud_cover']:
+                if base_col in df_features.columns:
+                    rolling_weather.extend([f'{base_col}_3h_mean', f'{base_col}_3h_std', f'{base_col}_3h_max', f'{base_col}_3h_min'])
+            rolling_weather = [col for col in rolling_weather if col in df_features.columns]
+            
+            # Add all weather features
+            self.feature_columns.extend(basic_weather + derived_weather + rolling_weather)
+        
+        # Get complete cases (all power columns have values)
+        complete_mask = df_features[power_columns].notna().all(axis=1)
+        
+        if complete_mask.sum() > 100:  # Need sufficient training data
+            X_train = df_features.loc[complete_mask, self.feature_columns]
+            y_train = df_features.loc[complete_mask, power_columns]
+            
+            # Scale features
+            self.scaler_X = MinMaxScaler()
+            self.scaler_y = MinMaxScaler()
+            
+            X_train_scaled = self.scaler_X.fit_transform(X_train)
+            y_train_scaled = self.scaler_y.fit_transform(y_train)
+            
+            # Train single LightGBM model for all outputs
+            model_params = method_config.get('model_parameters', {})
+            self.model = lgb.LGBMRegressor(
+                n_estimators=model_params.get('n_estimators', 200),
+                learning_rate=model_params.get('learning_rate', 0.1),
+                max_depth=model_params.get('max_depth', 6),
+                feature_fraction=model_params.get('feature_fraction', 0.9),
+                random_state=model_params.get('random_state', 42),
+                verbose=-1
+            )
+            self.model.fit(X_train_scaled, y_train_scaled)
+        
+        self.is_fitted = True
+        self.metadata = {
+            'method': 'multi_output_lgb_single_model',
+            'models_trained': 1,
+            'training_samples': complete_mask.sum() if 'complete_mask' in locals() else 0
+        }
+    
     def interpolate(self, df: pd.DataFrame, power_columns: List[str], time_column: str, weather_data: Optional[pd.DataFrame] = None) -> pd.DataFrame:
         """Perform multi-output interpolation"""
         if not self.is_fitted or not self.model:
@@ -592,32 +896,155 @@ class MultiOutputRegressionInterpolator(BaseInterpolator):
         df_result = df.copy()
         df_features = self.create_features(df_result, time_column, weather_data)
         
+        # Add SAFE correlation features if this was used during training
+        if (self.interp_config and 
+            self.interp_config.should_use_correlation('multi_output_regression') and
+            self.interp_config.should_model_independently('multi_output_regression')):
+            
+            correlation_features = self.interp_config.get_correlation_features('multi_output_regression')
+            if not correlation_features:
+                correlation_features = power_columns
+            
+            # Create the same safe correlation features used in training
+            for target_col in power_columns:
+                for corr_col in correlation_features:
+                    if corr_col != target_col and corr_col in df_features.columns:
+                        # Historical features only (no leakage)
+                        df_features[f'{corr_col}_hist_1h'] = df_features[corr_col].shift(1).fillna(0)
+                        df_features[f'{corr_col}_hist_2h'] = df_features[corr_col].shift(2).fillna(0)
+                        df_features[f'{corr_col}_hist_3h'] = df_features[corr_col].shift(3).fillna(0)
+                        
+                        # Historical statistics
+                        df_features[f'{corr_col}_hist_mean_6h'] = (
+                            df_features[corr_col].shift(1).rolling(window=6, min_periods=1).mean().fillna(0)
+                        )
+                        df_features[f'{corr_col}_hist_std_6h'] = (
+                            df_features[corr_col].shift(1).rolling(window=6, min_periods=1).std().fillna(0)
+                        )
+                        
+                        # Availability indicators
+                        df_features[f'{corr_col}_available'] = (~df_features[corr_col].isna()).astype(int)
+                        df_features[f'{corr_col}_available_lag1'] = df_features[f'{corr_col}_available'].shift(1).fillna(0)
+                        
+                        # Correlation strength (constant from training)
+                        if target_col in self.model and 'correlation_strengths' in self.model[target_col]:
+                            correlation_strength = self.model[target_col]['correlation_strengths'].get(corr_col, 0.0)
+                            df_features[f'{corr_col}_correlation_strength'] = correlation_strength
+                        else:
+                            df_features[f'{corr_col}_correlation_strength'] = 0.0
+        
         # Find rows with any missing values
         missing_mask = df_features[power_columns].isna().any(axis=1)
         
         if missing_mask.any():
-            # Prepare features
-            X_missing = df_features.loc[missing_mask, self.feature_columns]
-            X_missing_scaled = self.scaler_X.transform(X_missing)
-            
-            # Predict each column
-            predictions = np.zeros((missing_mask.sum(), len(power_columns)))
-            for i, col in enumerate(power_columns):
-                if col in self.model:
-                    predictions[:, i] = self.model[col].predict(X_missing_scaled)
-            
-            # Inverse transform predictions
-            predictions_unscaled = self.scaler_y.inverse_transform(predictions)
-            
-            # Fill missing values
-            for i, col in enumerate(power_columns):
-                col_missing_mask = df_features.loc[missing_mask, col].isna()
-                if col_missing_mask.any():
-                    df_result.loc[missing_mask & df_features[col].isna(), col] = predictions_unscaled[col_missing_mask, i]
+            # Handle different model types
+            if isinstance(self.model, dict):
+                # Check if models are stored as dictionaries (new adaptive method) or direct models (original method)
+                sample_model = list(self.model.values())[0]
+                if isinstance(sample_model, dict):
+                    # Independent models with correlation (new adaptive method)
+                    for col in power_columns:
+                        if col in self.model:
+                            # Find missing values for this specific column
+                            col_missing_mask = df_features[col].isna()
+                            
+                            if col_missing_mask.any():
+                                model_info = self.model[col]
+                                feature_cols = model_info['feature_cols']
+                                
+                                # Prepare features for missing values
+                                X_missing = df_features.loc[col_missing_mask, feature_cols]
+                                
+                                # Handle any remaining NaN in features
+                                X_missing = X_missing.fillna(0)
+                                
+                                # Scale and predict
+                                X_missing_scaled = model_info['scaler'].transform(X_missing)
+                                predictions = model_info['model'].predict(X_missing_scaled)
+                                
+                                # Fill missing values
+                                df_result.loc[col_missing_mask, col] = predictions
+                                
+                                print(f"Filled {col_missing_mask.sum()} missing values for {col}")
+                else:
+                    # Original independent models (no configuration)
+                    X_missing = df_features.loc[missing_mask, self.feature_columns]
+                    X_missing_scaled = self.scaler_X.transform(X_missing)
+                    
+                    # Predict each column
+                    predictions = np.zeros((missing_mask.sum(), len(power_columns)))
+                    for i, col in enumerate(power_columns):
+                        if col in self.model:
+                            predictions[:, i] = self.model[col].predict(X_missing_scaled)
+                    
+                    # Inverse transform predictions
+                    predictions_unscaled = self.scaler_y.inverse_transform(predictions)
+                    
+                    # Fill missing values
+                    for i, col in enumerate(power_columns):
+                        col_missing_mask = df_features.loc[missing_mask, col].isna()
+                        if col_missing_mask.any():
+                            df_result.loc[missing_mask & df_features[col].isna(), col] = predictions_unscaled[col_missing_mask, i]
+            else:
+                # Single multi-output model (original method)
+                X_missing = df_features.loc[missing_mask, self.feature_columns]
+                X_missing_scaled = self.scaler_X.transform(X_missing)
+                
+                # Predict each column
+                predictions = np.zeros((missing_mask.sum(), len(power_columns)))
+                for i, col in enumerate(power_columns):
+                    if col in self.model:
+                        predictions[:, i] = self.model[col].predict(X_missing_scaled)
+                
+                # Inverse transform predictions
+                predictions_unscaled = self.scaler_y.inverse_transform(predictions)
+                
+                # Fill missing values
+                for i, col in enumerate(power_columns):
+                    col_missing_mask = df_features.loc[missing_mask, col].isna()
+                    if col_missing_mask.any():
+                        df_result.loc[missing_mask & df_features[col].isna(), col] = predictions_unscaled[col_missing_mask, i]
         
-        # Apply solar constraints
-        df_result = self.apply_solar_constraints(df_result, power_columns, time_column)
+        # Apply solar constraints based on configuration
+        if self.interp_config:
+            df_result = self.apply_configuration_solar_constraints(df_result, power_columns, time_column)
+        else:
+            df_result = self.apply_solar_constraints(df_result, power_columns, time_column)
         
+        return df_result
+    
+    def apply_configuration_solar_constraints(self, df: pd.DataFrame, power_columns: List[str], time_column: str) -> pd.DataFrame:
+        """Apply solar constraints based on gap analysis recommendations"""
+        
+        # Get constraint configuration
+        constraints = self.interp_config.get_solar_constraints('multi_output_regression')
+        
+        df_result = df.copy()
+        df_result[time_column] = pd.to_datetime(df_result[time_column])
+        df_result['hour'] = df_result[time_column].dt.hour
+        
+        for col in power_columns:
+            # Apply nighttime constraint if recommended
+            if constraints.get('nighttime_zero', True):
+                night_mask = (df_result['hour'] <= 5) | (df_result['hour'] >= 19)
+                df_result.loc[night_mask, col] = 0
+            
+            # Apply negative clipping if recommended
+            if constraints.get('negative_clipping', True):
+                df_result[col] = df_result[col].clip(lower=0)
+            
+            # Apply max power limits if specified
+            max_power_limits = constraints.get('max_power_limits', {})
+            if col in max_power_limits:
+                df_result[col] = df_result[col].clip(upper=max_power_limits[col])
+            
+            # Apply max efficiency constraint if specified
+            max_efficiency = constraints.get('max_efficiency', 1.0)
+            if max_efficiency < 1.0:
+                # Scale down predictions by efficiency factor
+                df_result[col] = df_result[col] * max_efficiency
+        
+        df_result = df_result.drop('hour', axis=1)
         return df_result
 
 
@@ -842,7 +1269,12 @@ class InterpolationEngine:
                 # Train on validation data
                 print("Training interpolator...")
                 interpolator_class = self.interpolators[method]
-                interpolator = interpolator_class()
+                
+                # Create configuration parser for validation
+                interp_config = InterpolationConfig(gap_analysis)
+                
+                # Create interpolator with configuration
+                interpolator = interpolator_class(interpolation_config=interp_config)
                 interpolator.fit(df_val, power_columns, time_column, self.weather_data)
                 
                 # Interpolate validation data
@@ -876,7 +1308,20 @@ class InterpolationEngine:
         # Full interpolation on original data
         print("Performing full interpolation on original data...")
         interpolator_class = self.interpolators[method]
-        interpolator = interpolator_class()
+        
+        # Create configuration parser
+        interp_config = InterpolationConfig(gap_analysis)
+        
+        # Create interpolator with configuration
+        interpolator = interpolator_class(interpolation_config=interp_config)
+        
+        # Validate configuration
+        validation = interp_config.validate_configuration(method)
+        if not validation['valid']:
+            print(f"Configuration validation failed: {validation['errors']}")
+        if validation['warnings']:
+            print(f"Configuration warnings: {validation['warnings']}")
+        
         interpolator.fit(df, power_columns, time_column, self.weather_data)
         df_final = interpolator.interpolate(df, power_columns, time_column, self.weather_data)
         
